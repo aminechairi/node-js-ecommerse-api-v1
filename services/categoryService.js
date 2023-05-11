@@ -1,6 +1,7 @@
 const CategoryMudel = require(`../models/categoryModel`);
 const slugify = require('slugify');
-const asyncHandler = require('express-async-handler')
+const asyncHandler = require('express-async-handler');
+const ApiErrore = require("../utils/apiErrore");
 
 // @desc Get List Of Categories
 // @route GET /api/v1/categories
@@ -16,11 +17,11 @@ exports.getCategories = asyncHandler(async (req, res) => {
 // @desc Get Getegory by id
 // @route GET /api/v1/categories/:id
 // @access Public
-exports.getCategory = asyncHandler(async (req, res) => {
+exports.getCategory = asyncHandler(async (req, res, next)  => {
   const { id } = req.params;
   const category = await CategoryMudel.findById(id);
   if (!category) {
-    res.status(404).json({ msg: `No category for this id ${id}` })
+    return next(new ApiErrore(`No category for this id ${id}`, 404));
   } 
   res.status(200).json({ data: category });
 });
@@ -38,7 +39,7 @@ exports.createCategories = asyncHandler(async (req, res) => {
 // @desc Update specific category
 // @route PUT /api/v1/categories/:id
 // @access private
-exports.updateCategory = asyncHandler(async (req, res) => {
+exports.updateCategory = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const { name } = req.body;
   const category = await CategoryMudel.findOneAndUpdate(
@@ -50,7 +51,7 @@ exports.updateCategory = asyncHandler(async (req, res) => {
     { new: true }
   );
   if (!category) {
-    res.status(404).json({ msg: `No category for this id ${id}` })
+    return next(new ApiErrore(`No category for this id ${id}`, 404));
   } 
   res.status(200).json({ data: category });
 });
@@ -58,13 +59,13 @@ exports.updateCategory = asyncHandler(async (req, res) => {
 // @desc Delete specific category
 // @route DELETE /api/v1/categories/:id
 // @access private
-exports.deleteCategory = asyncHandler(async (req, res) => {
+exports.deleteCategory = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const category = await CategoryMudel.findByIdAndDelete(
     { _id: id },
   )
   if (!category) {
-    res.status(404).json({ msg: `No category for this id ${id}` })
+    return next(new ApiErrore(`No category for this id ${id}`, 404));
   } 
   res.status(200).json({ data: category });
 });
