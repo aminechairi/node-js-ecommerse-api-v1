@@ -1,7 +1,8 @@
-const CategoryMudel = require(`../models/categoryModel`);
 const slugify = require('slugify');
 const asyncHandler = require('express-async-handler');
 const ApiErrore = require("../utils/apiErrore");
+
+const CategoryMudel = require(`../models/categoryModel`);
 
 // @desc Get List Of Categories
 // @route GET /api/v1/categories
@@ -14,7 +15,7 @@ exports.getCategories = asyncHandler(async (req, res) => {
   res.status(200).json( { result: categories.length, page, data: categories } );
 });
 
-// @desc Get Getegory by id
+// @desc Get Category by id
 // @route GET /api/v1/categories/:id
 // @access Public
 exports.getCategory = asyncHandler(async (req, res, next)  => {
