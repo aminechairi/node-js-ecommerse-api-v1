@@ -8,11 +8,11 @@ const CategoryMudel = require(`../models/categoryModel`);
 // @route GET /api/v1/categories
 // @access Public
 exports.getCategories = asyncHandler(async (req, res) => {
-  let page = +req.query.page || 1;
-  let limit = +req.query.limit || 4;
-  let skip = (page - 1) * limit;
+  const page = +req.query.page || 1;
+  const limit = +req.query.limit || 4;
+  const skip = (page - 1) * limit;
   const categories = await CategoryMudel.find({}).skip( skip ).limit( limit );
-  res.status(200).json( { result: categories.length, page, data: categories } );
+  res.status(200).json( { result: categories.length, page: page, data: categories } );
 });
 
 // @desc Get Category by id
@@ -33,11 +33,11 @@ exports.getCategory = asyncHandler(async (req, res, next)  => {
 exports.createCategories = asyncHandler(async (req, res) => {
   const name = req.body.name;
   // async await
-  const category = await CategoryMudel.create({ name, slung: slugify(name) });
+  const category = await CategoryMudel.create({ name: name, slung: slugify(name) });
   res.status(201).json({ data: category });
 });
 
-// @desc Update specific category
+// @desc Update specific Category
 // @route PUT /api/v1/categories/:id
 // @access private
 exports.updateCategory = asyncHandler(async (req, res, next) => {
