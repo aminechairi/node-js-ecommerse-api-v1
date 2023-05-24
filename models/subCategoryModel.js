@@ -11,7 +11,7 @@ const subCategorySchema = new mongoose.Schema(
       minlength: [2, `To short subCategor name`],
       maxlength: [32, `To long subCategor name`],
     },
-    slung: {
+    slug: {
       type: String,
       lowercase: true,
     },
@@ -23,6 +23,15 @@ const subCategorySchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// mongoose query middleware
+subCategorySchema.pre("find", function(next) {
+  this.populate({
+    path: "category",
+    select: "name -_id",
+  });
+  next();
+});
 
 const subCategoryMudel = mongoose.model(`subCategory`, subCategorySchema);
 

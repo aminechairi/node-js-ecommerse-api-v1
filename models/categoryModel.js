@@ -11,7 +11,7 @@ const categorySchema = new mongoose.Schema(
       maxlength: [32, "Too long category name"],
     },
     // A and B => shoping.com/a-and-b
-    slung: {
+    slug: {
       type: String,
       lowercase: true,
     },
