@@ -1,36 +1,38 @@
-const { 
+const sharp = require("sharp");
+const asyncHandler = require("express-async-handler");
+const { v4: uuidv4 } = require("uuid");
+
+const {
   deleteOne,
   updateOne,
   createOne,
   getOne,
   getAll,
 } = require("./handlersFactory");
+const { uploadSingleImage } = require("../middlewares/uploadImageMiddleware");
 
 const brandMudel = require("../models/brandModel");
+
+// upload single image
+exports.uploadBrandImage = uploadSingleImage("image");
+
+// image processing
+exports.resizeImage = asyncHandler(async (req, res, next) => {
+  const fileName = `brand-${uuidv4()}-${Date.now()}.jpeg`;
+  await sharp(req.file.buffer)
+    .resize(800, 800)
+    .toFormat("jpeg")
+    .jpeg({ quality: 90 })
+    .toFile(`uploads/brands/${fileName}`);
+  // Save Image to Into Our db
+  req.body.image = `${fileName}`;
+  next();
+});
 
 // @desc Get List Of Brands
 // @route GET /api/v1/brands
 // @access Public
 exports.getBrands = getAll(brandMudel);
-// exports.getBrands = asyncHandler(async (req, res) => {
-//   // get count of products
-//   const countDocuments = await brandMudel.countDocuments();
-//   // build query
-//   const apiFeatures = new ApiFeatures(brandMudel.find(), req.query)
-//     .filter()
-//     .sort()
-//     .limitFields()
-//     .search()
-//     .paginate(countDocuments);
-//   // Execute Query
-//   const { mongooseQuery, paginationResults } = apiFeatures;
-//   const brands = await mongooseQuery;
-//   res.status(200).json({
-//     result: brands.length,
-//     paginationResults,
-//     data: brands,
-//   });
-// });
 
 // @desc Get Brand by id
 // @route GET /api/v1/brands/:id

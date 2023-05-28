@@ -10,7 +10,7 @@ dotenv.config({ path: '../../config.env' });
 dbConnection();
 
 // Read data
-const documents = JSON.parse(fs.readFileSync('./documents.json'));
+const documents = JSON.parse(fs.readFileSync('./products.json'));
 
 
 // Insert data into DB
