@@ -13,23 +13,25 @@ const { uploadSingleImage } = require("../middlewares/uploadImageMiddleware");
 
 const brandMudel = require("../models/brandModel");
 
-// upload single image
+// Upload single image
 exports.uploadBrandImage = uploadSingleImage("image");
 
-// image processing
+// Image processing
 exports.resizeImage = asyncHandler(async (req, res, next) => {
   const fileName = `brand-${uuidv4()}-${Date.now()}.jpeg`;
-  await sharp(req.file.buffer)
-    .resize(800, 800)
-    .toFormat("jpeg")
-    .jpeg({ quality: 90 })
-    .toFile(`uploads/brands/${fileName}`);
-  // Save Image to Into Our db
-  req.body.image = `${fileName}`;
+  if (req.file) {
+    await sharp(req.file.buffer)
+      .resize(800, 800)
+      .toFormat("jpeg")
+      .jpeg({ quality: 90 })
+      .toFile(`uploads/brands/${fileName}`);
+    // Save image to Into Our db
+    req.body.image = `${fileName}`;
+  }
   next();
 });
 
-// @desc Get List Of Brands
+// @desc Get List of brands
 // @route GET /api/v1/brands
 // @access Public
 exports.getBrands = getAll(brandMudel);
@@ -39,17 +41,17 @@ exports.getBrands = getAll(brandMudel);
 // @access Public
 exports.getBrand = getOne(brandMudel);
 
-// @desc Create Brand
+// @desc Create brand
 // @route POST /api/v1/brand
-// @access private
-exports.crateBrand = createOne(brandMudel);
+// @access Private
+exports.createBrand = createOne(brandMudel);
 
 // @desc Update specific Brand
 // @route PUT /api/v1/brands/:id
-// @access private
+// @access Private
 exports.updateBrand = updateOne(brandMudel);
 
 // @desc Delete specific brand
 // @route DELETE /api/v1/brand/:id
-// @access private
+// @access Private
 exports.deleteBrand = deleteOne(brandMudel);

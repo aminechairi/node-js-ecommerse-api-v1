@@ -5,7 +5,6 @@ const {
   getOne,
   getAll,
 } = require("./handlersFactory");
-
 const subCategoryModel = require("../models/subCategoryModel");
 
 exports.setCategoryIdToBody = (req, res, next) => {
@@ -23,10 +22,9 @@ exports.createFilterObj = (req, res, next) => {
   next();
 };
 
-// @desc Get List Of subCategories
+// @desc Get list Of subCategories
 // @route GET /api/v1/subcategories
 // @access Public
-
 exports.getSubCategories = getAll(subCategoryModel);
 
 // @desc Get subCategory by id
@@ -36,15 +34,15 @@ exports.getSubCategory = getOne(subCategoryModel);
 
 // @desc Create subCategory
 // @route POST /api/v1/subcategories
-// @access private
+// @access Private
 exports.createSubCategory = createOne(subCategoryModel);
 
 // @desc Update specific subCategory
 // @route PUT /api/v1/subcategories/:id
-// @access private
+// @access Private
 exports.updateSubCategory = updateOne(subCategoryModel);
 
 // @desc Delete specific subcategory
 // @route DELETE /api/v1/subcategories/:id
-// @access private
+// @access Private
 exports.deleteSubCategory = deleteOne(subCategoryModel);

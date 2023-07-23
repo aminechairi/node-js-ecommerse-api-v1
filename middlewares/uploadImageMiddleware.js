@@ -19,13 +19,15 @@ const multerOptions = () => {
     if (file.mimetype.startsWith("image")) {
       cb(null, true);
     } else {
-      cb(new ApiError("Only images Allowd", 400), false);
+      cb(new ApiError("Only images allowd", 400), false);
     }
   };
   const upload = multer({ storage: multeStorage, fileFilter: multerFilter });
   return upload;
 }
 
-exports.uploadSingleImage = (fieldName) => multerOptions().single(fieldName);
+exports.uploadSingleImage = (fieldName) => 
+  multerOptions().single(fieldName);
 
-exports.uploadMultipleImages = (arrayOfFields) =>  multerOptions().fields(arrayOfFields);
+exports.uploadMultipleImages = (arrayOfFields) =>  
+  multerOptions().fields(arrayOfFields);

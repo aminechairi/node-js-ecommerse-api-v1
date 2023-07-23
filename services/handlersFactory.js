@@ -54,9 +54,9 @@ exports.getAll = (model, modelName) =>
     if (req.filterObj) {
       filter = req.filterObj;
     }
-    // get count of products
+    // Get count of products
     const countDocuments = await model.countDocuments();
-    // build query
+    // Build query
     const apiFeatures = new ApiFeatures(model.find(filter), req.query)
       .filter()
       .sort()

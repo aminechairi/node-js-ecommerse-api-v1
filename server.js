@@ -8,10 +8,13 @@ dotenv.config({path: "./config.env"});
 const ApiErrore = require("./utils/apiErrore");
 const globalErrore = require("./middlewares/erroreMiddleware");
 const dbConection = require(`./config/database`);
+// Routes
 const categoryRoutes = require(`./routes/categoryRoutes`);
 const subCategoryRoutes = require('./routes/subCategoryRoutes');
 const brandRoutes = require("./routes/brandRouter");
 const productRout = require("./routes/productRouter");
+const userRoutes = require("./routes/userRouter");
+const authRoutes = require("./routes/authRouter");
 
 // dbConnection
 dbConection();
@@ -35,6 +38,8 @@ app.use(`/api/v1/categories`, categoryRoutes);
 app.use(`/api/v1/subcategories`, subCategoryRoutes);
 app.use(`/api/v1/brands`, brandRoutes);
 app.use(`/api/v1/products`, productRout);
+app.use(`/api/v1/users`, userRoutes);
+app.use(`/api/v1/auth`, authRoutes);
 
 app.all(`*`, (req, res, next) => {
   next(new ApiErrore(`can't find this rout: ${req.originalUrl}`, 400));
@@ -57,4 +62,4 @@ process.on("unhandledRejection", (err) => {
     console.log("Shutting down...");
     process.exit(1);
   });
-});
+}); 

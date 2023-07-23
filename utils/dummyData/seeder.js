@@ -1,7 +1,7 @@
 const fs = require('fs');
 require('colors');
 const dotenv = require('dotenv');
-const model = require('../../models/subCategoryModel');
+const model = require('../../models/productModel');
 const dbConnection = require('../../config/database');
 
 dotenv.config({ path: '../../config.env' });

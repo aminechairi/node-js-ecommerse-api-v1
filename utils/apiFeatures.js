@@ -57,7 +57,7 @@ class ApiFeatures {
     const skip = (page - 1) * limit;
     const endIndex = page * limit;
   
-    // pagination results
+    // Pagination results
     const pagination = {};
     pagination.currentPage = page;
     pagination.limit = limit;

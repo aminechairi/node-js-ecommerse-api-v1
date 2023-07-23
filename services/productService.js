@@ -12,10 +12,9 @@ const {
 const {
   uploadMultipleImages,
 } = require("../middlewares/uploadImageMiddleware");
-
 const productMudel = require("../models/productModel");
 
-// upload multiple images
+// Upload multiple images
 exports.uploadProductImages = uploadMultipleImages([
   {
     name: "imageCover",
@@ -27,9 +26,9 @@ exports.uploadProductImages = uploadMultipleImages([
   },
 ]);
 
-// images processing
+// Images processing
 exports.resizeProductImages = asyncHandler(async (req, res, next) => {
-  // 1 - image processing for imageCover
+  // 1 - Image processing for imageCover
   if (req.files.imageCover) {
     const imageCoverFileName = `products-${uuidv4()}-${Date.now()}-cover.jpeg`;
     await sharp(req.files.imageCover[0].buffer)
@@ -40,7 +39,7 @@ exports.resizeProductImages = asyncHandler(async (req, res, next) => {
     // Save ImageCover to Into Our db
     req.body.imageCover = `${imageCoverFileName}`;
   };
-  // 2 - image processing for images
+  // 2 - Image processing for images
   if (req.files.images) {
     req.body.images = [];
     await Promise.all(
@@ -59,27 +58,27 @@ exports.resizeProductImages = asyncHandler(async (req, res, next) => {
   next();
 });
 
-// @desc Get List Of Products
+// @desc Get list of products
 // @route GET /api/v1/products
 // @access Public
 exports.getProducts = getAll(productMudel, `Product`);
 
-// @desc Get Product by id
+// @desc Get product by id
 // @route GET /api/v1/products/:id
 // @access Public
 exports.getProduct = getOne(productMudel);
 
-// @desc Create Product
+// @desc Create product
 // @route POST /api/v1/products
-// @access private
+// @access Private
 exports.createProduct = createOne(productMudel);
 
-// @desc Update specific Product
+// @desc Update specific product
 // @route PUT /api/v1/products/:id
-// @access private
+// @access Private
 exports.updateProduct = updateOne(productMudel);
 
 // @desc Delete specific Product
 // @route DELETE /api/v1/products/:id
-// @access private
+// @access Private
 exports.deleteProduct = deleteOne(productMudel);

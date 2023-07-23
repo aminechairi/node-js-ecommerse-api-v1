@@ -16,13 +16,13 @@ const productSchema = new mongoose.Schema(
     },
     description: {
       type: String,
-      required: [true, "product description is required"],
+      required: [true, "Product description is required"],
       trim: true,
       minlength: [20, "Too short product description"],
     },
     quantity: {
       type: Number,
-      required: [true, "product quantity is required"],
+      required: [true, "Product quantity is required"],
     },
     sold: {
       type: Number,
@@ -42,7 +42,7 @@ const productSchema = new mongoose.Schema(
     },
     imageCover: {
       type: String,
-      required: [true, "product image cover is required"],
+      required: [true, "Product image cover is required"],
     },
     images: {
       type: [String],
@@ -50,7 +50,7 @@ const productSchema = new mongoose.Schema(
     category: {
       type: mongoose.Schema.ObjectId,
       ref: "Category",
-      required: [true, "product must belong to category"],
+      required: [true, "Product must belong to category"],
     },
     subcategories: [
       {

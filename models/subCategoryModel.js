@@ -5,8 +5,7 @@ const subCategorySchema = new mongoose.Schema(
     name: {
       type: String,
       trim: String,
-      required: [true, "Category required"],
-      // unique: [true, `subCategory must be uniqye`],
+      required: [true, "subCategory is required"],
       unique: true,
       minlength: [2, `To short subCategor name`],
       maxlength: [32, `To long subCategor name`],
@@ -18,7 +17,7 @@ const subCategorySchema = new mongoose.Schema(
     category: {
       type: mongoose.Schema.ObjectId,
       ref: `Category`,
-      required: [true, `subCategory must be belong tp parent category`],
+      required: [true, `subCategory must be belong to parent category`],
     },
   },
   { timestamps: true }
