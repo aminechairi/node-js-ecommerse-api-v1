@@ -1,9 +1,9 @@
 const { check } = require("express-validator");
+const validatorMiddleware = require("../../middlewares/validatorMiddleware");
 const slugify = require("slugify");
 const bcrypt = require("bcryptjs");
 
-const validatorMiddleware = require("../../middlewares/validatorMiddleware");
-const userModel = require("../../models/userModel");
+const userMudel = require("../../models/userModel");
 
 exports.getUserValidator = [
   check(`id`)
@@ -13,71 +13,83 @@ exports.getUserValidator = [
 ];
 
 exports.createUserValidator = [
-  check("userName")
-    .isString()
-    .withMessage("Nser name invalid")
+  check("firstName")
     .notEmpty()
-    .withMessage("User name required")
-    .isLength({ min: 3 })
-    .withMessage("Too short user name")
-    .isLength({ max: 22 })
-    .withMessage("Too long user name")
+    .withMessage("First name is required")
+    .isString()
+    .trim()
+    .isLength({ min: 3, max: 16 })
+    .withMessage("First name should be between 3 and 16 characters"),
+
+  check("lastName")
+    .notEmpty()
+    .withMessage("Last name is required")
+    .isString()
+    .trim()
+    .isLength({ min: 2, max: 16 })
+    .withMessage("Last name should be between 2 and 16 characters")
     .custom((value, { req }) => {
-      req.body.slug = slugify(value);
+      const frisrName = req.body.firstName;
+      const lastName = req.body.lastName;
+      req.body.slug = slugify(`${frisrName} ${lastName}`);
       return true;
     }),
 
   check("email")
     .notEmpty()
     .withMessage("Email is required")
+    .isString()
+    .trim()
     .isEmail()
-    .withMessage("Invalid email address")
-    .custom(async (value) => {
-      const email = await userModel.findOne({
-        email: value,
-      });
-      if (email) {
-        throw new Error(`E-mail already is user`);
-      } else {
-        return true;
+    .withMessage("Please provide a valid email address")
+    .custom(async (val) => {
+      const user = await userMudel.findOne({ email: val });
+      if (user) {
+        throw new Error("E-mail already in user");
       }
+      return true;
     }),
 
   check("phone")
-    .optional()
-    .isMobilePhone("ar-MA")
-    .withMessage("Invalid phone number"),
-
-  check("profileImg")
-    .optional(),
-
-  check("passwordConfirm")
     .notEmpty()
-    .withMessage("passwordConfirm is required"),
+    .withMessage("Phone number is required")
+    .isString()
+    .trim()
+    .isMobilePhone(["ar-MA"])
+    .withMessage("Invalid phone number only accepted Morocco Phone numbers"),
+
+  check("profileImage")
+    .optional({ checkFalsy: true }) // This field is optional
+    .isString()
+    .trim(),
+
+  check("profileCoverImage")
+    .optional({ checkFalsy: true }) // This field is optional
+    .isString()
+    .trim(),
 
   check("password")
     .notEmpty()
     .withMessage("Password is required")
-    .isLength({ min: 6 })
-    .withMessage("Too short password")
-    .isLength({ max: 32 })
-    .withMessage("Too long password")
-    .custom((password, { req }) => {
-      if (password !== req.body.passwordConfirm) {
-        throw new Error("passwordConfirm is not valid");
+    .isString()
+    .trim()
+    .isLength({ min: 8 })
+    .withMessage("Password should be at least 8 characters long"),
+
+  check("passwordConfirm")
+    .notEmpty()
+    .withMessage("Password confirm is required")
+    .custom((value, { req }) => {
+      if (value !== req.body.password) {
+        throw new Error("Password confirm dose not match password");
       }
       return true;
     }),
 
   check("role")
-    .optional()
-    .custom((value) => {
-      let roleslist = ["admin", "manager", "user"];
-      if (!roleslist.includes(value)) {
-        throw new Error(`Role invalid`);
-      }
-      return true;
-    }),
+    .optional({ checkFalsy: true }) // This field is optional
+    .isIn(["user", "manager", "admin"])
+    .withMessage("Invalid role"),
 
   validatorMiddleware,
 ];
@@ -87,46 +99,75 @@ exports.updateUserValidator = [
     .isMongoId()
     .withMessage(`Invalid user id format`),
 
-  check("userName")
+  check("firstName")
     .optional()
-    .isLength({ min: 3 })
-    .withMessage("Too short user name")
-    .isLength({ max: 22 })
-    .withMessage("Too long user name")
+    .isString()
+    .trim()
+    .isLength({ min: 3, max: 16 })
+    .withMessage("First name should be between 3 and 16 characters")
     .custom((value, { req }) => {
-      req.body.slug = slugify(value);
+      const lastName = req.body.lastName;
+      if (!lastName) {
+        throw new Error("Please write last name");
+      }
+      return true;
+    }),
+
+  check("lastName")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ min: 2, max: 16 })
+    .withMessage("Last name should be between 2 and 16 characters")
+    .custom((value, { req }) => {
+      const frisrName = req.body.firstName;
+      if (!frisrName) {
+        throw new Error("Please write frist name");
+      }
+      return true;
+    })
+    .custom((value, { req }) => {
+      const frisrName = req.body.firstName;
+      const lastName = req.body.lastName;
+      req.body.slug = slugify(`${frisrName} ${lastName}`);
       return true;
     }),
 
   check("email")
     .optional()
+    .isString()
+    .trim()
     .isEmail()
-    .withMessage("Invalid email address")
-    .custom(async (value) => {
-      const email = await userModel.findOne({
-        email: value,
-      });
-      if (email) {
-        throw new Error(`E-mail already is user`);
-      } else {
-        return true;
+    .withMessage("Please provide a valid email address")
+    .custom(async (val) => {
+      const user = await userMudel.findOne({ email: val });
+      if (user) {
+        throw new Error("E-mail already in user");
       }
+      return true;
     }),
 
   check("phone")
     .optional()
-    .isMobilePhone("ar-MA")
-    .withMessage("Invalid phone number"),
+    .isString()
+    .trim()
+    .isMobilePhone(["ar-MA"])
+    .withMessage("Invalid phone number only accepted Morocco Phone numbers"),
+
+  check("profileImage")
+    .optional({ checkFalsy: true }) // This field is optional
+    .isString()
+    .trim(),
+
+  check("profileCoverImage")
+    .optional({ checkFalsy: true }) // This field is optional
+    .isString()
+    .trim(),
 
   check("role")
-  .optional()
-  .custom((value) => {
-    let roleslist = ["admin", "manager", "user"];
-    if (!roleslist.includes(value)) {
-      throw new Error(`Role invalid`);
-    }
-    return true;
-  }),
+    .optional({ checkFalsy: true }) // This field is optional
+    .isIn(["user", "manager", "admin"])
+    .withMessage("Invalid role"),
 
   validatorMiddleware,
 ];
@@ -138,36 +179,39 @@ exports.changeUserPasswordValidator = [
 
   check("currentPassword")
     .notEmpty()
-    .withMessage("currentPassword is required")
-    .custom(async (currentPassword, { req }) => {
-      const user = await userModel.findById(req.params.id);
+    .withMessage("Current password is required")
+    .isString()
+    .trim()
+    .custom(async (val, { req }) => {
+      // 1) Verify current password
+      const user = await userMudel.findById(req.params.id);
       if (!user) {
-        throw new Error(`There is no user for this id ${req.params.id}`);
+        throw new Error("There is no user for this id");
       }
-      const iscurrentPassword = await bcrypt.compare(
-        currentPassword,
+      const isCorrectPassword = await bcrypt.compare(
+        req.body.currentPassword,
         user.password
       );
-      if (!iscurrentPassword) {
-        throw new Error("currentPassword is incorrect");
+      if (!isCorrectPassword) {
+        throw new Error("Incorrect current password");
       }
       return true;
     }),
 
-  check("passwordConfirm")
+  check("newPassword")
     .notEmpty()
-    .withMessage("PasswordConfirm is required"),
+    .withMessage("New password is required")
+    .isString()
+    .trim()
+    .isLength({ min: 8 })
+    .withMessage("New password should be at least 8 characters long"),
 
-  check("password")
+  check("newPasswordConfirm")
     .notEmpty()
-    .withMessage("Password is required")
-    .isLength({ min: 6 })
-    .withMessage("Too short password")
-    .isLength({ max: 32 })
-    .withMessage("Too long password")
-    .custom((password, { req }) => {
-      if (password !== req.body.passwordConfirm) {
-        throw new Error("passwordConfirm is not valid");
+    .withMessage("New password confirm is required")
+    .custom((value, { req }) => {
+      if (value !== req.body.newPassword) {
+        throw new Error("New password confirm dose not match new password");
       }
       return true;
     }),
@@ -179,77 +223,5 @@ exports.deleteUserValidator = [
   check(`id`)
     .isMongoId()
     .withMessage(`Invalid user id format`),
-  validatorMiddleware,
-];
-
-exports.updateLoggedUserPasswordValidator = [
-  check("currentPassword")
-    .notEmpty()
-    .withMessage("currentPassword is required")
-    .custom(async (currentPassword, { req }) => {
-      const user = await userModel.findById(req.user._id);
-      const iscurrentPassword = await bcrypt.compare(
-        currentPassword,
-        user.password
-      );
-      if (!iscurrentPassword) {
-        throw new Error("currentPassword is incorrect");
-      }
-      return true;
-    }),
-
-  check("passwordConfirm")
-    .notEmpty()
-    .withMessage("passwordConfirm is required"),
-
-  check("password")
-    .notEmpty()
-    .withMessage("Password is required")
-    .isLength({ min: 6 })
-    .withMessage("Too short password")
-    .isLength({ max: 32 })
-    .withMessage("Too long password")
-    .custom((password, { req }) => {
-      if (password !== req.body.passwordConfirm) {
-        throw new Error("passwordConfirm is not valid");
-      }
-      return true;
-    }),
-
-  validatorMiddleware,
-];
-
-exports.updateLoggedUserDataValidator = [
-  check("userName")
-    .optional()
-    .isLength({ min: 3 })
-    .withMessage("Too short user name")
-    .isLength({ max: 32 })
-    .withMessage("Too long user name")
-    .custom((value, { req }) => {
-      req.body.slug = slugify(value);
-      return true;
-    }),
-
-  check("email")
-    .optional()
-    .isEmail()
-    .withMessage("Invalid email address")
-    .custom(async (value) => {
-      const email = await userModel.findOne({
-        email: value,
-      });
-      if (email) {
-        throw new Error(`E-mail already is user`);
-      } else {
-        return true;
-      }
-    }),
-
-  check("phone")
-    .optional()
-    .isMobilePhone("ar-MA")
-    .withMessage("Invalid phone number"),
-
   validatorMiddleware,
 ];

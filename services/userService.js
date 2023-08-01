@@ -9,141 +9,111 @@ const {
   getOne,
   getAll,
 } = require("./handlersFactory");
-const { uploadSingleImage } = require("../middlewares/uploadImageMiddleware");
+const {
+  uploadMultipleImages,
+} = require("../middlewares/uploadImageMiddleware");
 const userMudel = require("../models/userModel");
-const ApiErrore = require("../utils/apiErrore");
-const createToken = require("../utils/createToken");
 
-// Upload single image
-exports.uploadUserImage = uploadSingleImage("profileImg");
+// Upload multiple images
+exports.uploadUserImages = uploadMultipleImages([
+  {
+    name: "profileImage",
+    maxCount: 1,
+  },
+  {
+    name: "profileCoverImage",
+    maxCount: 1,
+  },
+]);
 
-// Image processing
-exports.resizeImage = asyncHandler(async (req, res, next) => {
-  const fileName = `user-${uuidv4()}-${Date.now()}.jpeg`;
-  if (req.file) {
-    await sharp(req.file.buffer)
+// Images processing
+exports.resizeUserImages = asyncHandler(async (req, res, next) => {
+  // 1 - Image processing for profileImage
+  if (req.files.profileImage) {
+    const profileImageFileName = `users-${uuidv4()}-${Date.now()}.jpeg`;
+    await sharp(req.files.profileImage[0].buffer)
+      .resize(800, 800)
       .toFormat("jpeg")
-      .toFile(`uploads/users/${fileName}`);
-    // Save Image to Into Our db
-    req.body.profileImg = `${fileName}`;
+      .jpeg({ quality: 90 })
+      .toFile(`uploads/users/${profileImageFileName}`);
+    // Save profileImage to Into Our db
+    req.body.profileImage = `${profileImageFileName}`;
+  }
+  // 2 - Image processing for profileCoverImage
+  if (req.files.profileCoverImage) {
+    const profileCoverImageFileName = `users-${uuidv4()}-${Date.now()}.jpeg`;
+    await sharp(req.files.profileCoverImage[0].buffer)
+      .toFormat("jpeg")
+      .jpeg({ quality: 90 })
+      .toFile(`uploads/users/${profileCoverImageFileName}`);
+    // Save profileCoverImage to Into Our db
+    req.body.profileCoverImage = `${profileCoverImageFileName}`;
   }
   next();
 });
 
 // @desc Get list of users
 // @route GET /api/v1/users
-// @access Private/admin
+// @access Private admine
 exports.getUsers = getAll(userMudel);
 
 // @desc Get user by id
 // @route GET /api/v1/users/:id
-// @access Private
+// @access Private admine
 exports.getUser = getOne(userMudel);
 
-// @desc Create User
+// @desc Create user
 // @route POST /api/v1/users
-// @access Private
+// @access Private admine
 exports.createUser = createOne(userMudel);
 
-// @desc Update specific User
+// @desc Update specific user
 // @route PUT /api/v1/users/:id
-// @access Private
+// @access Private admine
 exports.updateUser = asyncHandler(async (req, res, next) => {
-  const active = req.body.active === "true" ? true : req.body.active === "false" ? false : undefined;
   const document = await userMudel.findByIdAndUpdate(
     req.params.id,
     {
-      userName: req.body.userName,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
       slug: req.body.slug,
       email: req.body.email,
       phone: req.body.phone,
-      profileImg: req.body.profileImg,
+      profileImage: req.body.profileImage,
+      profileCoverImage: req.body.profileCoverImage,
       role: req.body.role,
-      active: active,
     },
     {
       new: true,
     }
   );
   if (!document) {
-    return next(new ApiErrore(`No document for this id ${req.params.id}`, 404));
+    return next(new ApiError(`No document for this id ${req.params.id}`, 404));
   }
-  res.status(200).json({
-    data: document,
-  });
+  res.status(200).json({ data: document });
 });
 
 // @desc Change user password
 // @route PUT /api/v1/users/changepassword/:id
-// @access Private
+// @access Private admine
 exports.changeUserPassword = asyncHandler(async (req, res, next) => {
-  const user = await userMudel.findByIdAndUpdate(
+  const document = await userMudel.findByIdAndUpdate(
     req.params.id,
     {
-      password: await bcrypt.hash(req.body.password, 12),
-      passwordChangedAt: Date.now()
-    },
-    {
-      new: true,
-    }
-  );
-  if (!user) {
-    return next(new ApiErrore(`No user for this id ${req.params.id}`, 404));
-  }
-  res.status(200).json({
-    data: user,
-  });
-});
-
-// @desc Delete specific User
-// @route DELETE /api/v1/users/:id
-// @access Private
-exports.deleteUser = deleteOne(userMudel);
-
-// @desc Get logged User Data
-// @route GET /api/v1/users/getme
-// @access Private
-exports.getLoggedUserData = asyncHandler(async (req, res, next) => {
-  req.params.id = req.user._id;
-  next();
-});
-
-// @desc Update logged user password
-// @route POST /api/v1/auth/login/updatemypassword
-// @access Private
-exports.updateLoggedUserPassword = asyncHandler(async (req, res, next) => {
-  const user = await userMudel.findByIdAndUpdate(
-    req.user._id,
-    {
-      password: await bcrypt.hash(req.body.password, 12),
+      password: await bcrypt.hash(req.body.newPassword, 12),
       passwordChangedAt: Date.now(),
     },
     {
       new: true,
     }
   );
-  if (!user) {
-    return next(new ApiErrore(`No user for this id ${req.params.id}`, 404));
-  };
-  const token = createToken(user._id);
-  res.status(200).json({
-    date: user,
-    token
-  });
+  if (!document) {
+    return next(new ApiError(`No document for this id ${req.params.id}`, 404));
+  }
+  res.status(200).json({ data: document });
 });
 
-// @desc Update logged user data (without password, role)
-// @route PUT /api/v1/auth/login/updateme
-// @access Private
-exports.updateLoggedUserData = asyncHandler(async (req, res, next) => {
-  const updatedUser = await userMudel.findByIdAndUpdate(
-    req.user._id,
-    {
-      userName: req.body.userName,
-      email: req.body.email,
-      phone: req.body.phone,
-    },
-    { new: true }
-  );
-  res.status(200).json({ data: updatedUser });
-});
+// @desc Delete specific user
+// @route DELETE /api/v1/users/:id
+// @access Private admine
+exports.deleteUser = deleteOne(userMudel);

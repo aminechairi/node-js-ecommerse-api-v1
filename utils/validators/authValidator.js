@@ -1,58 +1,69 @@
 const { check } = require("express-validator");
+const validatorMiddleware = require("../../middlewares/validatorMiddleware");
 const slugify = require("slugify");
 
-const validatorMiddleware = require("../../middlewares/validatorMiddleware");
-const userModel = require("../../models/userModel");
+const userMudel = require("../../models/userModel");
 
-exports.signupValidator = [
-  check("userName")
+exports.signUpValidator = [
+  check("firstName")
     .notEmpty()
-    .withMessage("User name is required")
-    .isLength({ min: 3 })
-    .withMessage("Too short user name")
-    .isLength({ max: 32 })
-    .withMessage("Too long user name")
+    .withMessage("First name is required")
+    .isString()
+    .trim()
+    .isLength({ min: 3, max: 16 })
+    .withMessage("First name should be between 3 and 16 characters"),
+
+  check("lastName")
+    .notEmpty()
+    .withMessage("Last name is required")
+    .isString()
+    .trim()
+    .isLength({ min: 2, max: 16 })
+    .withMessage("Last name should be between 2 and 16 characters")
     .custom((value, { req }) => {
-      req.body.slug = slugify(value);
+      const frisrName = req.body.firstName;
+      const lastName = req.body.lastName;
+      req.body.slug = slugify(`${frisrName} ${lastName}`);
       return true;
     }),
 
   check("email")
     .notEmpty()
     .withMessage("Email is required")
+    .isString()
+    .trim()
     .isEmail()
-    .withMessage("Invalid email address")
-    .custom(async (value) => {
-      const email = await userModel.findOne({
-        email: value,
-      });
-      if (email) {
-        throw new Error(`E-mail already is user`);
-      } else {
-        return true;
+    .withMessage("Please provide a valid email address")
+    .custom(async (val) => {
+      const user = await userMudel.findOne({ email: val });
+      if (user) {
+        throw new Error("E-mail already in user");
       }
+      return true;
     }),
 
   check("phone")
     .notEmpty()
     .withMessage("Phone number is required")
-    .isMobilePhone("ar-MA")
-    .withMessage("Invalid phone number"),
-
-  check("passwordConfirm")
-    .notEmpty()
-    .withMessage("passwordConfirm is required"),
+    .isString()
+    .trim()
+    .isMobilePhone(["ar-MA"])
+    .withMessage("Invalid phone number only accepted Morocco Phone numbers"),
 
   check("password")
     .notEmpty()
-    .withMessage("Password required")
-    .isLength({ min: 6 })
-    .withMessage("Too short password")
-    .isLength({ max: 32 })
-    .withMessage("Too long password")
-    .custom((password, { req }) => {
-      if (password !== req.body.passwordConfirm) {
-        throw new Error("passwordConfirm is not valid");
+    .withMessage("Password is required")
+    .isString()
+    .trim()
+    .isLength({ min: 8 })
+    .withMessage("Password should be at least 8 characters long"),
+
+  check("passwordConfirm")
+    .notEmpty()
+    .withMessage("Password confirm is required")
+    .custom((value, { req }) => {
+      if (value !== req.body.password) {
+        throw new Error("Password confirm dose not match password");
       }
       return true;
     }),
@@ -60,16 +71,20 @@ exports.signupValidator = [
   validatorMiddleware,
 ];
 
-exports.loginValidator = [
+exports.logInValidator = [
   check("email")
     .notEmpty()
     .withMessage("Email is required")
+    .isString()
+    .trim()
     .isEmail()
-    .withMessage("Invalid email address"),
+    .withMessage("Please provide a valid email address"),
 
   check("password")
     .notEmpty()
-    .withMessage("Password is required"),
+    .withMessage("Password is required")
+    .isString()
+    .trim(),
 
   validatorMiddleware,
 ];
@@ -78,8 +93,20 @@ exports.forgotPasswordValidator = [
   check("email")
     .notEmpty()
     .withMessage("Email is required")
+    .isString()
+    .trim()
     .isEmail()
-    .withMessage("Invalid email address"),
+    .withMessage("Please provide a valid email address"),
+
+  validatorMiddleware,
+];
+
+exports.verifyPassResetCodeValidator = [
+  check("resetCode")
+    .notEmpty()
+    .withMessage("Please write reset code")
+    .isString()
+    .trim(),
 
   validatorMiddleware,
 ];
@@ -88,23 +115,25 @@ exports.resetPasswordValidator = [
   check("email")
     .notEmpty()
     .withMessage("Email is required")
+    .isString()
+    .trim()
     .isEmail()
-    .withMessage("Invalid email address"),
-
-  check("newPasswordConfirm")
-    .notEmpty()
-    .withMessage("newPasswordConfirm is required"),
+    .withMessage("Please provide a valid email address"),
 
   check("newPassword")
     .notEmpty()
-    .withMessage("newPassword is required")
-    .isLength({ min: 6 })
-    .withMessage("Too short newPassword")
-    .isLength({ max: 32 })
-    .withMessage("Too long newPassword")
-    .custom((newPassword, { req }) => {
-      if (newPassword !== req.body.newPasswordConfirm) {
-        throw new Error("newPasswordConfirm is not valid");
+    .withMessage("New password is required")
+    .isString()
+    .trim()
+    .isLength({ min: 8 })
+    .withMessage("New password should be at least 8 characters long"),
+
+  check("newPasswordConfirm")
+    .notEmpty()
+    .withMessage("New password confirm is required")
+    .custom((value, { req }) => {
+      if (value !== req.body.newPassword) {
+        throw new Error("New password confirm dose not match new password");
       }
       return true;
     }),

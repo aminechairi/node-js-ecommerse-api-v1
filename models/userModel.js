@@ -1,67 +1,78 @@
-const mongoose = require('mongoose');
-var bcrypt = require("bcryptjs");
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
 const userSchema = new mongoose.Schema(
   {
-    userName: {
+    firstName: {
       type: String,
+      required: [true, "First name is required"],
       trim: true,
-      required: [true, `User name is required`],
-      minlength: [3, "Too short user name"],
-      maxLength: [32, "Too long user name"],
+      minlength: [3, "Too short frist name"],
+      maxlength: [16, "Too long frist name"],
+    },
+    lastName: {
+      type: String,
+      required: [true, "Last name is required"],
+      trim: true,
+      minlength: [2, "Too short last name"],
+      maxlength: [16, "Too long last name"],
     },
     slug: {
       type: String,
-      lowercase: true,
+      required: [true, "Slug is required"],
+      trim: true,
     },
     email: {
       type: String,
-      required: [true, `Email is required`],
+      required: [true, "Email is required"],
       unique: true,
-      lowercase: true,
+      trim: true,
+      match: [/^\S+@\S+\.\S+$/, "Please provide a valid email address"],
     },
     phone: {
       type: String,
-      required: [true, `Phone number is required`],
+      required: [true, "Phone number is required"],
+      trim: true,
     },
-    profileImg: String,
+    profileImage: {
+      type: String,
+      trim: true,
+    },
+    profileCoverImage: {
+      type: String,
+      trim: true,
+    },
     password: {
       type: String,
-      required: [true, `Password is required`],
-      minlength: [6, `Too short password`],
-      maxlength: [32, `Too long password`],
+      required: [true, "Password is required"],
+      minlength: [8, "Password should be at least 8 characters long"],
     },
     passwordChangedAt: Date,
     passwordResetCode: String,
-    passwordResetCodeExpires: Date,
+    passwordResetExpires: Date,
     passwordResetVerified: Boolean,
     role: {
       type: String,
-      enum: [`user`, `manager`, `admin`],
-      default: `user`,
+      enum: ["user", "manager", "admin"],
+      default: "user",
     },
-    active: {
+    verifyEmail: {
       type: Boolean,
-      default: true,
+      default: false,
     },
   },
   { timestamps: true }
 );
 
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    return next();
-  };
-  // hashing user password
-  this.password = await bcrypt.hash(this.password, 12);
-  next();
-});
-
 const setImageUrl = (doc) => {
-  if (doc.profileImg) {
-    const imageUrl = `${process.env.BASE_URL}/users/${doc.profileImg}`;
-    doc.profileImg = imageUrl;
-  }
+  if (doc.profileImage) {
+    const imageUrl = `${process.env.BASE_URL}/users/${doc.profileImage}`;
+    doc.profileImage = imageUrl;
+  };
+  if (doc.profileCoverImage) {
+    const imageUrl = `${process.env.BASE_URL}/users/${doc.profileCoverImage}`;
+    doc.profileCoverImage = imageUrl;
+  };
 };
 
 // findOne, findAll, update, delete
@@ -69,9 +80,16 @@ userSchema.post("init", function (doc) {
   setImageUrl(doc);
 });
 
-// create
+// create a new category
 userSchema.post("save", function (doc) {
   setImageUrl(doc);
 });
 
-module.exports = mongoose.model('User', userSchema);
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  // Hashing user password
+  this.password = await bcrypt.hash(this.password, 12);
+  next();
+});
+
+module.exports = mongoose.model("User", userSchema);

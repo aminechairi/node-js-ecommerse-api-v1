@@ -1,12 +1,12 @@
 const express = require(`express`);
 
+const authService = require("../services/authService");
 const {
   createProductValidator,
   getProductValidator,
   updateProductValidator,
   deleteProductValidator ,
 } = require('../utils/validators/productValidator');
-
 const {
   getProducts,
   getProduct,
@@ -16,16 +16,16 @@ const {
   uploadProductImages,
   resizeProductImages,
 } = require('../services/productService');
-const authService = require("../services/authService");
 
 const router = express.Router();
 
 router
   .route("/")
-  .get(getProducts)
-  .post(
+  .get(
+    getProducts
+  ).post(
     authService.protect,
-    authService.allowedTo("manager", "admin"),
+    authService.allowedTo("admin", "manager"),
     uploadProductImages,
     resizeProductImages,
     createProductValidator,
@@ -34,10 +34,12 @@ router
 
 router
   .route("/:id")
-  .get(getProductValidator, getProduct)
-  .put(
+  .get(
+    getProductValidator,
+    getProduct
+  ).put(
     authService.protect,
-    authService.allowedTo("manager", "admin"),
+    authService.allowedTo("admin", "manager"),
     uploadProductImages,
     resizeProductImages,
     updateProductValidator,

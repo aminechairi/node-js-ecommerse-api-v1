@@ -70,15 +70,15 @@ exports.getProduct = getOne(productMudel);
 
 // @desc Create product
 // @route POST /api/v1/products
-// @access Private
+// @access Private admine & manager
 exports.createProduct = createOne(productMudel);
 
 // @desc Update specific product
 // @route PUT /api/v1/products/:id
-// @access Private
+// @access Private admine & manager
 exports.updateProduct = updateOne(productMudel);
 
 // @desc Delete specific Product
 // @route DELETE /api/v1/products/:id
-// @access Private
+// @access Private admine
 exports.deleteProduct = deleteOne(productMudel);

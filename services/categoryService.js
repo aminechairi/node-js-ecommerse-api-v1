@@ -42,15 +42,15 @@ exports.getCategory = getOne(categoryMudel);
 
 // @desc Create category
 // @route POST /api/v1/categories
-// @access Private
+// @access Private admine & manager
 exports.createCategories = createOne(categoryMudel);
 
-// @desc Update specific Category
+// @desc Update specific category
 // @route PUT /api/v1/categories/:id
-// @access Private
+// @access Private  admine & manager
 exports.updateCategory = updateOne(categoryMudel);
 
 // @desc Delete specific category
 // @route DELETE /api/v1/categories/:id
-// @access Private
+// @access Private  admine
 exports.deleteCategory = deleteOne(categoryMudel);
