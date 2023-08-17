@@ -2,7 +2,7 @@ const { check } = require('express-validator');
 const validatorMiddleware = require("../../middlewares/validatorMiddleware");
 const slugify = require("slugify");
 
-const categoryMudel = require("../../models/categoryModel");
+const categoryModel = require("../../models/categoryModel");
 
 exports.getSubCategoryValidator = [
   check("id")
@@ -38,7 +38,7 @@ exports.createSubCategoryValidator = [
     .withMessage("Invalid category id format")
     .custom(async (value, { req }) => {
       const ObjectId = req.body.category;
-      const category = await categoryMudel.findById(ObjectId);
+      const category = await categoryModel.findById(ObjectId);
       if (category) {
         return true;
       } else {
@@ -67,7 +67,7 @@ exports.updateSubCategoryValidator = [
     .withMessage("Invalid category id format")
     .custom(async (value, { req }) => {
       const ObjectId = req.body.category;
-      const category = await categoryMudel.findById(ObjectId);
+      const category = await categoryModel.findById(ObjectId);
       if (category) {
         return true;
       } else {

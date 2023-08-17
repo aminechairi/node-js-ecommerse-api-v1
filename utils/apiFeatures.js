@@ -2,7 +2,7 @@ class ApiFeatures {
   constructor(mongooseQuery, reqQuery) {
     this.mongooseQuery = mongooseQuery;
     this.reqQuery = reqQuery;
-  };
+  }
   filter() {
     const queryStringObject = { ...this.reqQuery };
     const excludesFields = [`page`, `sort`, `limit`, `fields`, `search`];
@@ -17,25 +17,35 @@ class ApiFeatures {
     queryStr = JSON.parse(queryStr);
     this.mongooseQuery = this.mongooseQuery.find(queryStr);
     return this;
-  };
+  }
   sort() {
     if (this.reqQuery.sort) {
       const sortBy = this.reqQuery.sort.split(",").join(" ");
       this.mongooseQuery = this.mongooseQuery.sort(sortBy);
     } else {
       this.mongooseQuery = this.mongooseQuery.sort(`-createdAt`);
-    };
+    }
     return this;
-  };
-  limitFields() {
+  }
+  limitFields(mudelName) {
     if (this.reqQuery.fields) {
       const fields = this.reqQuery.fields.split(",").join(" ");
       this.mongooseQuery = this.mongooseQuery.select(fields);
+    } else if (mudelName === `User`) {
+      this.mongooseQuery = this.mongooseQuery.select(`
+        -emailVerifyCode
+        -emailVerifyCodeExpires
+        -password
+        -passwordChangedAt
+        -passwordResetCode
+        -passwordResetExpires
+        -passwordResetVerified
+      `);
     } else {
       this.mongooseQuery = this.mongooseQuery.select("-__v");
-    };
+    }
     return this;
-  };
+  }
   search(mudelName) {
     if (this.reqQuery.search) {
       let query = {};
@@ -44,19 +54,28 @@ class ApiFeatures {
           { title: { $regex: this.reqQuery.search, $options: `i` } },
           { description: { $regex: this.reqQuery.search, $options: `i` } },
         ];
+      } else if (mudelName === `User`) {
+        query.$or = [
+          {
+            slug: {
+              $regex: `${this.reqQuery.search}`.replaceAll(" ", "-"),
+              $options: `i`,
+            },
+          },
+        ];
       } else {
         query = { name: { $regex: this.reqQuery.search, $options: `i` } };
       }
       this.mongooseQuery = this.mongooseQuery.find(query);
-    };
+    }
     return this;
-  };
+  }
   paginate(countDocuments) {
     const page = this.reqQuery.page * 1 || 1;
     const limit = this.reqQuery.limit * 1 || 50;
     const skip = (page - 1) * limit;
     const endIndex = page * limit;
-  
+
     // Pagination results
     const pagination = {};
     pagination.currentPage = page;
@@ -73,7 +92,7 @@ class ApiFeatures {
 
     this.mongooseQuery = this.mongooseQuery.skip(skip).limit(limit);
     return this;
-  };
+  }
 };
 
 module.exports = ApiFeatures;

@@ -10,7 +10,7 @@ const {
   getAll,
 } = require("./handlersFactory");
 const { uploadSingleImage } = require("../middlewares/uploadImageMiddleware");
-const categoryMudel = require(`../models/categoryModel`);
+const categoryModel = require(`../models/categoryModel`);
 
 // Upload single image
 exports.uploadCategoryImage = uploadSingleImage("image");
@@ -33,24 +33,24 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
 // @desc Get list of categories
 // @route GET /api/v1/categories
 // @access Public
-exports.getCategories = getAll(categoryMudel);
+exports.getCategories = getAll(categoryModel);
 
 // @desc Get category by id
 // @route GET /api/v1/categories/:id
 // @access Public
-exports.getCategory = getOne(categoryMudel);
+exports.getCategory = getOne(categoryModel);
 
 // @desc Create category
 // @route POST /api/v1/categories
-// @access Private admine & manager
-exports.createCategories = createOne(categoryMudel);
+// @access Private 
+exports.createCategories = createOne(categoryModel);
 
-// @desc Update specific category
+// @desc Update category by id
 // @route PUT /api/v1/categories/:id
-// @access Private  admine & manager
-exports.updateCategory = updateOne(categoryMudel);
+// @access Private
+exports.updateCategory = updateOne(categoryModel);
 
-// @desc Delete specific category
+// @desc Delete category by id
 // @route DELETE /api/v1/categories/:id
 // @access Private  admine
-exports.deleteCategory = deleteOne(categoryMudel);
+exports.deleteCategory = deleteOne(categoryModel);

@@ -1,6 +1,5 @@
 const express = require(`express`);
 
-const authService = require("../services/authService");
 const {
   createProductValidator,
   getProductValidator,
@@ -16,6 +15,7 @@ const {
   uploadProductImages,
   resizeProductImages,
 } = require('../services/productService');
+const protect_allowedTo = require("../services/authServises/protect&allowedTo");
 
 const router = express.Router();
 
@@ -24,8 +24,8 @@ router
   .get(
     getProducts
   ).post(
-    authService.protect,
-    authService.allowedTo("admin", "manager"),
+    protect_allowedTo.protect(),
+    protect_allowedTo.allowedTo("admin", "manager"),
     uploadProductImages,
     resizeProductImages,
     createProductValidator,
@@ -38,16 +38,16 @@ router
     getProductValidator,
     getProduct
   ).put(
-    authService.protect,
-    authService.allowedTo("admin", "manager"),
+    protect_allowedTo.protect(),
+    protect_allowedTo.allowedTo("admin", "manager"),
     uploadProductImages,
     resizeProductImages,
     updateProductValidator,
     updateProduct
   )
   .delete(
-    authService.protect,
-    authService.allowedTo("admin"),
+    protect_allowedTo.protect(),
+    protect_allowedTo.allowedTo("admin"),
     deleteProductValidator,
     deleteProduct
   );

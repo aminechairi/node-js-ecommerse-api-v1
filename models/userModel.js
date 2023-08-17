@@ -29,6 +29,12 @@ const userSchema = new mongoose.Schema(
       trim: true,
       match: [/^\S+@\S+\.\S+$/, "Please provide a valid email address"],
     },
+    emailVerify: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerifyCode: String,
+    emailVerifyCodeExpires: Date,
     phone: {
       type: String,
       required: [true, "Phone number is required"],
@@ -56,9 +62,13 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "manager", "admin"],
       default: "user",
     },
-    verifyEmail: {
+    active: {
       type: Boolean,
-      default: false,
+      default: true,
+    },
+    userBlock: {
+      type: Boolean,
+      default: true,
     },
   },
   { timestamps: true }

@@ -1,6 +1,5 @@
 const express = require(`express`);
 
-const authService = require("../services/authService");
 const {
   getBrandValidator,
   createBrandValidator,
@@ -16,6 +15,7 @@ const {
   uploadBrandImage,
   resizeImage,
 } = require("../services/brandService");
+const protect_allowedTo = require("../services/authServises/protect&allowedTo");
 
 const router = express.Router();
 
@@ -24,8 +24,8 @@ router
   .get(
     getBrands
   ).post(
-    authService.protect,
-    authService.allowedTo("admin", "manager"),
+    protect_allowedTo.protect(),
+    protect_allowedTo.allowedTo("admin", "manager"),
     uploadBrandImage,
     resizeImage,
     createBrandValidator,
@@ -38,15 +38,15 @@ router
     getBrandValidator,
     getBrand
   ).put(
-    authService.protect,
-    authService.allowedTo("admin", "manager"),
+    protect_allowedTo.protect(),
+    protect_allowedTo.allowedTo("admin", "manager"),
     uploadBrandImage,
     resizeImage,
     updateBrandValidator,
     updateBrand
   ).delete(
-    authService.protect,
-    authService.allowedTo("admin"),
+    protect_allowedTo.protect(),
+    protect_allowedTo.allowedTo("admin"),
     deleteBrandValidator,
     deleteBrand
   );

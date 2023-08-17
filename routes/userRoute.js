@@ -1,15 +1,19 @@
 const express = require(`express`);
 
-const authService = require("../services/authService");
 const {
   getUserValidator,
   createUserValidator,
   updateUserValidator,
-  deleteUserValidator,
-  
   changeUserPasswordValidator,
-} = require("../utils/validators/userValidator");
-
+  userBlockValidator,
+  deleteUserValidator,
+} = require("../utils/validators/userValidators/userValidator");
+const {
+  updateMyDataValidator,
+  changeMyPasswordValidator,
+  emailVerifyCodeValidator,
+  changeMyEmailValidator
+} = require("../utils/validators/userValidators/userLoggedInValidator");
 const {
   uploadUserImages,
   resizeUserImages,
@@ -17,16 +21,71 @@ const {
   getUser,
   createUser,
   updateUser,
-  deleteUser,
-
   changeUserPassword,
-} = require("../services/userService");
+  userBlock,
+  deleteUser,
+} = require("../services/userServices/userService");
+const {
+  emailVerify,
+  emailVerifyCode,
+  getMyData,
+  updateMyData,
+  changeMyPassword,
+  changeMyEmail
+} = require("../services/userServices/userLoggedIn");
+const protect_allowedTo = require("../services/authServises/protect&allowedTo");
 
 const router = express.Router();
 
+router.get(
+  "/emailverify",
+  protect_allowedTo.protect(true),
+  emailVerify
+);
+
+router.post(
+  "/emailverifycode",
+  protect_allowedTo.protect(true),
+  emailVerifyCodeValidator,
+  emailVerifyCode
+);
+
+router.get(
+  "/mydata",
+  protect_allowedTo.protect(),
+  getMyData,
+);
+
+router.put(
+  "/updatemydata",
+  protect_allowedTo.protect(),
+  uploadUserImages,
+  resizeUserImages,
+  updateMyDataValidator,
+  updateMyData
+);
+
+router.put(
+  "/changemypassword",
+  protect_allowedTo.protect(),
+  changeMyPasswordValidator,
+  changeMyPassword
+);
+
+router.put(
+  "/changemyemail",
+  protect_allowedTo.protect(true),
+  changeMyEmailValidator,
+  changeMyEmail
+);
+
+/*
+  ##################################################
+*/
+
 router.use(
-  authService.protect,
-  authService.allowedTo("admin"),
+  protect_allowedTo.protect(),
+  protect_allowedTo.allowedTo("admin"),
 );
 
 router
@@ -61,6 +120,12 @@ router.put(
   "/changepassword/:id",
   changeUserPasswordValidator,
   changeUserPassword
+);
+
+router.put(
+  "/userblock/:id",
+  userBlockValidator,
+  userBlock,
 );
 
 module.exports = router;

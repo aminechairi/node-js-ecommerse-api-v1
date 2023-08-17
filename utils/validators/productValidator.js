@@ -2,9 +2,9 @@ const { check } = require("express-validator");
 const validatorMiddleware = require("../../middlewares/validatorMiddleware");
 const slugify = require("slugify");
 
-const categoryMudel = require(`../../models/categoryModel`);
-const subCategoryMudel = require("../../models/subCategoryModel");
-const brandMudel = require("../../models/brandModel");
+const categoryModel = require(`../../models/categoryModel`);
+const subCategoryModel = require("../../models/subCategoryModel");
+const brandModel = require("../../models/brandModel");
 
 exports.createProductValidator = [
   check("title")
@@ -75,7 +75,7 @@ exports.createProductValidator = [
     .withMessage("Invalid ID formate")
     .custom(async (value, { req }) => {
       const ObjectId = req.body.category;
-      const category = await categoryMudel.findById(ObjectId);
+      const category = await categoryModel.findById(ObjectId);
       if (category) {
         return true;
       } else {
@@ -89,7 +89,7 @@ exports.createProductValidator = [
     .withMessage("Invalid ID formate")
     .custom(async (subcategoriesIds) => {
       if (subcategoriesIds.length > 0) {
-        const subcategories = await subCategoryMudel.find({
+        const subcategories = await subCategoryModel.find({
           _id: { $in: subcategoriesIds },
         });
         if (subcategories.length !== subcategoriesIds.length) {
@@ -107,7 +107,7 @@ exports.createProductValidator = [
     })
     .custom(async (subcategoriesIds, { req }) => {
       // step 1
-      const subcategories = await subCategoryMudel.find({
+      const subcategories = await subCategoryModel.find({
         category: req.body.category,
       });
 
@@ -133,7 +133,7 @@ exports.createProductValidator = [
     .withMessage("Invalid ID formate")
     .custom(async (value, { req }) => {
       const ObjectId = req.body.brand;
-      const brand = await brandMudel.findById(ObjectId);
+      const brand = await brandModel.findById(ObjectId);
       if (brand) {
         return true;
       } else {
@@ -182,7 +182,7 @@ exports.updateProductValidator = [
     .withMessage("Invalid ID formate")
     .custom(async (value, { req }) => {
       const ObjectId = req.body.category;
-      const category = await categoryMudel.findById(ObjectId);
+      const category = await categoryModel.findById(ObjectId);
       if (category) {
         return true;
       } else {
@@ -196,7 +196,7 @@ exports.updateProductValidator = [
     .withMessage("Invalid ID formate")
     .custom(async (subcategoriesIds) => {
       if (subcategoriesIds.length > 0) {
-        const subcategories = await subCategoryMudel.find({
+        const subcategories = await subCategoryModel.find({
           _id: { $in: subcategoriesIds },
         });
         if (subcategories.length !== subcategoriesIds.length) {
@@ -214,7 +214,7 @@ exports.updateProductValidator = [
     })
     .custom(async (subcategoriesIds, { req }) => {
       // step 1
-      const subcategories = await subCategoryMudel.find({
+      const subcategories = await subCategoryModel.find({
         category: req.body.category,
       });
 
@@ -240,7 +240,7 @@ exports.updateProductValidator = [
     .withMessage("Invalid ID formate")
     .custom(async (value, { req }) => {
       const ObjectId = req.body.brand;
-      const brand = await brandMudel.findById(ObjectId);
+      const brand = await brandModel.findById(ObjectId);
       if (brand) {
         return true;
       } else {

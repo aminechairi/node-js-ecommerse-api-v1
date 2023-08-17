@@ -10,8 +10,7 @@ const {
   getAll,
 } = require("./handlersFactory");
 const { uploadSingleImage } = require("../middlewares/uploadImageMiddleware");
-
-const brandMudel = require("../models/brandModel");
+const brandModel = require("../models/brandModel");
 
 // Upload single image
 exports.uploadBrandImage = uploadSingleImage("image");
@@ -34,24 +33,24 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
 // @desc Get List of brands
 // @route GET /api/v1/brands
 // @access Public 
-exports.getBrands = getAll(brandMudel);
+exports.getBrands = getAll(brandModel);
 
 // @desc Get brand by id
 // @route GET /api/v1/brands/:id
 // @access Public
-exports.getBrand = getOne(brandMudel);
+exports.getBrand = getOne(brandModel);
 
 // @desc Create brand
 // @route POST /api/v1/brand
-// @access Private admine & manager
-exports.createBrand = createOne(brandMudel);
+// @access Private
+exports.createBrand = createOne(brandModel);
 
-// @desc Update specific Brand
+// @desc Update Brand by id
 // @route PUT /api/v1/brands/:id
-// @access Private admine & manager
-exports.updateBrand = updateOne(brandMudel);
+// @access Private
+exports.updateBrand = updateOne(brandModel);
 
-// @desc Delete specific brand
+// @desc Delete brand by id
 // @route DELETE /api/v1/brand/:id
-// @access Private admine
-exports.deleteBrand = deleteOne(brandMudel);
+// @access Private
+exports.deleteBrand = deleteOne(brandModel);

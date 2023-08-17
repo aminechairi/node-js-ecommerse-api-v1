@@ -12,7 +12,7 @@ const {
 const {
   uploadMultipleImages,
 } = require("../middlewares/uploadImageMiddleware");
-const productMudel = require("../models/productModel");
+const productModel = require("../models/productModel");
 
 // Upload multiple images
 exports.uploadProductImages = uploadMultipleImages([
@@ -61,24 +61,24 @@ exports.resizeProductImages = asyncHandler(async (req, res, next) => {
 // @desc Get list of products
 // @route GET /api/v1/products
 // @access Public
-exports.getProducts = getAll(productMudel, `Product`);
+exports.getProducts = getAll(productModel, `Product`);
 
 // @desc Get product by id
 // @route GET /api/v1/products/:id
 // @access Public
-exports.getProduct = getOne(productMudel);
+exports.getProduct = getOne(productModel);
 
 // @desc Create product
 // @route POST /api/v1/products
-// @access Private admine & manager
-exports.createProduct = createOne(productMudel);
+// @access Private
+exports.createProduct = createOne(productModel);
 
-// @desc Update specific product
+// @desc Update product by id
 // @route PUT /api/v1/products/:id
-// @access Private admine & manager
-exports.updateProduct = updateOne(productMudel);
+// @access Private
+exports.updateProduct = updateOne(productModel);
 
-// @desc Delete specific Product
+// @desc Delete Product by id
 // @route DELETE /api/v1/products/:id
-// @access Private admine
-exports.deleteProduct = deleteOne(productMudel);
+// @access Private
+exports.deleteProduct = deleteOne(productModel);

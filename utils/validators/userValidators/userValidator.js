@@ -1,14 +1,11 @@
 const { check } = require("express-validator");
-const validatorMiddleware = require("../../middlewares/validatorMiddleware");
+const validatorMiddleware = require("../../../middlewares/validatorMiddleware");
 const slugify = require("slugify");
-const bcrypt = require("bcryptjs");
 
-const userMudel = require("../../models/userModel");
+const userModel = require("../../../models/userModel");
 
 exports.getUserValidator = [
-  check(`id`)
-    .isMongoId()
-    .withMessage(`Invalid user id format`),
+  check(`id`).isMongoId().withMessage(`Invalid user id format`),
   validatorMiddleware,
 ];
 
@@ -43,12 +40,17 @@ exports.createUserValidator = [
     .isEmail()
     .withMessage("Please provide a valid email address")
     .custom(async (val) => {
-      const user = await userMudel.findOne({ email: val });
+      const user = await userModel.findOne({ email: val });
       if (user) {
         throw new Error("E-mail already in user");
       }
       return true;
     }),
+
+  check("emailVerify")
+    .notEmpty()
+    .withMessage("Email verify is required")
+    .isBoolean(),
 
   check("phone")
     .notEmpty()
@@ -95,9 +97,7 @@ exports.createUserValidator = [
 ];
 
 exports.updateUserValidator = [
-  check(`id`)
-    .isMongoId()
-    .withMessage(`Invalid user id format`),
+  check(`id`).isMongoId().withMessage(`Invalid user id format`),
 
   check("firstName")
     .optional()
@@ -140,12 +140,16 @@ exports.updateUserValidator = [
     .isEmail()
     .withMessage("Please provide a valid email address")
     .custom(async (val) => {
-      const user = await userMudel.findOne({ email: val });
+      const user = await userModel.findOne({ email: val });
       if (user) {
         throw new Error("E-mail already in user");
       }
       return true;
     }),
+
+  check("emailVerify")
+    .optional()
+    .isBoolean(),
 
   check("phone")
     .optional()
@@ -181,22 +185,7 @@ exports.changeUserPasswordValidator = [
     .notEmpty()
     .withMessage("Current password is required")
     .isString()
-    .trim()
-    .custom(async (val, { req }) => {
-      // 1) Verify current password
-      const user = await userMudel.findById(req.params.id);
-      if (!user) {
-        throw new Error("There is no user for this id");
-      }
-      const isCorrectPassword = await bcrypt.compare(
-        req.body.currentPassword,
-        user.password
-      );
-      if (!isCorrectPassword) {
-        throw new Error("Incorrect current password");
-      }
-      return true;
-    }),
+    .trim(),
 
   check("newPassword")
     .notEmpty()
@@ -215,6 +204,19 @@ exports.changeUserPasswordValidator = [
       }
       return true;
     }),
+
+  validatorMiddleware,
+];
+
+exports.userBlockValidator = [
+  check(`id`)
+    .isMongoId()
+    .withMessage(`Invalid user id format`),
+
+  check("userBlock")
+    .notEmpty()
+    .withMessage("User block is required")
+    .isBoolean(),
 
   validatorMiddleware,
 ];

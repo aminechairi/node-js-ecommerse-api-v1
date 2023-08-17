@@ -34,15 +34,15 @@ exports.getSubCategory = getOne(subCategoryModel);
 
 // @desc Create subCategory
 // @route POST /api/v1/subcategories
-// @access Private admine & manager
+// @access Private
 exports.createSubCategory = createOne(subCategoryModel);
 
-// @desc Update specific subCategory
+// @desc Update subCategory by id
 // @route PUT /api/v1/subcategories/:id
-// @access Private admine & manager
+// @access Private
 exports.updateSubCategory = updateOne(subCategoryModel);
 
-// @desc Delete specific subcategory
+// @desc Delete subcategory by id
 // @route DELETE /api/v1/subcategories/:id
-// @access Private admine
+// @access Private 
 exports.deleteSubCategory = deleteOne(subCategoryModel);
