@@ -19,6 +19,7 @@ const subCategorySchema = new mongoose.Schema(
       ref: `Category`,
       required: [true, `subCategory must be belong to parent category`],
     },
+    image: String,
   },
   { timestamps: true }
 );
@@ -30,6 +31,23 @@ subCategorySchema.pre("find", function(next) {
     select: "name -_id",
   });
   next();
+});
+
+const setImageUrl = (doc) => {
+  if (doc.image) {
+    const imageUrl = `${process.env.BASE_URL}/subCategories/${doc.image}`;
+    doc.image = imageUrl;
+  }
+};
+
+// findOne, findAll, update, delete
+subCategorySchema.post("init", function (doc) {
+  setImageUrl(doc);
+});
+
+// create
+subCategorySchema.post("save", function (doc) {
+  setImageUrl(doc);
 });
 
 const subCategoryMudel = mongoose.model(`subCategory`, subCategorySchema);

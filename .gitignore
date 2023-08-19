@@ -1,6 +1,8 @@
 /node_modules
 /config.env
-/uploads/brands
+
 /uploads/categories
+/uploads/subCategories
 /uploads/products
+/uploads/brands
 /uploads/users

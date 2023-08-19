@@ -25,7 +25,9 @@ exports.createCategoryValidator = [
 ];
 
 exports.updateCategoryValidator = [
-  check(`id`).isMongoId().withMessage(`Invalid category id format`),
+  check(`id`)
+    .isMongoId()
+    .withMessage(`Invalid category id format`),
   check("name")
     .optional()
     .isLength({ min: 3 })

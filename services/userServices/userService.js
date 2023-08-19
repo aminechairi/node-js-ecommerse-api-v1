@@ -91,7 +91,7 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
   // Check if the user is an admin
   if (userCheck.role === "admin") {
     return next(
-      new ApiError(`This user cannot be updated because is an asmin`, 404)
+      new ApiError(`This user cannot be updated because is an admin`, 404)
     );
   }
   const document = await userModel.findByIdAndUpdate(
