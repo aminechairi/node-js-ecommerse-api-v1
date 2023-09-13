@@ -15,6 +15,9 @@ const brandRoutes = require("./routes/brandRoute");
 const productRoutes = require("./routes/productRoute");
 const userRoutes = require("./routes/userRoute");
 const authRoutes = require("./routes/authRoute");
+const reviewRoutes = require("./routes/reviewRoute");
+const wishListRoutes = require("./routes/wishlistRoute");
+const addressRoutes = require("./routes/addressRoute");
 
 // dbConnection
 dbConection();
@@ -40,6 +43,9 @@ app.use(`/api/v1/brands`, brandRoutes);
 app.use(`/api/v1/products`, productRoutes);
 app.use(`/api/v1/users`, userRoutes);
 app.use(`/api/v1/auth`, authRoutes);
+app.use(`/api/v1/reviews`, reviewRoutes);
+app.use(`/api/v1/wishlist`, wishListRoutes);
+app.use(`/api/v1/addresses`, addressRoutes);
 
 app.all(`*`, (req, res, next) => {
   next(new ApiErrore(`can't find this rout: ${req.originalUrl}`, 400));
@@ -62,4 +68,4 @@ process.on("unhandledRejection", (err) => {
     console.log("Shutting down...");
     process.exit(1);
   });
-}); 
+});

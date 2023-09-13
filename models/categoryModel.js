@@ -36,6 +36,6 @@ categorySchema.post("save", function (doc) {
   setImageUrl(doc);
 });
 
-const CategoryMudel = mongoose.model(`Category`, categorySchema);
+const categoryModel = mongoose.model(`Category`, categorySchema);
 
-module.exports = CategoryMudel;
+module.exports = categoryModel;

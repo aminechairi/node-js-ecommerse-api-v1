@@ -16,8 +16,17 @@ const {
   resizeProductImages,
 } = require('../services/productService');
 const protect_allowedTo = require("../services/authServises/protect&allowedTo");
+const productsRoute = require("./reviewRoute");
 
 const router = express.Router();
+
+// POST   /products/:productId/reviews
+// GET    /products/:productId/reviews
+// GET    /products/:productId/reviews/reviewId
+router.use(
+    "/:productId/reviews",
+    productsRoute
+  );
 
 router
   .route("/")

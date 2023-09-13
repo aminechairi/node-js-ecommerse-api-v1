@@ -50,6 +50,6 @@ subCategorySchema.post("save", function (doc) {
   setImageUrl(doc);
 });
 
-const subCategoryMudel = mongoose.model(`subCategory`, subCategorySchema);
+const subCategoryModel = mongoose.model(`subCategory`, subCategorySchema);
 
-module.exports = subCategoryMudel;
+module.exports = subCategoryModel;

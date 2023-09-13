@@ -70,6 +70,45 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // child reference (one to many)
+    wishlist: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: "Product",
+      },
+    ],
+    addressesList: [
+      {
+        id: mongoose.Schema.Types.ObjectId,
+        alias: {
+          type: String,
+          required: [true, "Alias is required"],
+          trim: true,
+          minlength: [2, "Too short alias"],
+          maxlength: [32, "Too long alias"],
+        },
+        details: {
+          type: String,
+          required: [true, "Details is required"],
+          trim: true,
+          minlength: [8, "Too short details"],
+        },
+        phone: {
+          type: String,
+          required: [true, "Phone number is required"],
+        },
+        city: {
+          type: String,
+          required: [true, "City is required"],
+          trim: true,
+        },
+        postalCode: {
+          type: String,
+          required: [true, "Postal code is required"],
+          trim: true,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );

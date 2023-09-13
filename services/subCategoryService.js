@@ -30,12 +30,6 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
   next();
 });
 
-exports.setCategoryIdToBody = (req, res, next) => {
-  // Nested route (Create)
-  if (!req.body.category) req.body.category = req.params.categoryId;
-  next();
-};
-
 // Nested route
 // GET /api/v1/categories/:categoryId/subcategories
 exports.createFilterObj = (req, res, next) => {
@@ -54,6 +48,12 @@ exports.getSubCategories = getAll(subCategoryModel);
 // @route GET /api/v1/subcategories/:id
 // @access Public
 exports.getSubCategory = getOne(subCategoryModel);
+
+exports.setCategoryIdToBody = (req, res, next) => {
+  // Nested route (Create)
+  if (!req.body.category) req.body.category = req.params.categoryId;
+  next();
+};
 
 // @desc Create subCategory
 // @route POST /api/v1/subcategories
