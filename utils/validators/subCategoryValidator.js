@@ -22,7 +22,7 @@ exports.getSubCategoriesValidator = [
 exports.createSubCategoryValidator = [
   check("name")
     .notEmpty()
-    .withMessage("subCategory required")
+    .withMessage("subCategory name is required")
     .isLength({ min: 2 })
     .withMessage("Too short subcategory name")
     .isLength({ max: 32 })
@@ -55,7 +55,7 @@ exports.updateSubCategoryValidator = [
 
   check("name")
     .notEmpty()
-    .withMessage("subCategory is required")
+    .withMessage("subCategory name is required")
     .isLength({ min: 2 })
     .withMessage("Too short subcategory name")
     .isLength({ max: 32 })
