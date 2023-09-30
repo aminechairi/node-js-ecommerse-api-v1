@@ -9,6 +9,7 @@ const {
 const {
   getProducts,
   getProduct,
+  editeReqBody,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -38,6 +39,7 @@ router
     uploadProductImages,
     resizeProductImages,
     createProductValidator,
+    editeReqBody,
     createProduct
   );
 
@@ -52,6 +54,7 @@ router
     uploadProductImages,
     resizeProductImages,
     updateProductValidator,
+    editeReqBody,
     updateProduct
   )
   .delete(

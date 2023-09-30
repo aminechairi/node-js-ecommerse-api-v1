@@ -4,34 +4,39 @@ const subCategorySchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      trim: String,
-      required: [true, "subCategory is required"],
-      unique: true,
-      minlength: [2, `To short subCategor name`],
-      maxlength: [32, `To long subCategor name`],
+      required: [true, "Sub ategory name is required."],
+      trim: true,
+      minlength: [3, "Too short sub category name."],
+      maxlength: [32, "Too long sub category name."],
     },
     slug: {
       type: String,
+      required: [true, "Sub category slug is required."],
+      trim: true,
       lowercase: true,
     },
     category: {
       type: mongoose.Schema.ObjectId,
       ref: `Category`,
-      required: [true, `subCategory must be belong to parent category`],
+      required: [true, "Sub category must be belong to category."],
     },
-    image: String,
+    image: {
+      type: String,
+      required: [true, "sub category image is required."],
+      trim: true,
+    },
   },
   { timestamps: true }
 );
 
 // mongoose query middleware
-subCategorySchema.pre("find", function(next) {
-  this.populate({
-    path: "category",
-    select: "name -_id",
-  });
-  next();
-});
+// subCategorySchema.pre("find", function(next) {
+//   this.populate({
+//     path: "category",
+//     select: "name -_id",
+//   });
+//   next();
+// });
 
 const setImageUrl = (doc) => {
   if (doc.image) {
@@ -50,6 +55,4 @@ subCategorySchema.post("save", function (doc) {
   setImageUrl(doc);
 });
 
-const subCategoryModel = mongoose.model(`subCategory`, subCategorySchema);
-
-module.exports = subCategoryModel;
+module.exports = mongoose.model(`subCategory`, subCategorySchema);

@@ -17,7 +17,7 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
   const user = await userModel.findOne({ email: req.body.email });
   if (!user) {
     return next(
-      new ApiError(`There is no user with that email ${req.body.email}`, 404)
+      new ApiError(`There is no user with that email ${req.body.email}.`, 404)
     );
   };
 
@@ -62,7 +62,7 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
   try {
     await sendEmail({
       email: user.email,
-      subject: "Your password reset code (valid for 10 min)",
+      subject: "Your password reset code (valid for 10 min).",
       message,
     });
   } catch (err) {
@@ -76,12 +76,12 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
         passwordResetVerified: null,
       }
     );
-    return next(new ApiError("There is an error in sending email", 500));
+    return next(new ApiError("There is an error in sending email.", 500));
   };
 
   res
     .status(200)
-    .json({ status: "Success", message: "Reset code sent to email" });
+    .json({ status: "Success", message: "Reset code sent to email." });
 });
 
 // @desc    Verify password reset code
@@ -99,7 +99,7 @@ exports.verifyPassResetCode = asyncHandler(async (req, res, next) => {
     passwordResetExpires: { $gt: Date.now() },
   });
   if (!user) {
-    return next(new ApiError('Reset code invalid or expired'));
+    return next(new ApiError('Reset code invalid or expired.'));
   };
 
   // 2) Reset code valid
@@ -125,13 +125,13 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
   const document = await userModel.findOne({ email: req.body.email });
   if (!document) {
     return next(
-      new ApiError(`There is no user with email ${req.body.email}`, 404)
+      new ApiError(`There is no user with email ${req.body.email}.`, 404)
     );
   }
 
   // 2) Check if reset code verified
   if (!document.passwordResetVerified) {
-    return next(new ApiError('Reset code not verified', 400));
+    return next(new ApiError('Reset code not verified.', 400));
   };
 
   await userModel.updateOne(

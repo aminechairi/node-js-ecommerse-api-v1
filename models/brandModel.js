@@ -4,16 +4,23 @@ const brandSchema = mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, "Brand required"],
+      required: [true, "Brand name is required."],
       unique: true,
-      minlength: [2, "Too short brand name"],
-      maxlength: [32, "Too long brand name"],
+      trim: true,
+      minlength: [3, "Too short brand name."],
+      maxlength: [32, "Too long brand name."],
     },
     slug: {
       type: String,
+      required: [true, "Brand slug is required."],
+      trim: true,
       lowercase: true,
     },
-    image: String,
+    image: {
+      type: String,
+      required: [true, "Brand image is required."],
+      trim: true,
+    },
   },
   { timestamps: true }
 );

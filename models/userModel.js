@@ -5,29 +5,29 @@ const userSchema = new mongoose.Schema(
   {
     firstName: {
       type: String,
-      required: [true, "First name is required"],
+      required: [true, "First name is required."],
       trim: true,
-      minlength: [3, "Too short frist name"],
-      maxlength: [16, "Too long frist name"],
+      minlength: [3, "Too short frist name."],
+      maxlength: [16, "Too long frist name."],
     },
     lastName: {
       type: String,
-      required: [true, "Last name is required"],
+      required: [true, "Last name is required."],
       trim: true,
-      minlength: [2, "Too short last name"],
-      maxlength: [16, "Too long last name"],
+      minlength: [2, "Too short last name."],
+      maxlength: [16, "Too long last name."],
     },
     slug: {
       type: String,
-      required: [true, "Slug is required"],
+      required: [true, "Slug is required."],
       trim: true,
     },
     email: {
       type: String,
-      required: [true, "Email is required"],
+      required: [true, "Email is required."],
       unique: true,
       trim: true,
-      match: [/^\S+@\S+\.\S+$/, "Please provide a valid email address"],
+      match: [/^\S+@\S+\.\S+$/, "Please provide a valid email address."],
     },
     emailVerify: {
       type: Boolean,
@@ -37,7 +37,7 @@ const userSchema = new mongoose.Schema(
     emailVerifyCodeExpires: Date,
     phone: {
       type: String,
-      required: [true, "Phone number is required"],
+      required: [true, "Phone number is required."],
       trim: true,
     },
     profileImage: {
@@ -50,8 +50,8 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, "Password is required"],
-      minlength: [8, "Password should be at least 8 characters long"],
+      required: [true, "Password is required."],
+      minlength: [8, "Password should be at least 8 characters long."],
     },
     passwordChangedAt: Date,
     passwordResetCode: String,
@@ -68,7 +68,7 @@ const userSchema = new mongoose.Schema(
     },
     userBlock: {
       type: Boolean,
-      default: true,
+      default: false,
     },
     // child reference (one to many)
     wishlist: [
@@ -82,29 +82,32 @@ const userSchema = new mongoose.Schema(
         id: mongoose.Schema.Types.ObjectId,
         alias: {
           type: String,
-          required: [true, "Alias is required"],
+          required: [true, "Alias is required."],
           trim: true,
-          minlength: [2, "Too short alias"],
-          maxlength: [32, "Too long alias"],
+          minlength: [2, "Too short alias."],
+          maxlength: [32, "Too long alias."],
         },
         details: {
           type: String,
-          required: [true, "Details is required"],
+          required: [true, "Details is required."],
           trim: true,
-          minlength: [8, "Too short details"],
+          minlength: [8, "Too short details."],
+          maxlength: [64, "Too long details."]
         },
         phone: {
           type: String,
-          required: [true, "Phone number is required"],
+          required: [true, "Phone number is required."],
         },
         city: {
           type: String,
-          required: [true, "City is required"],
+          required: [true, "City is required."],
           trim: true,
+          minlength: [2, "Too short city."],
+          maxlength: [32, "Too long city."],
         },
         postalCode: {
           type: String,
-          required: [true, "Postal code is required"],
+          required: [true, "Postal code is required."],
           trim: true,
         },
       },

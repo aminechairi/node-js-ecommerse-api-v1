@@ -6,6 +6,7 @@ const reviewSchema = new mongoose.Schema(
     title: {
       type: String,
       trim: true,
+      maxlength: [200, "Too long review title."],
     },
     ratings: {
       type: Number,

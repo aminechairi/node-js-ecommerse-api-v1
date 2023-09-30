@@ -4,17 +4,23 @@ const categorySchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, "Category required"],
+      required: [true, "Category name is required."],
       unique: true,
-      minlength: [3, "Too short category name"],
-      maxlength: [32, "Too long category name"],
+      trim: true,
+      minlength: [3, "Too short category name."],
+      maxlength: [32, "Too long category name."],
     },
-    // A and B => shoping.com/a-and-b
     slug: {
       type: String,
+      required: [true, "Category slug is required."],
+      trim: true,
       lowercase: true,
     },
-    image: String,
+    image: {
+      type: String,
+      required: [true, "Category image is required."],
+      trim: true,
+    },
   },
   { timestamps: true }
 );
@@ -36,6 +42,4 @@ categorySchema.post("save", function (doc) {
   setImageUrl(doc);
 });
 
-const categoryModel = mongoose.model(`Category`, categorySchema);
-
-module.exports = categoryModel;
+module.exports = mongoose.model(`Category`, categorySchema);

@@ -18,7 +18,7 @@ exports.protect = (emailVerify = false) =>
     if (!token) {
       return next(
         new ApiError(
-          "You are not login, Please login to get access this route",
+          "You are not login, Please login to get access this route.",
           401
         )
       );
@@ -32,7 +32,7 @@ exports.protect = (emailVerify = false) =>
     if (!currentUser) {
       return next(
         new ApiError(
-          "The user that belong to this token does no longer exist",
+          "The user that belong to this token does no longer exist.",
           401
         )
       );
@@ -51,7 +51,7 @@ exports.protect = (emailVerify = false) =>
     };
 
     // 5) Check user if block
-    if (!currentUser.userBlock) {
+    if (currentUser.userBlock) {
       return next(
         new ApiError(
           "The user has been banned.",
@@ -89,7 +89,7 @@ exports.allowedTo = (...roles) =>
     // 2) access registered user (req.user.role)
     if (!roles.includes(req.user.role)) {
       return next(
-        new ApiError("You are not allowed to access this route", 403)
+        new ApiError("You are not allowed to access this route.", 403)
       );
     }
     next();

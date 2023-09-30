@@ -9,7 +9,6 @@ exports.addAddressToAddresseslistValidator = [
     .withMessage("Alias is required.")
     .isString()
     .withMessage("Alias must be a string.")
-    .trim()
     .isLength({ min: 2 })
     .withMessage("Too short alias.")
     .isLength({ max: 32 })
@@ -29,7 +28,6 @@ exports.addAddressToAddresseslistValidator = [
     .withMessage("Details is required.")
     .isString()
     .withMessage("Details must be a string.")
-    .trim()
     .isLength({ min: 8 })
     .withMessage("Too short details.")
     .isLength({ max: 64 })
@@ -40,7 +38,6 @@ exports.addAddressToAddresseslistValidator = [
     .withMessage("Phone number is required.")
     .isString()
     .withMessage("Phone must be a string.")
-    .trim()
     .isMobilePhone(["ar-MA"])
     .withMessage("Invalid phone number only accepted Morocco Phone numbers."),
 
@@ -48,27 +45,27 @@ exports.addAddressToAddresseslistValidator = [
     .notEmpty()
     .withMessage("City is require.d.")
     .isString()
-    .withMessage("City must be a strin.g.")
-    .trim()
+    .withMessage("City must be a string.")
     .isLength({ min: 3 })
-    .withMessage("Too short cit.y.")
+    .withMessage("Too short city.")
     .isLength({ max: 32 })
-    .withMessage("Too long cit.y."),
+    .withMessage("Too long city."),
 
   check("postalCode")
     .notEmpty()
     .withMessage("Postal code is required.")
     .isString()
     .withMessage("Postal code must be a string.")
-    .trim()
     .matches(/^\d{5}$/)
     .withMessage("Postal code must be exactly 5 digits."),
+
   validatorMiddleware,
 ];
 
 exports.removeAddressFromAddresseslistValidator = [
-    check(`addressId`)
+    check("addressId")
     .isMongoId()
-    .withMessage(`Invalid address id format.`),
+    .withMessage("Invalid address id format."),
+
   validatorMiddleware,
 ];

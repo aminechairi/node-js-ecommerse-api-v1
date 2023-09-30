@@ -6,7 +6,7 @@ const productModel = require("../../models/productModel");
 exports.addProductToWishlistValidator = [
   check("productId")
     .isMongoId()
-    .withMessage(`Invalid productId format`)
+    .withMessage(`Invalid product id format`)
     .custom(async (val, { req }) => {
       const product = await productModel.findById(val);
       if (!product) {
@@ -20,6 +20,7 @@ exports.addProductToWishlistValidator = [
 exports.removeProductFromWishlisttValidator = [
   check("productId")
     .isMongoId()
-    .withMessage(`Invalid productId format`),
+    .withMessage(`Invalid product id format.`),
+
   validatorMiddleware,
 ];

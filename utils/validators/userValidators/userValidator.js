@@ -5,16 +5,19 @@ const slugify = require("slugify");
 const userModel = require("../../../models/userModel");
 
 exports.getUserValidator = [
-  check(`id`).isMongoId().withMessage(`Invalid user id format`),
+  check("id")
+    .isMongoId()
+    .withMessage("Invalid user id format."),
+
   validatorMiddleware,
 ];
 
 exports.createUserValidator = [
   check("firstName")
     .notEmpty()
-    .withMessage("First name is required")
+    .withMessage("First name is required.")
     .isString()
-    .trim()
+    .withMessage("First name must be of type string.")
     .isLength({ min: 3, max: 16 })
     .withMessage("First name should be between 3 and 16 characters"),
 
@@ -22,7 +25,7 @@ exports.createUserValidator = [
     .notEmpty()
     .withMessage("Last name is required")
     .isString()
-    .trim()
+    .withMessage("Last name must be of type string.")
     .isLength({ min: 2, max: 16 })
     .withMessage("Last name should be between 2 and 16 characters")
     .custom((value, { req }) => {
@@ -34,56 +37,59 @@ exports.createUserValidator = [
 
   check("email")
     .notEmpty()
-    .withMessage("Email is required")
+    .withMessage("Email is required.")
     .isString()
-    .trim()
+    .withMessage("Email must be of type string.")
     .isEmail()
-    .withMessage("Please provide a valid email address")
+    .withMessage("Please provide a valid email address.")
     .custom(async (val) => {
       const user = await userModel.findOne({ email: val });
       if (user) {
-        throw new Error("E-mail already in user");
+        throw new Error("E-mail already in user.");
       }
       return true;
     }),
 
   check("emailVerify")
     .notEmpty()
-    .withMessage("Email verify is required")
-    .isBoolean(),
+    .withMessage("Email verify is required.")
+    .isBoolean()
+    .withMessage("Email verify must be of type boolean."),
 
   check("phone")
     .notEmpty()
-    .withMessage("Phone number is required")
+    .withMessage("Phone number is required.")
     .isString()
-    .trim()
+    .withMessage("Phone must be of type string.")
     .isMobilePhone(["ar-MA"])
-    .withMessage("Invalid phone number only accepted Morocco Phone numbers"),
+    .withMessage("Invalid phone number only accepted Morocco Phone numbers."),
 
   check("profileImage")
     .optional({ checkFalsy: true }) // This field is optional
     .isString()
-    .trim(),
+    .withMessage("Profile image must be of type string."),
 
   check("profileCoverImage")
     .optional({ checkFalsy: true }) // This field is optional
     .isString()
-    .trim(),
+    .withMessage("Profile cover image must be of type string."),
 
   check("password")
     .notEmpty()
-    .withMessage("Password is required")
+    .withMessage("Password is required.")
     .isString()
-    .trim()
+    .withMessage("Password must be of type string.")
     .isLength({ min: 8 })
-    .withMessage("Password should be at least 8 characters long"),
+    .withMessage("Password should be at least 8 characters long."),
 
   check("passwordConfirm")
     .notEmpty()
-    .withMessage("Password confirm is required")
+    .withMessage("Password confirm is required.")
+    .isString()
+    .withMessage("Password confirm must be of type string.")
     .custom((value, { req }) => {
       if (value !== req.body.password) {
-        throw new Error("Password confirm dose not match password");
+        throw new Error("Password confirm dose not match password.");
       }
       return true;
     }),
@@ -91,18 +97,20 @@ exports.createUserValidator = [
   check("role")
     .optional({ checkFalsy: true }) // This field is optional
     .isIn(["user", "manager", "admin"])
-    .withMessage("Invalid role"),
+    .withMessage("Invalid role."),
 
   validatorMiddleware,
 ];
 
 exports.updateUserValidator = [
-  check(`id`).isMongoId().withMessage(`Invalid user id format`),
+  check("id")
+    .isMongoId()
+    .withMessage("Invalid user id format."),
 
   check("firstName")
     .optional()
     .isString()
-    .trim()
+    .withMessage("First name must be of type string.")
     .isLength({ min: 3, max: 16 })
     .withMessage("First name should be between 3 and 16 characters")
     .custom((value, { req }) => {
@@ -116,13 +124,13 @@ exports.updateUserValidator = [
   check("lastName")
     .optional()
     .isString()
-    .trim()
+    .withMessage("Last name must be of type string.")
     .isLength({ min: 2, max: 16 })
-    .withMessage("Last name should be between 2 and 16 characters")
+    .withMessage("Last name should be between 2 and 16 characters.")
     .custom((value, { req }) => {
       const frisrName = req.body.firstName;
       if (!frisrName) {
-        throw new Error("Please write frist name");
+        throw new Error("Please write frist name.");
       }
       return true;
     })
@@ -136,71 +144,74 @@ exports.updateUserValidator = [
   check("email")
     .optional()
     .isString()
-    .trim()
+    .withMessage("Email must be of type string.")
     .isEmail()
-    .withMessage("Please provide a valid email address")
+    .withMessage("Please provide a valid email address.")
     .custom(async (val) => {
       const user = await userModel.findOne({ email: val });
       if (user) {
-        throw new Error("E-mail already in user");
+        throw new Error("E-mail already in user.");
       }
       return true;
     }),
 
   check("emailVerify")
     .optional()
-    .isBoolean(),
+    .isBoolean()
+    .withMessage("Email verify must be of type boolean."),
 
   check("phone")
     .optional()
     .isString()
-    .trim()
+    .withMessage("Phone must be of type string.")
     .isMobilePhone(["ar-MA"])
-    .withMessage("Invalid phone number only accepted Morocco Phone numbers"),
+    .withMessage("Invalid phone number only accepted Morocco Phone numbers."),
 
   check("profileImage")
     .optional({ checkFalsy: true }) // This field is optional
     .isString()
-    .trim(),
+    .withMessage("Profile image must be of type string."),
 
   check("profileCoverImage")
     .optional({ checkFalsy: true }) // This field is optional
     .isString()
-    .trim(),
+    .withMessage("Profile cover image must be of type string."),
 
   check("role")
     .optional({ checkFalsy: true }) // This field is optional
     .isIn(["user", "manager", "admin"])
-    .withMessage("Invalid role"),
+    .withMessage("Invalid role."),
 
   validatorMiddleware,
 ];
 
 exports.changeUserPasswordValidator = [
-  check(`id`)
+  check("id")
     .isMongoId()
-    .withMessage(`Invalid user id format`),
+    .withMessage("Invalid user id format."),
 
   check("currentPassword")
     .notEmpty()
-    .withMessage("Current password is required")
+    .withMessage("Current password is required.")
     .isString()
-    .trim(),
+    .withMessage("Current password must be of type string."),
 
   check("newPassword")
     .notEmpty()
-    .withMessage("New password is required")
+    .withMessage("New password is required.")
     .isString()
-    .trim()
+    .withMessage("New password must be of type string.")
     .isLength({ min: 8 })
-    .withMessage("New password should be at least 8 characters long"),
+    .withMessage("New password should be at least 8 characters long."),
 
   check("newPasswordConfirm")
     .notEmpty()
-    .withMessage("New password confirm is required")
+    .withMessage("New password confirm is required.")
+    .isString()
+    .withMessage("New password confirm must be of type string.")
     .custom((value, { req }) => {
       if (value !== req.body.newPassword) {
-        throw new Error("New password confirm dose not match new password");
+        throw new Error("New password confirm dose not match new password.");
       }
       return true;
     }),
@@ -209,21 +220,23 @@ exports.changeUserPasswordValidator = [
 ];
 
 exports.userBlockValidator = [
-  check(`id`)
+  check("id")
     .isMongoId()
-    .withMessage(`Invalid user id format`),
+    .withMessage("Invalid user id format."),
 
   check("userBlock")
     .notEmpty()
-    .withMessage("User block is required")
-    .isBoolean(),
+    .withMessage("User block is required.")
+    .isBoolean()
+    .withMessage("User block must be of type boolean."),
 
   validatorMiddleware,
 ];
 
 exports.deleteUserValidator = [
-  check(`id`)
+  check("id")
     .isMongoId()
-    .withMessage(`Invalid user id format`),
+    .withMessage("Invalid user id format"),
+
   validatorMiddleware,
 ];

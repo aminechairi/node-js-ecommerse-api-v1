@@ -2,55 +2,73 @@ const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema(
   {
+    uniqueName: {
+      type: String,
+      required: [true, "Product unique name is required."],
+      trim: true,
+      uppercase: true,
+      minlength: [3, "Too short product unique name."],
+      maxlength: [32, "Too long product unique name."],
+    },
     title: {
       type: String,
-      required: true,
+      required: [true, "Product title is required."],
       trim: true,
-      minlength: [3, "Too short product title"],
-      maxlength: [100, "Too long product title"],
+      minlength: [3, "Too short product title."],
+      maxlength: [200, "Too long product title."],
     },
     slug: {
       type: String,
-      required: true,
+      required: [true, "Product slug is required."],
+      trim: true,
       lowercase: true,
     },
     description: {
       type: String,
-      required: [true, "Product description is required"],
+      required: [true, "Product description is required."],
       trim: true,
-      minlength: [20, "Too short product description"],
+      minlength: [20, "Too short product description."],    
     },
     quantity: {
       type: Number,
-      required: [true, "Product quantity is required"],
+      required: [true, "Product quantity is required."],
+      min: [1, "Prodact quantity number cannot be less than 1."],
     },
     sold: {
       type: Number,
+      min: [0, "Prodact sold number cannot be less than 0."],
       default: 0,
     },
     price: {
       type: Number,
-      required: [true, "Product price is required"],
-      trim: true,
-      max: [200000, "Too long product price"],
+      required: [true, "Product price is required."],
+      min: [0, "Prodact price number cannot be less than 0."],
     },
     priceAfterDiscount: {
       type: Number,
+      min: [0, "Prodact price after discount number cannot be less than 0."],
     },
-    colors: {
-      type: [String],
+    color: {
+      type: String,
+      trim: true,
+      minlength: [3, "Too short product color name."],
+      maxlength: [32, "Too long product color name."],
     },
     imageCover: {
       type: String,
-      required: [true, "Product image cover is required"],
+      required: [true, "Product image cover is required."],
+      trim: true,
     },
-    images: {
-      type: [String],
-    },
+    images: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
     category: {
       type: mongoose.Schema.ObjectId,
       ref: "Category",
-      required: [true, "Product must belong to category"],
+      required: [true, "Product must belong to category."],
     },
     subcategories: [
       {
@@ -70,6 +88,7 @@ const productSchema = new mongoose.Schema(
     ratingsQuantity: {
       type: Number,
       default: 0,
+      min: 0,
     },
   },
   {
@@ -90,13 +109,12 @@ productSchema.virtual(
 );
 
 // mongoose query middleware
-productSchema.pre(/^find/, function(next) {
-  this.populate({
-    path: "category subcategories brand",
-    select: "name -_id",
-  })
-  next();
-});
+// productSchema.pre(/^find/, function(next) {
+//   this.populate({
+//     path: "category subcategories brand",
+//   })
+//   next();
+// });
 
 const setImageUrl = (doc) => {
   if (doc.imageCover) {

@@ -12,19 +12,8 @@ exports.loggedUserAddProductValidator = [
     .optional()
     .isNumeric()
     .withMessage("quantity must be of type number.")
-    .isFloat({ min: 1, })
-    .withMessage("Quantity number cannot be less than 1."),
-
-  check("color")
-    .notEmpty()
-    .withMessage("Color name is required.")
-    .isString()
-    .withMessage("Color name must be of type string.")
-    .trim()
-    .isLength({ min: 3 })
-    .withMessage("Too short color name.")
-    .isLength({ max: 32 })
-    .withMessage("Too long color name."),
+    .isInt({ min: 1, })
+    .withMessage("Prodact quantity number cannot be less than 1 and must be a integer number."),
 
   validatorMiddleware,
 ];
@@ -51,8 +40,8 @@ exports.loggedUserUpdateProductQuantityValidator = [
     .withMessage("quantity is required.")
     .isNumeric()
     .withMessage("quantity must be of type number.")
-    .isFloat({ min: 1, })
-    .withMessage("Quantity number cannot be less than 1."),
+    .isInt({ min: 1, })
+    .withMessage("Prodact quantity number cannot be less than 1 and must be a integer number."),
 
   validatorMiddleware,
 ];
