@@ -1,6 +1,5 @@
 const path = require("path");
 
-const mongoose = require("mongoose");
 const express = require("express");
 const dotenv = require("dotenv");
 const morgan = require("morgan");
@@ -10,13 +9,13 @@ const compression = require('compression');
 dotenv.config({path: "./config.env"});
 const ApiErrore = require("./utils/apiErrore");
 const globalErrore = require("./middlewares/erroreMiddleware");
-// const dbConection = require(`./config/database`);
+const dbConection = require(`./config/database`);
 
 // Routes
 const mountRoutes = require("./routes");
 
 // dbConnection
-// dbConection();
+dbConection();
 
 // express app
 const app = express();
@@ -49,22 +48,12 @@ app.all(`*`, (req, res, next) => {
 // Global error handling middleware
 app.use(globalErrore);
 
-// const PORT = process.env.PORT || 3000;
-// const server = app.listen(PORT, _ => {
-//   console.log(
-//     `app runnig on port ${PORT}`
-//   );
-// });
-
-  mongoose.connect("mongodb+srv://admin:admin2000@cluster0.isseznv.mongodb.net/udemy-ecommerse?retryWrites=true&w=majority").then((conn) => {
-    console.log(`database connected ${conn.connection.host}`);
-    const PORT = process.env.PORT || 3000;
-    const server = app.listen(PORT, _ => {
-      console.log(
-        `app runnig on port ${PORT}`
-      );
-    });
-  })
+const PORT = process.env.PORT || 3000;
+const server = app.listen(PORT, _ => {
+  console.log(
+    `app runnig on port ${PORT}`
+  );
+});
 
 // handle rejection outside express
 process.on("unhandledRejection", (err) => {
