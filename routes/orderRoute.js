@@ -1,12 +1,13 @@
 const express = require(`express`);
 
 const {
-  createCashOrder,
+  loggedUserCreateCashOrder,
   getOrders,
   filterOrderForLoggedUser,
   getOrder,
   updateOrderPaid,
-  updateOrderDelivered
+  updateOrderDelivered,
+  checkoutSession,
 } = require("../services/orderServise");
 const protect_allowedTo = require("../services/authServises/protect&allowedTo");
 
@@ -17,7 +18,7 @@ router
   .post(
     protect_allowedTo.protect(),
     protect_allowedTo.allowedTo("user"),
-    createCashOrder
+    loggedUserCreateCashOrder
   );
 
 router
@@ -53,4 +54,11 @@ router
     updateOrderDelivered
   );
 
+  router.get(
+    '/checkout-session/:cartId',
+    protect_allowedTo.protect(),
+    protect_allowedTo.allowedTo("user"),
+    checkoutSession,
+  );
+  
 module.exports = router;

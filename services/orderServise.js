@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const ApiError = require('../utils/apiErrore');
+const stripe = require('stripe')(`${process.env.SECRET_KEY}`);
 
 const {
   getAll,
@@ -7,24 +8,46 @@ const {
 const productModel = require('../models/productModel');
 const cartModel = require('../models/cartModel');
 const orderModel = require('../models/orderModel');
+const {
+  checkProductsIfDeletedOrVariable,
+  calcTotalCartPrice
+} = require("../utils/shoppingCartProcessing");
 
-// @desc    create cash order
+// @desc    Logget user create cash order
 // @route   POST /api/v1/orders/cartId
-// @access  Protected/User
-exports.createCashOrder = asyncHandler(async (req, res, next) => {
-  // 1) Get cart depend on cartId
-  const cart = await cartModel.findById(req.params.cartId);
+// @access  Pravite
+exports.loggedUserCreateCashOrder = asyncHandler(async (req, res, next) => {
+  const cartId = req.params.cartId;
+  // Get shopping cart depend on cartId
+  const cart = await cartModel.findById(cartId);
+  // Check shopping cart if available
   if (!cart) {
     return next(
-      new ApiError(`No cart for this id ${req.params.cartId}.`, 404)
+      new ApiError(`No cart for this id ${cartId}.`, 404)
     );
   };
+  // Save old shopping cart
+  const oldCart = JSON.stringify(cart);
+  // Check products if deleted or variable
+  checkProductsIfDeletedOrVariable(cart);
+  // Save new shopping cart
+  const newCart = JSON.stringify(cart);
+  // Comparison between old shopping cart and new shopping cart
+  if (oldCart !== newCart) {
+    // Calc total cart price 
+    calcTotalCartPrice(cart);
+    await cart.save();
+    return next(
+      new ApiError(`Sorry, the products you added to your cart are no longer available as requested.`, 404)
+    );
+  };
+  // Check shopping cart if varegh
   if (cart.cartItems.length === 0) {
     return next(
-      new ApiError(`This oredr is not valid.`, 404)
+      new ApiError(`This oredr is not valid.`, 401)
     );
   };
-  // 2) Create order with default paymentMethodType cash
+  // Create order with default paymentMethodType cash
   const order = await orderModel.create({
     user: req.user._id,
     cartItems: cart.cartItems,
@@ -36,7 +59,7 @@ exports.createCashOrder = asyncHandler(async (req, res, next) => {
     couponDiscount: cart.couponDiscount,
     totalPriceAfterDiscount: cart.totalPriceAfterDiscount,
   });
-  // 3) After creating order, decrement product quantity, increment product sold
+  // After creating order, decrement product quantity, increment product sold
   if (order) {
     const bulkOption = cart.cartItems.map((item) => ({
       updateOne: {
@@ -46,7 +69,7 @@ exports.createCashOrder = asyncHandler(async (req, res, next) => {
     }));
     await productModel.bulkWrite(bulkOption, {});
     // 5) Clear cart depend on cartId
-    await cartModel.findByIdAndDelete(req.params.cartId);
+    await cartModel.findByIdAndDelete(cartId);
   };
   res.status(201).json({
     status: 'success',
@@ -125,4 +148,63 @@ exports.updateOrderDelivered = asyncHandler(async (req, res, next) => {
   };
   const updatedOrder = await order.save();
   res.status(200).json({ status: 'success', data: updatedOrder });
+});
+
+// @desc    Get checkout session from stripe and send it as response
+// @route   GET /api/v1/orders/checkout-session/cartId
+// @access  Pravite
+exports.checkoutSession = asyncHandler(async (req, res, next) => {
+  const cartId = req.params.cartId;
+  // Get shopping cart depend on cartId
+  const cart = await cartModel.findById(cartId);
+  // Check shopping cart if available
+  if (!cart) {
+    return next(
+      new ApiError(`No cart for this id ${cartId}.`, 404)
+    );
+  };
+  // Save old shopping cart
+  const oldCart = JSON.stringify(cart);
+  // Check products if deleted or variable
+  checkProductsIfDeletedOrVariable(cart);
+  // Save new shopping cart
+  const newCart = JSON.stringify(cart);
+  // Comparison between old shopping cart and new shopping cart
+  if (oldCart !== newCart) {
+    // Calc total cart price 
+    calcTotalCartPrice(cart);
+    await cart.save();
+    return next(
+      new ApiError(`Sorry, the products you added to your cart are no longer available as requested.`, 404)
+    );
+  };
+  // Check shopping cart if varegh
+  if (cart.cartItems.length === 0) {
+    return next(
+      new ApiError(`This oredr is not valid.`, 401)
+    );
+  };
+
+  const price = cart.totalPriceAfterDiscount || cart.totalPrice;
+  const session = await stripe.checkout.sessions.create({
+    line_items: [
+      {
+        price_data: {
+          currency: 'usd',
+          unit_amount: price * 100,
+          product_data: {
+            name: `${req.user.firstName} ${req.user.lastName}`,
+          },
+        },
+        quantity: 1,
+      },
+    ],
+    mode: 'payment',
+    client_reference_id: req.params.cartId,
+    customer_email: req.user.email,
+    success_url: `${req.protocol}://${req.get('host')}/orders`,
+    cancel_url: `${req.protocol}://${req.get('host')}/cart`,
+  });
+  // send session to response
+  res.status(200).json({ status: 'success', session });
 });

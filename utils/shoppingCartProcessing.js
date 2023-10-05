@@ -1,0 +1,32 @@
+// Check products if deleted or variable
+exports.checkProductsIfDeletedOrVariable = (cart) => {
+  const cartItems = cart.cartItems.filter((item) => {
+    // if product deleted
+    if (item.product === null) item.product = { quantity: 0, };
+    return item.product.quantity >= 1;
+  });
+  cartItems.forEach((item) => {
+    item.product.quantity < item.quantity 
+    ? item.quantity = item.product.quantity
+    : item.quantity = item.quantity
+    item.price = item.product.priceAfterDiscount || item.product.price
+  });
+  cart.cartItems = cartItems;
+};
+
+// Calc total cart price
+exports.calcTotalCartPrice = (cart) => {
+  // app settings
+  const taxPrice = 0;
+  const shippingPrice = 0;
+  let totalPrice = 0;
+  cart.cartItems.forEach((item) => {
+    totalPrice += item.price * item.quantity;
+  });
+  cart.taxPrice = taxPrice;
+  cart.shippingPrice = shippingPrice;
+  cart.totalPrice = (totalPrice + taxPrice + shippingPrice).toFixed(2);
+  cart.couponName = undefined;
+  cart.couponDiscount = undefined;
+  cart.totalPriceAfterDiscount = undefined;
+};
