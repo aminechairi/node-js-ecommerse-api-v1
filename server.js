@@ -56,7 +56,7 @@ app.use(globalErrore);
 //   );
 // });
 
-  mongoose.connect(process.env.DB_URI).then((conn) => {
+  mongoose.connect("mongodb+srv://admin:admin2000@cluster0.isseznv.mongodb.net/udemy-ecommerse?retryWrites=true&w=majority").then((conn) => {
     console.log(`database connected ${conn.connection.host}`);
     const PORT = process.env.PORT || 3000;
     const server = app.listen(PORT, _ => {
