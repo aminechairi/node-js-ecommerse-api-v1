@@ -1,5 +1,3 @@
-const path = require("path");
-
 const sharp = require("sharp");
 const asyncHandler = require("express-async-handler");
 const { v4: uuidv4 } = require("uuid");
@@ -25,8 +23,7 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
       .resize(800, 800)
       .toFormat("jpeg")
       .jpeg({ quality: 90 })
-      .toFile(path.join(`uploads`, `categories`, `${fileName}`))
-      // .toFile(`uploads/categories/${fileName}`);
+      .toFile(`uploads/categories/${fileName}`);
     // Save image to Into Our db
     req.body.image = `${fileName}`;
   }
