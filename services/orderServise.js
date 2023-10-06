@@ -1,6 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const ApiError = require('../utils/apiErrore');
-const stripe = require('stripe')(`${process.env.SECRET_KEY}`);
+const stripe = require('stripe')(`${process.env.STRIPE_SECRET_KEY}`);
 
 const {
   getAll,
@@ -207,4 +207,26 @@ exports.checkoutSession = asyncHandler(async (req, res, next) => {
   });
   // send session to response
   res.status(200).json({ status: 'success', session });
+});
+
+// @desc    This webhook will run when stripe payment success paid
+// @route   POST /webhook-checkout
+// @access  Pravite
+exports.webhookCheckout = asyncHandler(async (req, res, next) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET_KEY
+    );
+  } catch (err) {
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+  if (event.type === 'checkout.session.completed') {
+    //  Create order
+    console.log(`Create oredr sucssusfuly.`);
+  }
+  res.status(200).json({ received: true });
 });
