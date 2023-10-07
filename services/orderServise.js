@@ -191,7 +191,7 @@ exports.checkoutSession = asyncHandler(async (req, res, next) => {
       {
         price_data: {
           currency: 'usd',
-          unit_amount: price * 100,
+          unit_amount: price,
           product_data: {
             name: `${req.user.firstName} ${req.user.lastName}`,
           },
