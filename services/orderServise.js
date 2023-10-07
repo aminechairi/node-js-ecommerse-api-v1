@@ -209,6 +209,42 @@ exports.checkoutSession = asyncHandler(async (req, res, next) => {
   res.status(200).json({ status: 'success', session });
 });
 
+// create order with card
+const createOrder = async (session) => {
+  console.log(session);
+  // const cart = cartModel.findById();
+
+  // // Create order with card
+  // const order = await orderModel.create({
+  //   user: req.user._id,
+  //   cartItems: cart.cartItems,
+  //   shippingAddress: req.body.shippingAddress,
+  //   taxPrice: cart.taxPrice,
+  //   shippingPrice: cart.shippingPrice,
+  //   totalPrice: cart.totalPrice,
+  //   couponName: cart.couponName,
+  //   couponDiscount: cart.couponDiscount,
+  //   totalPriceAfterDiscount: cart.totalPriceAfterDiscount,
+  // });
+  // // After creating order, decrement product quantity, increment product sold
+  // if (order) {
+  //   const bulkOption = cart.cartItems.map((item) => ({
+  //     updateOne: {
+  //       filter: { _id: item.product },
+  //       update: { $inc: { quantity: -item.quantity, sold: +item.quantity } },
+  //     },
+  //   }));
+  //   await productModel.bulkWrite(bulkOption, {});
+  //   // Clear cart depend on cartId
+  //   await cartModel.findByIdAndDelete(cartId);
+  // };
+  // res.status(201).json({
+  //   status: 'success',
+  //   message: `The order was completed successfully.`,
+  //   data: order
+  // });
+};
+
 // @desc    This webhook will run when stripe payment success paid
 // @route   POST /webhook-checkout
 // @access  Pravite
@@ -225,7 +261,7 @@ exports.webhookCheckout = asyncHandler(async (req, res, next) => {
     case 'checkout.session.completed':
       const checkoutSessionCompleted = event.data.object;
       // Then define and call a function to handle the event checkout.session.completed
-      console.log(`checkout.session.completed.`);
+      createOrder(checkoutSessionCompleted);
       break;
     // ... handle other event types
     default:
