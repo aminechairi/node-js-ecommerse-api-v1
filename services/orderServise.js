@@ -216,17 +216,30 @@ exports.webhookCheckout = asyncHandler(async (req, res, next) => {
   const sig = req.headers['stripe-signature'];
   let event;
   try {
-    event = stripe.webhooks.constructEvent(
-      req.body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET_KEY
-    );
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET_KEY);
   } catch (err) {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   };
-  if (event.type === 'checkout.session.completed') {
-    //  Create order
-    console.log(event.data.object.client_reference_id);
+  // Handle the event
+  switch (event.type) {
+    case 'payment_intent.created':
+      const paymentIntentCreated = event.data.object;
+      // Then define and call a function to handle the event payment_intent.created
+      console.log(`payment_intent.created.`);
+      break;
+    case 'payment_intent.canceled':
+      const paymentIntentCanceled = event.data.object;
+      // Then define and call a function to handle the event payment_intent.canceled
+      console.log(`payment_intent.canceled.`);
+      break;
+    case 'checkout.session.completed':
+      const checkoutSessionCompleted = event.data.object;
+      // Then define and call a function to handle the event checkout.session.completed
+      console.log(`checkout.session.completed.`);
+      break;
+    // ... handle other event types
+    default:
+      console.log(`Unhandled event type ${event.type}`);
   };
   res.status(200).json({ received: true });
 });
