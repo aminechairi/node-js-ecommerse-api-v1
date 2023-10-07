@@ -219,7 +219,7 @@ const createOrder = async (session) => {
   // get shipping cart
   const cart = await cartModel.findById(cartId);
   // get user
-  const user = userModel.findOne({ email: userEmail });
+  const user = await userModel.findOne({ email: userEmail });
   // // Create order with card
   const order = await orderModel.create({
     user: user._id,
@@ -247,11 +247,6 @@ const createOrder = async (session) => {
     // Clear cart depend on cartId
     await cartModel.findByIdAndDelete(cartId);
   };
-  res.status(201).json({
-    status: 'success',
-    message: `The order was completed successfully.`,
-    data: order
-  });
 };
 
 // @desc    This webhook will run when stripe payment success paid
