@@ -184,7 +184,7 @@ exports.checkoutSession = asyncHandler(async (req, res, next) => {
       new ApiError(`This oredr is not valid.`, 401)
     );
   };
-
+  // Stripe create session
   const price = cart.totalPriceAfterDiscount || cart.totalPrice;
   const session = await stripe.checkout.sessions.create({
     line_items: [
@@ -223,11 +223,10 @@ exports.webhookCheckout = asyncHandler(async (req, res, next) => {
     );
   } catch (err) {
     return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
+  };
   if (event.type === 'checkout.session.completed') {
     //  Create order
     console.log(event.data.object.client_reference_id);
-    console.log(event.data.object);    
-  }
+  };
   res.status(200).json({ received: true });
 });

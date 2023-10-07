@@ -26,7 +26,9 @@ exports.calcTotalCartPrice = (cart) => {
   cart.taxPrice = taxPrice;
   cart.shippingPrice = shippingPrice;
   cart.totalPrice = (totalPrice + taxPrice + shippingPrice).toFixed(2);
-  cart.couponName = undefined;
-  cart.couponDiscount = undefined;
-  cart.totalPriceAfterDiscount = undefined;
+  if (cart.couponName) {
+    const totalPrice = cart.totalPrice;
+    const totalPriceAfterDiscount = (totalPrice - (totalPrice * cart.couponDiscount) / 100).toFixed(2); // 99.23
+    cart.totalPriceAfterDiscount = totalPriceAfterDiscount;
+  };
 };
