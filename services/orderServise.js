@@ -8,6 +8,7 @@ const {
 const productModel = require('../models/productModel');
 const cartModel = require('../models/cartModel');
 const orderModel = require('../models/orderModel');
+const userModel = require('../models/userModel');
 const {
   checkProductsIfDeletedOrVariable,
   calcTotalCartPrice
@@ -204,6 +205,7 @@ exports.checkoutSession = asyncHandler(async (req, res, next) => {
     customer_email: req.user.email,
     success_url: `${req.protocol}://${req.get('host')}/api/v1/orders`,
     cancel_url: `${req.protocol}://${req.get('host')}/api/v1/cart`,
+    metadata: req.body.shippingAddress,
   });
   // send session to response
   res.status(200).json({ status: 'success', session });
@@ -211,38 +213,45 @@ exports.checkoutSession = asyncHandler(async (req, res, next) => {
 
 // create order with card
 const createOrder = async (session) => {
-  console.log(session);
-  // const cart = cartModel.findById();
-
+  const cartId = session.client_reference_id;
+  const userEmail = session.customer_email;
+  const shippingAddress = session.metadata;
+  // get shipping cart
+  const cart = await cartModel.findById(cartId);
+  // get user
+  const user = userModel.findOne({ email: userEmail });
   // // Create order with card
-  // const order = await orderModel.create({
-  //   user: req.user._id,
-  //   cartItems: cart.cartItems,
-  //   shippingAddress: req.body.shippingAddress,
-  //   taxPrice: cart.taxPrice,
-  //   shippingPrice: cart.shippingPrice,
-  //   totalPrice: cart.totalPrice,
-  //   couponName: cart.couponName,
-  //   couponDiscount: cart.couponDiscount,
-  //   totalPriceAfterDiscount: cart.totalPriceAfterDiscount,
-  // });
-  // // After creating order, decrement product quantity, increment product sold
-  // if (order) {
-  //   const bulkOption = cart.cartItems.map((item) => ({
-  //     updateOne: {
-  //       filter: { _id: item.product },
-  //       update: { $inc: { quantity: -item.quantity, sold: +item.quantity } },
-  //     },
-  //   }));
-  //   await productModel.bulkWrite(bulkOption, {});
-  //   // Clear cart depend on cartId
-  //   await cartModel.findByIdAndDelete(cartId);
-  // };
-  // res.status(201).json({
-  //   status: 'success',
-  //   message: `The order was completed successfully.`,
-  //   data: order
-  // });
+  const order = await orderModel.create({
+    user: user._id,
+    cartItems: cart.cartItems,
+    shippingAddress: shippingAddress,
+    taxPrice: cart.taxPrice,
+    shippingPrice: cart.shippingPrice,
+    totalPrice: cart.totalPrice,
+    couponName: cart.couponName,
+    couponDiscount: cart.couponDiscount,
+    totalPriceAfterDiscount: cart.totalPriceAfterDiscount,
+    paymentMethodType: 'card',
+    isPaid: true,
+    paidAt: Date.now(),
+  });
+  // After creating order, decrement product quantity, increment product sold
+  if (order) {
+    const bulkOption = cart.cartItems.map((item) => ({
+      updateOne: {
+        filter: { _id: item.product },
+        update: { $inc: { quantity: -item.quantity, sold: +item.quantity } },
+      },
+    }));
+    await productModel.bulkWrite(bulkOption, {});
+    // Clear cart depend on cartId
+    await cartModel.findByIdAndDelete(cartId);
+  };
+  res.status(201).json({
+    status: 'success',
+    message: `The order was completed successfully.`,
+    data: order
+  });
 };
 
 // @desc    This webhook will run when stripe payment success paid
