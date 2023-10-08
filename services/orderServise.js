@@ -211,11 +211,6 @@ exports.checkoutSession = asyncHandler(async (req, res, next) => {
   res.status(200).json({ status: 'success', session });
 });
 
-// create order with card
-// const createOrder = async (session) => {
-
-// };
-
 // @desc    This webhook will run when stripe payment success paid
 // @route   POST /webhook-checkout
 // @access  Pravite
@@ -225,14 +220,13 @@ exports.webhookCheckout = asyncHandler(async (req, res, next) => {
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET_KEY);
   } catch (err) {
-    return res.status(400).send(`Webhook Error: ${err.message}`);
+    return next(
+      new ApiError(`Webhook Error: ${err.message}`, 400)
+    );
   };
   // Handle the event
   switch (event.type) {
     case 'checkout.session.completed':
-      // const checkoutSessionCompleted = event.data.object;
-      // Then define and call a function to handle the event checkout.session.completed
-      // createOrder(checkoutSessionCompleted);
       const session =  event.data.object;
       const cartId = session.client_reference_id;
       const userEmail = session.customer_email;
@@ -271,7 +265,13 @@ exports.webhookCheckout = asyncHandler(async (req, res, next) => {
       break;
     // ... handle other event types
     default:
-      console.log(`Unhandled event type ${event.type}`);
+      return next(
+        new ApiError(`Unhandled event type ${event.type}`, 400)
+      );
   };
-  res.status(200).json({ received: true });
+  res.status(200).json({
+    status: 'success',
+    message: `The order was completed successfully.`,
+    received: true
+  });
 });
