@@ -212,42 +212,9 @@ exports.checkoutSession = asyncHandler(async (req, res, next) => {
 });
 
 // create order with card
-const createOrder = async (session) => {
-  const cartId = session.client_reference_id;
-  const userEmail = session.customer_email;
-  const shippingAddress = session.metadata;
-  // get shipping cart
-  const cart = await cartModel.findById(cartId);
-  // get user
-  const user = await userModel.findOne({ email: userEmail });
-  // // Create order with card
-  const order = await orderModel.create({
-    user: user._id,
-    cartItems: cart.cartItems,
-    shippingAddress: shippingAddress,
-    taxPrice: cart.taxPrice,
-    shippingPrice: cart.shippingPrice,
-    totalPrice: cart.totalPrice,
-    couponName: cart.couponName,
-    couponDiscount: cart.couponDiscount,
-    totalPriceAfterDiscount: cart.totalPriceAfterDiscount,
-    paymentMethodType: 'card',
-    isPaid: true,
-    paidAt: Date.now(),
-  });
-  // After creating order, decrement product quantity, increment product sold
-  if (order) {
-    const bulkOption = cart.cartItems.map((item) => ({
-      updateOne: {
-        filter: { _id: item.product },
-        update: { $inc: { quantity: -item.quantity, sold: +item.quantity } },
-      },
-    }));
-    await productModel.bulkWrite(bulkOption, {});
-    // Clear cart depend on cartId
-    await cartModel.findByIdAndDelete(cartId);
-  };
-};
+// const createOrder = async (session) => {
+
+// };
 
 // @desc    This webhook will run when stripe payment success paid
 // @route   POST /webhook-checkout
@@ -263,9 +230,44 @@ exports.webhookCheckout = asyncHandler(async (req, res, next) => {
   // Handle the event
   switch (event.type) {
     case 'checkout.session.completed':
-      const checkoutSessionCompleted = event.data.object;
+      // const checkoutSessionCompleted = event.data.object;
       // Then define and call a function to handle the event checkout.session.completed
-      createOrder(checkoutSessionCompleted);
+      // createOrder(checkoutSessionCompleted);
+      const session =  event.data.object;
+      const cartId = session.client_reference_id;
+      const userEmail = session.customer_email;
+      const shippingAddress = session.metadata;
+      // get shipping cart
+      const cart = await cartModel.findById(cartId);
+      // get user
+      const user = await userModel.findOne({ email: userEmail });
+      // // Create order with card
+      const order = await orderModel.create({
+        user: user._id,
+        cartItems: cart.cartItems,
+        shippingAddress: shippingAddress,
+        taxPrice: cart.taxPrice,
+        shippingPrice: cart.shippingPrice,
+        totalPrice: cart.totalPrice,
+        couponName: cart.couponName,
+        couponDiscount: cart.couponDiscount,
+        totalPriceAfterDiscount: cart.totalPriceAfterDiscount,
+        paymentMethodType: 'card',
+        isPaid: true,
+        paidAt: Date.now(),
+      });
+      // After creating order, decrement product quantity, increment product sold
+      if (order) {
+        const bulkOption = cart.cartItems.map((item) => ({
+          updateOne: {
+            filter: { _id: item.product },
+            update: { $inc: { quantity: -item.quantity, sold: +item.quantity } },
+          },
+        }));
+        await productModel.bulkWrite(bulkOption, {});
+        // Clear cart depend on cartId
+        await cartModel.findByIdAndDelete(cartId);
+      };
       break;
     // ... handle other event types
     default:
