@@ -43,7 +43,7 @@ exports.addAddressToAddresseslistValidator = [
 
   check("city")
     .notEmpty()
-    .withMessage("City is require.d.")
+    .withMessage("City is required.")
     .isString()
     .withMessage("City must be a string.")
     .isLength({ min: 3 })

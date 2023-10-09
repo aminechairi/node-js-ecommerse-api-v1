@@ -1,6 +1,14 @@
 const express = require(`express`);
 
 const {
+  loggedUserCreateCashOrderValidator,
+  getOrderValidator,
+  updateOrderPaidValidator,
+  updateOrderDeliveredValidator,
+  checkoutSessionValidator
+} = require("../utils/validators/orderValidator");
+
+const {
   loggedUserCreateCashOrder,
   getOrders,
   filterOrderForLoggedUser,
@@ -18,6 +26,7 @@ router
   .post(
     protect_allowedTo.protect(),
     protect_allowedTo.allowedTo("user"),
+    loggedUserCreateCashOrderValidator,
     loggedUserCreateCashOrder
   );
 
@@ -35,6 +44,7 @@ router
   .get(
     protect_allowedTo.protect(),
     protect_allowedTo.allowedTo("admin", "manager", "user"),
+    getOrderValidator,
     getOrder
   );
 
@@ -43,21 +53,24 @@ router
   .put(
     protect_allowedTo.protect(),
     protect_allowedTo.allowedTo("admin"),
+    updateOrderPaidValidator,
     updateOrderPaid
   );
 
-  router
+router
   .route("/:id/delivered")
   .put(
     protect_allowedTo.protect(),
     protect_allowedTo.allowedTo("admin"),
+    updateOrderDeliveredValidator,
     updateOrderDelivered
   );
 
-  router.get(
+router.get(
     '/checkout-session/:cartId',
     protect_allowedTo.protect(),
     protect_allowedTo.allowedTo("user"),
+    checkoutSessionValidator,
     checkoutSession,
   );
   

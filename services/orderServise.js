@@ -213,7 +213,7 @@ exports.checkoutSession = asyncHandler(async (req, res, next) => {
 
 // @desc    This webhook will run when stripe payment success paid
 // @route   POST /webhook-checkout
-// @access  Pravite
+// @access  Pravite /user/manager/admin => acsees rout with <=
 exports.webhookCheckout = asyncHandler(async (req, res, next) => {
   const sig = req.headers['stripe-signature'];
   let event;
