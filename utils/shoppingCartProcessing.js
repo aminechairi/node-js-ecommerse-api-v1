@@ -1,3 +1,5 @@
+const appSettingsModel = require("../models/appSettingsModel")
+
 // Check products if deleted or variable
 exports.checkProductsIfDeletedOrVariable = (cart) => {
   const cartItems = cart.cartItems.filter((item) => {
@@ -15,10 +17,11 @@ exports.checkProductsIfDeletedOrVariable = (cart) => {
 };
 
 // Calc total cart price
-exports.calcTotalCartPrice = (cart) => {
-  // app settings
-  const taxPrice = 0;
-  const shippingPrice = 0;
+exports.calcTotalCartPrice = async (cart) => {
+  // Get app settings
+  const appSettings = await appSettingsModel.findOne({});
+  const taxPrice = appSettings.taxPrice || 0;
+  const shippingPrice = appSettings.shippingPrice || 0;
   let totalPrice = 0;
   cart.cartItems.forEach((item) => {
     totalPrice += item.price * item.quantity;

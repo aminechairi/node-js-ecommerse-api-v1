@@ -52,5 +52,5 @@ exports.updateCategory = updateOne(categoryModel);
 
 // @desc Delete category by id
 // @route DELETE /api/v1/categories/:id
-// @access Private  admine
+// @access Private
 exports.deleteCategory = deleteOne(categoryModel);

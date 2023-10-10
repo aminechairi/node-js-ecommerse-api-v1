@@ -45,7 +45,7 @@ exports.loggedUserAddProduct = asyncHandler(async (req, res, next) => {
     // Check products if deleted or variable
     checkProductsIfDeletedOrVariable(cart);
     // Calc total cart price 
-    calcTotalCartPrice(cart);
+    await calcTotalCartPrice(cart);
     await cart.save();
     // Product validations
     if (!product) {
@@ -76,7 +76,7 @@ exports.loggedUserAddProduct = asyncHandler(async (req, res, next) => {
     };
   };
   // Calc total cart price 
-  calcTotalCartPrice(cart);
+  await calcTotalCartPrice(cart);
   await cart.save();
   // Response
   res.status(200).json({
@@ -102,7 +102,7 @@ exports.loggedUserGetCart = asyncHandler(async (req, res, next) => {
   // Check products if deleted or variable
   checkProductsIfDeletedOrVariable(cart);
   // Calc total cart price 
-  calcTotalCartPrice(cart);
+  await calcTotalCartPrice(cart);
   await cart.save();
   // Response
   res.status(200).json({
@@ -133,7 +133,7 @@ exports.loggedUserRemoveProduct = asyncHandler(async (req, res, next) => {
   // Check products if deleted or variable
   checkProductsIfDeletedOrVariable(cart);
   // Calc total cart price 
-  calcTotalCartPrice(cart);
+  await calcTotalCartPrice(cart);
   await cart.save();
   // Response
   res.status(200).json({
@@ -170,7 +170,7 @@ exports.loggedUserUpdateProductQuantity = asyncHandler(async (req, res, next) =>
   // Check products if deleted or variable
   checkProductsIfDeletedOrVariable(cart);
   // Calc total cart price 
-  calcTotalCartPrice(cart);
+  await calcTotalCartPrice(cart);
   await cart.save();
   // Check product if already available in shopping cart
   const itemIndex = cart.cartItems.findIndex(
@@ -188,7 +188,7 @@ exports.loggedUserUpdateProductQuantity = asyncHandler(async (req, res, next) =>
     const cartItem = cart.cartItems[itemIndex];
     cartItem.quantity = quantity;
     cart.cartItems[itemIndex] = cartItem;
-    calcTotalCartPrice(cart);
+    await calcTotalCartPrice(cart);
     await cart.save();
   } else {
     return next(new ApiError(`No product in shopping cart for this id ${productId}.`, 404));
@@ -225,7 +225,7 @@ exports.loggedUserApplyCoupon = asyncHandler(async (req, res, next) => {
   // Check products if deleted or variable
   checkProductsIfDeletedOrVariable(cart);
   // Calc total cart price 
-  calcTotalCartPrice(cart);
+  await calcTotalCartPrice(cart);
   // apply coupon
   const totalPrice = cart.totalPrice;
   const totalPriceAfterDiscount = (totalPrice - (totalPrice * coupon.discount) / 100).toFixed(2); // 99.23

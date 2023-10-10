@@ -36,7 +36,7 @@ exports.loggedUserCreateCashOrder = asyncHandler(async (req, res, next) => {
   // Comparison between old shopping cart and new shopping cart
   if (oldCart !== newCart) {
     // Calc total cart price 
-    calcTotalCartPrice(cart);
+    await calcTotalCartPrice(cart);
     await cart.save();
     return next(
       new ApiError(`Sorry, the products you added to your cart are no longer available as requested.`, 404)
@@ -173,7 +173,7 @@ exports.checkoutSession = asyncHandler(async (req, res, next) => {
   // Comparison between old shopping cart and new shopping cart
   if (oldCart !== newCart) {
     // Calc total cart price 
-    calcTotalCartPrice(cart);
+    await calcTotalCartPrice(cart);
     await cart.save();
     return next(
       new ApiError(`Sorry, the products you added to your cart are no longer available as requested.`, 404)
