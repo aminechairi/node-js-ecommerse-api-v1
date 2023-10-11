@@ -14,6 +14,7 @@ const {
 } = require("../middlewares/uploadImageMiddleware");
 const productModel = require("../models/productModel");
 const reviewModel = require("../models/reviewModel");
+const saveModel = require("../models/saveModel");
 
 // Upload multiple images
 exports.uploadProductImages = uploadMultipleImages([
@@ -98,5 +99,6 @@ exports.deleteProduct =   asyncHandler(async (req, res, next) => {
     return next(new ApiError(`No product for this id ${id}`, 404));
   };
   await reviewModel.deleteMany({ product: id });
+  await saveModel.deleteMany({ productId: id });
   res.status(200).json({ data: product });
 });
