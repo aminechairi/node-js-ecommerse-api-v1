@@ -30,13 +30,13 @@ const subCategorySchema = new mongoose.Schema(
 );
 
 // mongoose query middleware
-// subCategorySchema.pre("find", function(next) {
-//   this.populate({
-//     path: "category",
-//     select: "name -_id",
-//   });
-//   next();
-// });
+subCategorySchema.pre("findOne", function(next) {
+  this.populate({
+    path: "category",
+    select: "name image",
+  });
+  next();
+});
 
 const setImageUrl = (doc) => {
   if (doc.image) {

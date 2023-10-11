@@ -1,11 +1,17 @@
 const asyncHandler = require("express-async-handler");
 
+const ApiError = require('../utils/apiErrore');
 const userModel = require("../models/userModel");
 
 // @desc    Add address to addresses list
 // @route   POST /api/v1/addresses
 // @access  Private
 exports.addAddressToAddresseslist = asyncHandler(async (req, res, next) => {
+  const checkListLength = await userModel.findById(req.user._id);
+  const max = 8;
+  if (checkListLength.addressesList.length > max) {
+    throw next(new ApiError(`You cannot create addresses more than ${max} times.`, 403));
+  }
   const user = await userModel.findByIdAndUpdate(
     req.user._id,
     {

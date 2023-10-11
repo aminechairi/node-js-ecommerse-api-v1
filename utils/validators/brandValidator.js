@@ -2,6 +2,8 @@ const { check } = require("express-validator");
 const validatorMiddleware = require("../../middlewares/validatorMiddleware");
 const slugify = require("slugify");
 
+const brandModel = require("../../models/brandModel");
+
 exports.getBrandValidator = [
   check("id")
     .isMongoId()
@@ -20,8 +22,12 @@ exports.createBrandValidator = [
     .withMessage("Too short brand name.")
     .isLength({ max: 32 })
     .withMessage("Too long brand name.")
-    .custom((value, { req }) => {
+    .custom(async (value, { req }) => {
       req.body.slug = slugify(value);
+      const brand = await brandModel.findOne({ name: value });
+      if (brand) {
+        throw new Error(`I've used this name before.`);
+      };
       return true;
     }),
 
@@ -47,8 +53,12 @@ exports.updateBrandValidator = [
     .withMessage("Too short brand name.")
     .isLength({ max: 32 })
     .withMessage("Too long brand name.")
-    .custom((value, { req }) => {
+    .custom(async (value, { req }) => {
       req.body.slug = slugify(value);
+      const brand = await brandModel.findOne({ name: value });
+      if (brand) {
+        throw new Error(`I've used this name before.`);
+      };
       return true;
     }),
 

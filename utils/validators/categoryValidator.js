@@ -2,6 +2,8 @@ const { check } = require('express-validator');
 const validatorMiddleware = require("../../middlewares/validatorMiddleware");
 const slugify = require("slugify");
 
+const categoryModel = require("../../models/categoryModel");
+
 exports.getCategoryValidator = [
   check("id")
   .isMongoId()
@@ -20,8 +22,12 @@ exports.createCategoryValidator = [
     .withMessage("Too short category name.")
     .isLength({ max: 32 })
     .withMessage("Too long category name.")
-    .custom((value, { req }) => {
+    .custom(async (value, { req }) => {
       req.body.slug = slugify(value);
+      const category = await categoryModel.findOne({ name: value });
+      if (category) {
+        throw new Error(`I've used this name before.`);
+      };
       return true;
     }),
 
@@ -47,8 +53,12 @@ exports.updateCategoryValidator = [
     .withMessage("Too short category name.")
     .isLength({ max: 32 })
     .withMessage("Too long category name.")
-    .custom((value, { req }) => {
+    .custom(async (value, { req }) => {
       req.body.slug = slugify(value);
+      const category = await categoryModel.findOne({ name: value });
+      if (category) {
+        throw new Error(`I've used this name before.`);
+      };
       return true;
     }),
 

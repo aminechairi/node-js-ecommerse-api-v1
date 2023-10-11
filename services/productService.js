@@ -13,6 +13,7 @@ const {
   uploadMultipleImages,
 } = require("../middlewares/uploadImageMiddleware");
 const productModel = require("../models/productModel");
+const reviewModel = require("../models/reviewModel");
 
 // Upload multiple images
 exports.uploadProductImages = uploadMultipleImages([
@@ -72,7 +73,10 @@ exports.getProducts = getAll(productModel, `Product`);
 // @desc Get product by id
 // @route GET /api/v1/products/:id
 // @access Public
-exports.getProduct = getOne(productModel, "reviews");
+exports.getProduct = getOne(productModel, {
+  path: "reviews",
+  select: "title ratings -product"
+});
 
 // @desc Create product
 // @route POST /api/v1/products
@@ -87,4 +91,12 @@ exports.updateProduct = updateOne(productModel);
 // @desc Delete Product by id
 // @route DELETE /api/v1/products/:id
 // @access Private
-exports.deleteProduct = deleteOne(productModel);
+exports.deleteProduct =   asyncHandler(async (req, res, next) => {
+  const { id } = req.params;
+  const product = await productModel.findByIdAndDelete({ _id: id });
+  if (!product) {
+    return next(new ApiError(`No product for this id ${id}`, 404));
+  };
+  await reviewModel.deleteMany({ product: id });
+  res.status(200).json({ data: product });
+});

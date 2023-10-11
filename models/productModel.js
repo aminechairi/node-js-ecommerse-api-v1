@@ -109,12 +109,13 @@ productSchema.virtual(
 );
 
 // mongoose query middleware
-// productSchema.pre(/^find/, function(next) {
-//   this.populate({
-//     path: "category subcategories brand",
-//   })
-//   next();
-// });
+productSchema.pre("findOne", function(next) {
+  this.populate({
+    path: "category subcategories brand",
+    select: "name image"
+  })
+  next();
+});
 
 const setImageUrl = (doc) => {
   if (doc.imageCover) {
