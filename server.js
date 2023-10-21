@@ -5,6 +5,10 @@ const dotenv = require("dotenv");
 const morgan = require("morgan");
 var cors = require('cors');
 const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+var hpp = require('hpp');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
 
 dotenv.config({path: "./config.env"});
 const ApiErrore = require("./utils/apiErrore");
@@ -36,7 +40,7 @@ app.post(
 );
 
 // middlewares
-app.use(express.json());
+app.use(express.json({ limit: '20kb' }));
 app.use(express.static(path.join(__dirname, "uploads")));
 
 if (process.env.NODE_ENV === `development`) {
@@ -44,7 +48,24 @@ if (process.env.NODE_ENV === `development`) {
   console.log(
     `mode: ${process.env.NODE_ENV}`
   );
-}
+};
+
+// To apply data sanitization
+app.use(mongoSanitize());
+app.use(xss());
+
+// Apply rate limiting middleware
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: {
+    message: 'Too many requests, please try again later.'
+  },
+});
+// Apply rate limiting middleware Tto all requests
+app.use('/api', limiter);
+
+app.use(hpp());
 
 // Mounet Routes
 mountRoutes(app);

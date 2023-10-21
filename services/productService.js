@@ -3,7 +3,6 @@ const asyncHandler = require("express-async-handler");
 const { v4: uuidv4 } = require("uuid");
 
 const {
-  deleteOne,
   updateOne,
   createOne,
   getOne,
@@ -61,7 +60,6 @@ exports.resizeProductImages = asyncHandler(async (req, res, next) => {
 });
 
 exports.editeReqBody = (req, res, next) => {
-  console.log(req.body);
   req.body.uniqueName = `${req.body.uniqueName}`.toUpperCase().replaceAll(" ", "");
   next();
 };
