@@ -33,7 +33,7 @@ exports.resizeProductImages = asyncHandler(async (req, res, next) => {
   if (req.files.imageCover) {
     const imageCoverFileName = `products-${uuidv4()}-${Date.now()}-cover.jpeg`;
     await sharp(req.files.imageCover[0].buffer)
-      .resize(800, 800)
+      .resize(960, 1312)
       .toFormat("jpeg")
       .jpeg({ quality: 90 })
       .toFile(`uploads/products/${imageCoverFileName}`);
@@ -47,7 +47,7 @@ exports.resizeProductImages = asyncHandler(async (req, res, next) => {
       req.files.images.map(async (img, index) => {
         const imageName = `product-${uuidv4()}-${Date.now()}-${index + 1}.jpeg`;
         await sharp(img.buffer)
-          .resize(800, 800)
+          .resize(960, 1312)
           .toFormat("jpeg")
           .jpeg({ quality: 90 })
           .toFile(`uploads/products/${imageName}`);

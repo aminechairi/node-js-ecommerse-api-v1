@@ -55,7 +55,7 @@ reviewSchema.statics.calcAverageRatingsAndQuantity = async function (productId) 
   ]);
   if (result.length > 0) {
     await productModel.findByIdAndUpdate(productId, {
-      ratingsAverage: result[0].avgRatings,
+      ratingsAverage: (result[0].avgRatings).toFixed(1),  
       ratingsQuantity: result[0].ratingsQuantity,
     });
   } else {

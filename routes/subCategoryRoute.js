@@ -19,8 +19,14 @@ const {
   resizeImage,
 } = require("../services/subCategoryService");
 const protect_allowedTo = require("../services/authServises/protect&allowedTo");
+const underSubCategoryRoute = require('./underSubCategoryRoute')
 
 const router = express.Router({ mergeParams: true });
+
+router.use(
+  "/:subCategoryId/undersubcategories",
+  underSubCategoryRoute
+);
 
 router
   .route("/")

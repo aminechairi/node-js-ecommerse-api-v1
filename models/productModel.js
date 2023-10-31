@@ -70,10 +70,15 @@ const productSchema = new mongoose.Schema(
       ref: "Category",
       required: [true, "Product must belong to category."],
     },
-    subcategories: [
+    subCategory: {
+      type: mongoose.Schema.ObjectId,
+      ref: "subCategory",
+      required: [true, "Product must belong to sub category."],
+    },
+    underSubCategories: [
       {
         type: mongoose.Schema.ObjectId,
-        ref: "subCategory",
+        ref: "underSubCategory",
       },
     ],
     brand: {
@@ -111,7 +116,7 @@ productSchema.virtual(
 // mongoose query middleware
 productSchema.pre("findOne", function(next) {
   this.populate({
-    path: "category subcategories brand",
+    path: "category subCategory underSubCategories brand",
     select: "name image"
   })
   next();

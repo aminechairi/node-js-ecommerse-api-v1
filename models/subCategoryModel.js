@@ -6,6 +6,7 @@ const subCategorySchema = new mongoose.Schema(
       type: String,
       required: [true, "Sub ategory name is required."],
       trim: true,
+      lowercase: true,
       minlength: [3, "Too short sub category name."],
       maxlength: [32, "Too long sub category name."],
     },
@@ -22,7 +23,7 @@ const subCategorySchema = new mongoose.Schema(
     },
     image: {
       type: String,
-      required: [true, "sub category image is required."],
+      required: [true, "Sub category image is required."],
       trim: true,
     },
   },

@@ -4,8 +4,14 @@ const slugify = require("slugify");
 
 const categoryModel = require(`../../models/categoryModel`);
 const subCategoryModel = require("../../models/subCategoryModel");
+const underSubCategoryModel = require('../../models/underSubCategoryModel');
 const brandModel = require("../../models/brandModel");
 const productModel = require("../../models/productModel");
+
+const mongoose = require('mongoose');
+
+// Custom validation function for MongoDB ObjectID
+const isValidObjectId = value => mongoose.Types.ObjectId.isValid(value);
 
 exports.createProductValidator = [
   check("uniqueName")
@@ -109,59 +115,98 @@ exports.createProductValidator = [
     .withMessage("Product must be belong to a category.")
     .isMongoId()
     .withMessage("Invalid category id formate.")
-    .custom(async (value, { req }) => {
+    .custom(async (_, { req }) => {
       const ObjectId = req.body.category;
       const category = await categoryModel.findById(ObjectId);
       if (category) {
         return true;
       } else {
         throw new Error(`No category for this id ${ObjectId}.`);
-      }
+      };
     }),
 
-  check("subcategories")
+    check("subCategory")
+    .notEmpty()
+    .withMessage("Product must be belong to a sub category.")
+    .isMongoId()
+    .withMessage("Invalid sub category id formate.")
+    .custom(async (_, { req }) => {
+      const ObjectId = req.body.subCategory;
+      const subCategory = await subCategoryModel.findById(ObjectId);
+      if (subCategory) {
+        return true;
+      } else {
+        throw new Error(`No sub category for this id ${ObjectId}.`);
+      };
+    })
+    .custom(async (_, { req }) => {
+     const subCategoryId = req.body.subCategory;
+      const categoryId = req.body.category;
+      const subCategory = await subCategoryModel.findOne({
+        _id: subCategoryId,
+        category: categoryId,
+      });
+      if (!subCategory) {
+        throw new Error(`Sub category not belomg category.`);
+      };
+      return true;
+    }),
+
+    check("underSubCategories")
     .optional()
     .isArray()
-    .withMessage("Product subcategories must be an array.")
-    .custom(async (subcategoriesIds) => {
-      if (subcategoriesIds.length > 0) {
-        const subcategories = await subCategoryModel.find({
-          _id: { $in: subcategoriesIds },
+    .withMessage("Product under sub categories must be an array.")
+    .custom((value) => {
+      if (!( Array.isArray(value) && value.every(isValidObjectId) )) {
+        throw new Error(` ${
+          value.length > 1 
+          ? 'Invalid under sub categories ids formqte.'
+          : 'Invalid under sub category id formqte.'
+        }`);
+      };
+      return true;
+    })
+    .custom(async (underSubCategoriesIds) => {
+      if (underSubCategoriesIds.length > 0) {
+        const underSubCategories = await underSubCategoryModel.find({
+          _id: { $in: underSubCategoriesIds },
         });
-        if (subcategories.length !== subcategoriesIds.length) {
+        if (underSubCategories.length !== underSubCategoriesIds.length) {
           throw new Error(
             `Invalid ${
-              subcategoriesIds.length === 1 ? `subCategory id` : `subCategories ids`
-            } ${subcategoriesIds}.`
+              underSubCategoriesIds.length > 1 ? 
+              `under sub categories ids` : 
+              `under sub category id`
+            } ${underSubCategoriesIds}.`
           );
         } else {
           return true;
-        }
+        };
       } else {
         return true;
-      }
+      };
     })
-    .custom(async (subcategoriesIds, { req }) => {
+    .custom(async (underSubCategoriesIds, { req }) => {
       // step 1
-      const subcategories = await subCategoryModel.find({
-        category: req.body.category,
+      const underSubcategories = await underSubCategoryModel.find({
+        subCategory: req.body.subCategory,
       });
       // step 2
-      const listSubcategoriesIds = [];
-      for (let i = 0; i < subcategories.length; i++) {
-        listSubcategoriesIds.push(subcategories[i]._id.toString());
+      const listUnderSubCategoriesIds = [];
+      for (let i = 0; i < underSubcategories.length; i++) {
+        listUnderSubCategoriesIds.push(underSubcategories[i]._id.toString());
       };
       // step 3
-      const check = subcategoriesIds.every((el) => {
-        return listSubcategoriesIds.includes(el);
+      const check = underSubCategoriesIds.every((el) => {
+        return listUnderSubCategoriesIds.includes(el);
       });
       // step 4
       if (!check) {
         throw new Error(`${
-          req.body.subcategories.length > 1
-          ? "subcategories"
-          : "subcategory"
-        } not belong to categories.`);
+          underSubCategoriesIds.length > 1
+          ? "Under sub categories"
+          : "Under sub category"
+        } not belong to sub category.`);
       };
       return true;
     }),
@@ -312,10 +357,19 @@ exports.updateProductValidator = [
     .optional()
     .isMongoId()
     .withMessage("Invalid category id formate.")
-    .custom(async (value, { req }) => {
-      if (!req.body.subcategories) {
-        throw new Error(`You must update subcategories.`);
-      }
+    .custom((_, { req }) => {
+      if (!req.body.subCategory) {
+        throw new Error(`You must update sub category.`);
+      };
+      return true;
+    })
+    .custom((_, { req }) => {
+      if (!req.body.underSubCategories) {
+        throw new Error(`You must update under sub categories.`);
+      };
+      return true;
+    })
+    .custom(async (_, { req }) => {
       const ObjectId = req.body.category;
       const category = await categoryModel.findById(ObjectId);
       if (category) {
@@ -325,49 +379,107 @@ exports.updateProductValidator = [
       }
     }),
 
-  check("subcategories")
+    check("subCategory")
+    .optional()
+    .isMongoId()
+    .withMessage("Invalid sub category id formate.")
+    .custom((_, { req }) => {
+      if (!req.body.category) {
+        throw new Error(`You must update category.`);
+      };
+      return true;
+    })
+    .custom((_, { req }) => {
+      if (!req.body.underSubCategories) {
+        throw new Error(`You must update under sub categories.`);
+      };
+      return true;
+    })
+    .custom(async (_, { req }) => {
+      const ObjectId = req.body.subCategory;
+      const subCategory = await subCategoryModel.findById(ObjectId);
+      if (subCategory) {
+        return true;
+      } else {
+        throw new Error(`No sub category for this id ${ObjectId}.`);
+      };
+    })
+    .custom(async (_, { req }) => {
+      const categoryId = req.body.category;
+      const subCategoryId = req.body.subCategory;
+      let product;
+      if (!categoryId) {
+        product = await productModel.findById(req.params.id);
+      };
+      const subCategory = await subCategoryModel.findOne({
+        _id: subCategoryId,
+        category: categoryId || product.category._id,
+      });
+      if (!subCategory) {
+        throw new Error(`Sub category not belomg category.`);
+      };
+      return true;
+    }),
+
+    check("underSubCategories")
     .optional()
     .isArray()
-    .withMessage("Product subcategories must be an array.")
-    .custom(async (subcategoriesIds) => {
-      if (subcategoriesIds.length > 0) {
-        const subcategories = await subCategoryModel.find({
-          _id: { $in: subcategoriesIds },
+    .withMessage("Product under sub categories must be an array.")
+    .custom((value) => {
+      if (!( Array.isArray(value) && value.every(isValidObjectId) )) {
+        throw new Error(` ${
+          value.length > 1 
+          ? 'Invalid under sub categories ids formate.'
+          : 'Invalid under sub category id formate.'
+        }`);
+      };
+      return true;
+    })
+    .custom(async (underSubCategoriesIds) => {
+      if (underSubCategoriesIds.length > 0) {
+        const underSubCategories = await underSubCategoryModel.find({
+          _id: { $in: underSubCategoriesIds },
         });
-        if (subcategories.length !== subcategoriesIds.length) {
+        if (underSubCategories.length !== underSubCategoriesIds.length) {
           throw new Error(
             `Invalid ${
-              subcategoriesIds.length === 1 ? `subCategory id` : `subCategories ids`
-            } ${subcategoriesIds}.`
+              underSubCategoriesIds.length > 1 ? 
+              `under sub categories ids` : 
+              `under sub category id`
+            } ${underSubCategoriesIds}.`
           );
         } else {
           return true;
-        }
+        };
       } else {
         return true;
-      }
+      };
     })
-    .custom(async (subcategoriesIds, { req }) => {
+    .custom(async (underSubCategoriesIds, { req }) => {
       let product;
-      if (!req.body.category) {
+      if (!req.body.subCategory) {
         product = await productModel.findById(req.params.id);
       };
-      const subcategories = await subCategoryModel.find({
-        category: req.body.category || product.category._id,
+      // step 1
+      const underSubcategories = await underSubCategoryModel.find({
+        subCategory: req.body.subCategory || product.subCategory._id,
       });
-      const listSubcategoriesIds = [];
-      for (let i = 0; i < subcategories.length; i++) {
-        listSubcategoriesIds.push(subcategories[i]._id.toString());
+      // step 2
+      const listUnderSubCategoriesIds = [];
+      for (let i = 0; i < underSubcategories.length; i++) {
+        listUnderSubCategoriesIds.push(underSubcategories[i]._id.toString());
       };
-      const check = subcategoriesIds.every((el) => {
-        return listSubcategoriesIds.includes(el);
+      // step 3
+      const check = underSubCategoriesIds.every((el) => {
+        return listUnderSubCategoriesIds.includes(el);
       });
+      // step 4
       if (!check) {
         throw new Error(`${
-          req.body.subcategories.length > 1
-          ? "subcategories"
-          : "subcategory"
-        } not belong to categories.`);
+          underSubCategoriesIds.length > 1
+          ? "Under sub categories"
+          : "Under sub category"
+        } not belong to sub category.`);
       };
       return true;
     }),
@@ -410,4 +522,4 @@ exports.deleteProductValidator = [
     .isMongoId()
     .withMessage("Invalid product id formate."),
   validatorMiddleware,
-];
+]; 
