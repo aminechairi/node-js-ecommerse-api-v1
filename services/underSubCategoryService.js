@@ -64,9 +64,9 @@ exports.createUnderSubCategory = createOne(underSubCategoryModel);
 // @desc Update underSubCategory by id
 // @route PUT /api/v1/undersubcategories/:id
 // @access Private
-exports.updateUnderSubCategory = updateOne(underSubCategoryModel);
+exports.updateUnderSubCategory = updateOne(underSubCategoryModel, 'underSubCategories');
 
 // @desc Delete underSubCategory by id
 // @route DELETE /api/v1/undersubcategories/:id
 // @access Private
-exports.deleteUnderSubCategory = deleteOne(underSubCategoryModel);
+exports.deleteUnderSubCategory = deleteOne(underSubCategoryModel, 'underSubCategories');

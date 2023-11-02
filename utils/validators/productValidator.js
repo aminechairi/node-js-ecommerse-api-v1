@@ -254,13 +254,7 @@ exports.getProductValidator = [
 exports.updateProductValidator = [
   check("id")
     .isMongoId()
-    .withMessage("Invalid product id formate.")
-    .custom(async (val, { req }) => {
-      const product = await productModel.findById(req.params.id);
-      if (!product) {
-        throw new Error(`No product for this id ${req.params.id}.`);
-      };
-    }),
+    .withMessage("Invalid product id formate."),
 
     check("uniqueName")
     .optional()
@@ -320,6 +314,9 @@ exports.updateProductValidator = [
     .withMessage("Prodact price after discount number cannot be less than 0.")
     .custom(async (value, { req }) => {
       const product = await productModel.findById(req.params.id);
+      if (!product) {
+        throw new Error(`No product for this id ${req.params.id}`);
+      }
       if (product.price <= +value) {
         throw new Error("Prodact price after discount must be lower than price.");
       }
@@ -410,6 +407,9 @@ exports.updateProductValidator = [
       let product;
       if (!categoryId) {
         product = await productModel.findById(req.params.id);
+        if (!product) {
+          throw new Error(`No product for this id ${req.params.id}`);
+        }
       };
       const subCategory = await subCategoryModel.findOne({
         _id: subCategoryId,
@@ -459,6 +459,9 @@ exports.updateProductValidator = [
       let product;
       if (!req.body.subCategory) {
         product = await productModel.findById(req.params.id);
+        if (!product) {
+          throw new Error(`No product for this id ${req.params.id}`);
+        }
       };
       // step 1
       const underSubcategories = await underSubCategoryModel.find({

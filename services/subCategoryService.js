@@ -63,9 +63,9 @@ exports.createSubCategory = createOne(subCategoryModel);
 // @desc Update subCategory by id
 // @route PUT /api/v1/subcategories/:id
 // @access Private
-exports.updateSubCategory = updateOne(subCategoryModel);
+exports.updateSubCategory = updateOne(subCategoryModel, 'subCategories');
 
 // @desc Delete subcategory by id
 // @route DELETE /api/v1/subcategories/:id
 // @access Private
-exports.deleteSubCategory = deleteOne(subCategoryModel);
+exports.deleteSubCategory = deleteOne(subCategoryModel, 'subCategories');

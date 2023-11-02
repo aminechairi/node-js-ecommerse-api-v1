@@ -2,6 +2,7 @@ const sharp = require("sharp");
 const asyncHandler = require("express-async-handler");
 const { v4: uuidv4 } = require("uuid");
 
+const ApiError = require('../utils/apiErrore');
 const {
   deleteOne,
   updateOne,
@@ -48,9 +49,9 @@ exports.createCategories = createOne(categoryModel);
 // @desc Update category by id
 // @route PUT /api/v1/categories/:id
 // @access Private
-exports.updateCategory = updateOne(categoryModel);
+exports.updateCategory = updateOne(categoryModel, 'categories');
 
 // @desc Delete category by id
 // @route DELETE /api/v1/categories/:id
 // @access Private
-exports.deleteCategory = deleteOne(categoryModel);
+exports.deleteCategory = deleteOne(categoryModel, 'categories');

@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require("path");
 const crypto = require("crypto");
 
 const asyncHandler = require("express-async-handler");
@@ -128,23 +130,70 @@ exports.getMyData = asyncHandler(async (req, res) => {
 // @route PUT /api/v1/users/updatemydata
 // @access user logged in
 exports.updateMyData = asyncHandler(async (req, res) => {
+
   const id = req.user._id;
-  const document = await userModel.findByIdAndUpdate(
-    id,
-    {
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
-      slug: req.body.slug,
-      phone: req.body.phone,
-      profileImage: req.body.profileImage,
-      profileCoverImage: req.body.profileCoverImage,
-    },
-    {
-      new: true,
-    }
-  );
-  const user = userPropertysPrivate(document);
-  res.status(200).json({ data: user });
+  const body = req.body;
+
+  if (body.profileImage || body.profileCoverImage) {
+
+    let user = await userModel.findByIdAndUpdate(
+      id,
+      {
+        firstName: body.firstName,
+        lastName: body.lastName,
+        slug: body.slug,
+        phone: body.phone,
+        profileImage: body.profileImage,
+        profileCoverImage: body.profileCoverImage,
+      }
+    );
+
+    let allUrlsImages = [];
+    if (body.profileImage) {
+      allUrlsImages.push(user.profileImage);
+    };
+    if (body.profileCoverImage) {
+      allUrlsImages.push(user.profileCoverImage);
+    };
+
+    const allNamesImages = allUrlsImages.map((item) => {
+      const imageUrl = item;
+      const baseUrl = `${process.env.BASE_URL}/users/`;
+      const imageName = imageUrl.replace(baseUrl, '');
+      return imageName;
+    });
+  
+    for (let i = 0; i < allNamesImages.length; i++) {
+      const imagePath = path.join(__dirname, '..', '..', 'uploads', 'users', `${allNamesImages[i]}`);
+      fs.unlink(imagePath, (err) => {});
+    };
+
+    user = await userModel.find({ _id: id });
+
+    user = userPropertysPrivate(user[0]);
+
+    res.status(200).json({ data: user });
+
+  } else {
+
+    let user = await userModel.findByIdAndUpdate(
+      id,
+      {
+        firstName: body.firstName,
+        lastName: body.lastName,
+        slug: body.slug,
+        phone: body.phone,
+      },
+      {
+        new: true,
+      }
+    );
+
+    user = userPropertysPrivate(user);
+    res.status(200).json({ data: user });
+
+  };
+
 });
 
 // @desc Change my password

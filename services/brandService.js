@@ -48,9 +48,9 @@ exports.createBrand = createOne(brandModel);
 // @desc Update Brand by id
 // @route PUT /api/v1/brands/:id
 // @access Private
-exports.updateBrand = updateOne(brandModel);
+exports.updateBrand = updateOne(brandModel, 'brands');
 
 // @desc Delete brand by id
 // @route DELETE /api/v1/brand/:id
 // @access Private
-exports.deleteBrand = deleteOne(brandModel);
+exports.deleteBrand = deleteOne(brandModel, 'brands');

@@ -1,7 +1,11 @@
+const fs = require('fs');
+const path = require("path");
+
 const sharp = require("sharp");
 const asyncHandler = require("express-async-handler");
 const { v4: uuidv4 } = require("uuid");
 
+const ApiError = require("../utils/apiErrore");
 const {
   updateOne,
   createOne,
@@ -85,18 +89,97 @@ exports.createProduct = createOne(productModel);
 // @desc Update product by id
 // @route PUT /api/v1/products/:id
 // @access Private
-exports.updateProduct = updateOne(productModel);
+exports.updateProduct = asyncHandler(async (req, res, next) => {
+
+  const { id } = req.params;
+  const body = req.body;
+
+  if (body.imageCover || body.images) {
+
+    let product = await productModel.findByIdAndUpdate(
+      id,
+      body,
+    );
+    if (!product) {
+      return next(new ApiError(`No product for this id ${id}`, 404));
+    };
+
+    let allUrlsImages = [];
+    if (body.imageCover) {
+      allUrlsImages.push(product.imageCover);
+    };
+    if (body.images) {
+      allUrlsImages.push(...product.images);
+    };
+  
+    const allNamesImages = allUrlsImages.map((item) => {
+      const imageUrl = item;
+      const baseUrl = `${process.env.BASE_URL}/products/`;
+      const imageName = imageUrl.replace(baseUrl, '');
+      return imageName;
+    });
+  
+    for (let i = 0; i < allNamesImages.length; i++) {
+      const imagePath = path.join(__dirname, '..', 'uploads', 'products', `${allNamesImages[i]}`);
+      fs.unlink(imagePath, (err) => {});
+    };
+
+    product = await productModel.find({ _id: id });
+
+    res.status(200).json({ data: product[0] });
+
+  } else {
+
+    const product = await productModel.findByIdAndUpdate(
+      id,
+      body,
+      { new:true }
+    );
+    if (!product) {
+      return next(new ApiError(`No product for this id ${id}`, 404));
+    };
+  
+    res.status(200).json({ data: product });
+
+  };
+
+});
 
 // @desc Delete Product by id
 // @route DELETE /api/v1/products/:id
 // @access Private
 exports.deleteProduct =   asyncHandler(async (req, res, next) => {
+
   const { id } = req.params;
+
   const product = await productModel.findByIdAndDelete({ _id: id });
   if (!product) {
     return next(new ApiError(`No product for this id ${id}`, 404));
   };
+
+  let allUrlsImages = [];
+  if (product.images) {
+    allUrlsImages.push(...product.images);
+  };
+  if (product.imageCover) {
+    allUrlsImages.push(product.imageCover);
+  };
+
+  const allNamesImages = allUrlsImages.map((item) => {
+    const imageUrl = item;
+    const baseUrl = `${process.env.BASE_URL}/products/`;
+    const imageName = imageUrl.replace(baseUrl, '');
+    return imageName;
+  });
+
+  for (let i = 0; i < allNamesImages.length; i++) {
+    const imagePath = path.join(__dirname, '..', 'uploads', 'products', `${allNamesImages[i]}`);
+    fs.unlink(imagePath, (err) => {});
+  };
+
   await reviewModel.deleteMany({ product: id });
   await saveModel.deleteMany({ productId: id });
+
   res.status(200).json({ data: product });
+
 });

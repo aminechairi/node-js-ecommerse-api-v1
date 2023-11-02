@@ -1,3 +1,6 @@
+const fs = require('fs');
+const path = require("path");
+
 const sharp = require("sharp");
 const asyncHandler = require("express-async-handler");
 const { v4: uuidv4 } = require("uuid");
@@ -65,7 +68,7 @@ exports.getUser = asyncHandler(async (req, res, next) => {
   const id = req.params.id;
   const document = await userModel.findById(id);
   if (!document) {
-    return next(new ApiError(`No user for this id ${id}`, 404));
+    return next(new ApiError(`No user for this id ${id}.`, 404));
   };
   const user = userPropertysPrivate(document)
   res.status(200).json({
@@ -82,37 +85,88 @@ exports.createUser = createOne(userModel);
 // @route PUT /api/v1/users/:id
 // @access Private admine
 exports.updateUser = asyncHandler(async (req, res, next) => {
+
   const { id } = req.params;
+  const body = req.body;
+
   const userCheck = await userModel.findById(id);
   // Check user exist
   if (!userCheck) {
-    return next(new ApiError(`No user for this id ${id}`, 404));
+    return next(new ApiError(`No user for this id ${id}.`, 404));
   }
   // Check if the user is an admin
   if (userCheck.role === "admin") {
     return next(
-      new ApiError(`This user cannot be updated because is an admin`, 404)
+      new ApiError(`This user cannot be updated data because is an admin.`, 404)
     );
-  }
-  const document = await userModel.findByIdAndUpdate(
-    id,
-    {
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
-      slug: req.body.slug,
-      email: req.body.email,
-      emailVerify: req.body.emailVerify,
-      phone: req.body.phone,
-      profileImage: req.body.profileImage,
-      profileCoverImage: req.body.profileCoverImage,
-      role: req.body.role,
-    },
-    {
-      new: true,
-    }
-  );
-  const user = userPropertysPrivate(document);
-  res.status(200).json({ data: user });
+  };
+
+  if (body.profileImage || body.profileCoverImage) {
+
+    let user = await userModel.findByIdAndUpdate(
+      id,
+      {
+        firstName: body.firstName,
+        lastName: body.lastName,
+        slug: body.slug,
+        email: body.email,
+        emailVerify: body.emailVerify,
+        phone: body.phone,
+        profileImage: body.profileImage,
+        profileCoverImage: body.profileCoverImage,
+        role: body.role,
+      }
+    );
+
+    let allUrlsImages = [];
+    if (body.profileImage) {
+      allUrlsImages.push(user.profileImage);
+    };
+    if (body.profileCoverImage) {
+      allUrlsImages.push(user.profileCoverImage);
+    };
+
+    const allNamesImages = allUrlsImages.map((item) => {
+      const imageUrl = item;
+      const baseUrl = `${process.env.BASE_URL}/users/`;
+      const imageName = imageUrl.replace(baseUrl, '');
+      return imageName;
+    });
+  
+    for (let i = 0; i < allNamesImages.length; i++) {
+      const imagePath = path.join(__dirname, '..', '..', 'uploads', 'users', `${allNamesImages[i]}`);
+      fs.unlink(imagePath, (err) => {});
+    };
+
+    user = await userModel.find({ _id: id });
+
+    user = userPropertysPrivate(user[0]);
+
+    res.status(200).json({ data: user });
+
+  } else {
+
+    let user = await userModel.findByIdAndUpdate(
+      id,
+      {
+        firstName: body.firstName,
+        lastName: body.lastName,
+        slug: body.slug,
+        email: body.email,
+        emailVerify: body.emailVerify,
+        phone: body.phone,
+        role: body.role,
+      },
+      {
+        new: true,
+      }
+    );
+
+    user = userPropertysPrivate(user);
+    res.status(200).json({ data: user });
+
+  };
+
 });
 
 // @desc Change user password
@@ -123,20 +177,20 @@ exports.changeUserPassword = asyncHandler(async (req, res, next) => {
   const userCheck = await userModel.findById(id);
   // Check user exist
   if (!userCheck) {
-    return next(new ApiError(`No user for this id ${id}`, 404));
+    return next(new ApiError(`No user for this id ${id}.`, 404));
+  };
+  // Check if the user is an admin
+  if (userCheck.role === "admin") {
+    return next(
+      new ApiError(`This user cannot be change password because is an admin.`, 404)
+    );
   };
   const isCorrectPassword = await bcrypt.compare(
     req.body.currentPassword,
     userCheck.password
   );
   if (!isCorrectPassword) {
-    return next(new ApiError("Incorrect current password", 401));
-  };
-  // Check if the user is an admin
-  if (userCheck.role === "admin") {
-    return next(
-      new ApiError(`This user cannot be change password because is an admin`, 404)
-    );
+    return next(new ApiError("Incorrect current password.", 401));
   };
   const document = await userModel.findByIdAndUpdate(
     id,
@@ -160,12 +214,12 @@ exports.userBlock = asyncHandler(async (req, res, next) => {
   const userCheck = await userModel.findById(id);
   // Check user exist
   if (!userCheck) {
-    return next(new ApiError(`No user for this id ${id}`, 404));
+    return next(new ApiError(`No user for this id ${id}.`, 404));
   }
   // Check if the user is an admin
   if (userCheck.role === "admin") {
     return next(
-      new ApiError(`This user cannot be blocked because is an admin`, 404)
+      new ApiError(`This user cannot be blocked because is an admin.`, 404)
     );
   };
   const document = await userModel.findByIdAndUpdate(
@@ -185,18 +239,56 @@ exports.userBlock = asyncHandler(async (req, res, next) => {
 // @route DELETE /api/v1/users/:id
 // @access Private admine
 exports.deleteUser = asyncHandler(async (req, res, next) => {
+
   const { id } = req.params;
   const userCheck = await userModel.findById(id);
+
   // Check user exist
   if (!userCheck) {
-    return next(new ApiError(`No user for this id ${id}`, 404));
+    return next(new ApiError(`No user for this id ${id}.`, 404));
   };
   // Check if the user is an admin
   if (userCheck.role === "admin") {
     return next(
-      new ApiError(`This user cannot be deleted because is an admin`, 404)
+      new ApiError(`This user cannot be deleted because is an admin.`, 404)
     );
   };
-  const user = await userModel.findByIdAndDelete({ _id: id });
-  res.status(200).json({ data: user });
+
+  // Delete user
+  let user = await userModel.findByIdAndDelete({ _id: id });
+  // Delete images
+  if (user.profileImage || user.profileCoverImage) {
+
+    let allUrlsImages = [];
+    if (user.profileImage) {
+      allUrlsImages.push(user.profileImage);
+    };
+    if (user.profileCoverImage) {
+      allUrlsImages.push(user.profileCoverImage);
+    };
+
+    const allNamesImages = allUrlsImages.map((item) => {
+      const imageUrl = item;
+      const baseUrl = `${process.env.BASE_URL}/users/`;
+      const imageName = imageUrl.replace(baseUrl, '');
+      return imageName;
+    });
+  
+    for (let i = 0; i < allNamesImages.length; i++) {
+      const imagePath = path.join(__dirname, '..', '..', 'uploads', 'users', `${allNamesImages[i]}`);
+      fs.unlink(imagePath, (err) => {});
+    };
+
+    user = userPropertysPrivate(user);
+
+    res.status(200).json({ data: user }); 
+
+  } else {
+
+    user = userPropertysPrivate(user);
+
+    res.status(200).json({ data: user });
+
+  };
+
 });
