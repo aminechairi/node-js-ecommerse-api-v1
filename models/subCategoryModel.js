@@ -20,6 +20,7 @@ const subCategorySchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: `Category`,
       required: [true, "Sub category must be belong to category."],
+      immutable: true,
     },
     image: {
       type: String,

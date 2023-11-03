@@ -4,7 +4,8 @@ const {
   getCategoryValidator,
   createCategoryValidator,
   updateCategoryValidator,
-  deleteCategoryValidator
+  deleteCategoryValidator,
+  imageValidator
 } = require("../utils/validators/categoryValidator");
 const {
   getCategories,
@@ -32,8 +33,9 @@ router.route("/")
     protect_allowedTo.protect(),
     protect_allowedTo.allowedTo("admin", "manager"),
     uploadCategoryImage,
-    resizeImage,
     createCategoryValidator,
+    resizeImage,
+    imageValidator,
     createCategories
   );
 
@@ -46,8 +48,8 @@ router
     protect_allowedTo.protect(),
     protect_allowedTo.allowedTo("admin", "manager"),
     uploadCategoryImage,
+    updateCategoryValidator,    
     resizeImage,
-    updateCategoryValidator,
     updateCategory
   ).delete(
     protect_allowedTo.protect(),

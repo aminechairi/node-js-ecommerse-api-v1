@@ -6,6 +6,7 @@ const {
   createSubCategoryValidator,
   updateSubCategoryValidator,
   deleteSubCategoryValidator,
+  imageValidator
 } = require("../utils/validators/subCategoryValidator");
 const {
   getSubCategories,
@@ -38,9 +39,10 @@ router
     protect_allowedTo.protect(),
     protect_allowedTo.allowedTo("admin", "manager"),
     uploadSubCategoryImage,
-    resizeImage,
     setCategoryIdToBody,
     createSubCategoryValidator,
+    resizeImage,
+    imageValidator,
     createSubCategory
   );
 
@@ -53,8 +55,8 @@ router
     protect_allowedTo.protect(),
     protect_allowedTo.allowedTo("admin", "manager"),
     uploadSubCategoryImage,
+    updateSubCategoryValidator,    
     resizeImage,
-    updateSubCategoryValidator,
     updateSubCategory
   )
   .delete(

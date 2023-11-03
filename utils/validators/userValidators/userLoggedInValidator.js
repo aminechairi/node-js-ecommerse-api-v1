@@ -56,15 +56,21 @@ exports.updateMyDataValidator = [
     .isMobilePhone(["ar-MA"])
     .withMessage("Invalid phone number only accepted Morocco Phone numbers."),
 
-  check("profileImage")
-    .optional({ checkFalsy: true }) // This field is optional
-    .isString()
-    .withMessage("Profile image must be of type string."),
+    check("profileImage")
+    .custom((_, { req }) => {
+      if (!(req.body.profileImage === undefined)) {
+        throw new Error('The field you entered for profileImage is not an Image type.');
+      };
+      return true;
+    }),
 
   check("profileCoverImage")
-    .optional({ checkFalsy: true }) // This field is optional
-    .isString()
-    .withMessage("Profile cover image must be of type string."),
+    .custom((_, { req }) => {
+      if (!(req.body.profileCoverImage === undefined)) {
+        throw new Error('The field you entered for profileCoverImage is not an Image type.');
+      };
+      return true;
+    }),
 
   validatorMiddleware,
 ];

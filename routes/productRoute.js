@@ -5,6 +5,7 @@ const {
   getProductValidator,
   updateProductValidator,
   deleteProductValidator ,
+  imageValidator
 } = require('../utils/validators/productValidator');
 const {
   getProducts,
@@ -37,8 +38,9 @@ router
     protect_allowedTo.protect(),
     protect_allowedTo.allowedTo("admin", "manager"),
     uploadProductImages,
+    createProductValidator,    
     resizeProductImages,
-    createProductValidator,
+    imageValidator,
     editeReqBody,
     createProduct
   );
@@ -52,8 +54,8 @@ router
     protect_allowedTo.protect(),
     protect_allowedTo.allowedTo("admin", "manager"),
     uploadProductImages,
+    updateProductValidator,    
     resizeProductImages,
-    updateProductValidator,
     editeReqBody,
     updateProduct
   )

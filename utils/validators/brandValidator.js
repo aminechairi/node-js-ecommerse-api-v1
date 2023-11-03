@@ -32,10 +32,12 @@ exports.createBrandValidator = [
     }),
 
   check("image")
-    .notEmpty()
-    .withMessage("Brand image is required.")
-    .isString()
-    .withMessage("Brand image must be of type string."),
+    .custom((_, { req }) => {
+      if (!(req.body.image === undefined)) {
+        throw new Error('The field you entered for Image is not an Image type.');
+      };
+      return true;
+    }),
 
   validatorMiddleware,
 ];
@@ -43,7 +45,13 @@ exports.createBrandValidator = [
 exports.updateBrandValidator = [
   check("id")
     .isMongoId()
-    .withMessage("Invalid brand id format."),
+    .withMessage("Invalid brand id format.")
+    .custom(async (value, { req }) => {
+      const brand = await brandModel.findById(value);
+      if (!brand) {
+        throw new Error(`No brand for this id ${value}.`);
+      };
+    }),
 
   check("name")
     .optional()
@@ -63,9 +71,12 @@ exports.updateBrandValidator = [
     }),
 
   check("image")
-    .optional()
-    .isString()
-    .withMessage("Brand image must be of type string."),
+    .custom((_, { req }) => {
+      if (!(req.body.image === undefined)) {
+        throw new Error('The field you entered for Image is not an Image type.');
+      };
+      return true;
+    }),
 
   validatorMiddleware,
 ];
@@ -74,6 +85,14 @@ exports.deleteBrandValidator = [
   check("id")
     .isMongoId()
     .withMessage("Invalid brand id format."),
+
+  validatorMiddleware,
+];
+
+exports.imageValidator = [
+  check("image")
+    .notEmpty()
+    .withMessage("Brand image is required."),
 
   validatorMiddleware,
 ];

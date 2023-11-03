@@ -5,7 +5,8 @@ const {
   getUnderSubCategoryValidator,
   createUnderSubCategoryValidator,
   updateUnderSubCategoryValidator,
-  deleteUnderSubCategoryValidator
+  deleteUnderSubCategoryValidator,
+  imageValidator
 } = require("../utils/validators/underSubCategoryValidator");
 const {
   createFilterObj,
@@ -32,9 +33,10 @@ router
     protect_allowedTo.protect(),
     protect_allowedTo.allowedTo("admin", "manager"),
     uploadUnderSubCategoryImage,
-    resizeImage,
     setSubCategoryIdToBody,
     createUnderSubCategoryValidator,
+    resizeImage,
+    imageValidator,
     createUnderSubCategory,
   );
 
@@ -47,8 +49,8 @@ router
     protect_allowedTo.protect(),
     protect_allowedTo.allowedTo("admin", "manager"),
     uploadUnderSubCategoryImage,
-    resizeImage,
     updateUnderSubCategoryValidator,
+    resizeImage,
     updateUnderSubCategory,
   )
   .delete(

@@ -92,21 +92,18 @@ exports.createProductValidator = [
     .withMessage("Too long product color name."),
 
   check("imageCover")
-    .notEmpty()
-    .withMessage("Product image cover is required.")
-    .isString()
-    .withMessage("Product image cover must be of type string."),
+    .custom((_, { req }) => {
+      if (!(req.body.imageCover === undefined)) {
+        throw new Error('The field you entered for ImageCover is not an Image type.');
+      };
+      return true;
+    }),
 
   check("images")
-    .optional()
-    .isArray()
-    .withMessage("Product images must be an array.")
-    .custom(images => {
-      for (const image of images) {
-        if (typeof image !== 'string') {
-          throw new Error("Product images must be of type string.");
-        }
-      }
+    .custom((_, { req }) => {
+      if (!(req.body.images === undefined)) {
+        throw new Error('The field you entered for Images is not an Image type.');
+      };
       return true;
     }),
 
@@ -254,9 +251,15 @@ exports.getProductValidator = [
 exports.updateProductValidator = [
   check("id")
     .isMongoId()
-    .withMessage("Invalid product id formate."),
+    .withMessage("Invalid product id formate.")
+    .custom(async (value, { req }) => {
+      const product = await productModel.findById(value);
+      if (!product) {
+        throw new Error(`No product for this id ${value}.`);
+      };
+    }),
 
-    check("uniqueName")
+  check("uniqueName")
     .optional()
     .isString()
     .withMessage("Product unique name must be of type string.")
@@ -333,20 +336,18 @@ exports.updateProductValidator = [
     .withMessage("Too long product color name."),
 
   check("imageCover")
-    .optional()
-    .isString()
-    .withMessage("Product image cover must be of type string."),
+    .custom((_, { req }) => {
+      if (!(req.body.imageCover === undefined)) {
+        throw new Error('The field you entered for ImageCover is not an Image type.');
+      };
+      return true;
+    }),
 
   check("images")
-    .optional()
-    .isArray()
-    .withMessage("Product images must be an array.")
-    .custom(images => {
-      for (const image of images) {
-        if (typeof image !== 'string') {
-          throw new Error("Product images must be of type string.");
-        }
-      }
+    .custom((_, { req }) => {
+      if (!(req.body.images === undefined)) {
+        throw new Error('The field you entered for Images is not an Image type.');
+      };
       return true;
     }),
 
@@ -524,5 +525,14 @@ exports.deleteProductValidator = [
   check("id")
     .isMongoId()
     .withMessage("Invalid product id formate."),
+
   validatorMiddleware,
-]; 
+];
+
+exports.imageValidator = [
+  check("imageCover")
+    .notEmpty()
+    .withMessage("Product image cover is required."),
+
+  validatorMiddleware,
+];

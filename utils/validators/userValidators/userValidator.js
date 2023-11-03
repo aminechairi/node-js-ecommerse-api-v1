@@ -65,15 +65,21 @@ exports.createUserValidator = [
     .withMessage("Invalid phone number only accepted Morocco Phone numbers."),
 
   check("profileImage")
-    .optional({ checkFalsy: true }) // This field is optional
-    .isString()
-    .withMessage("Profile image must be of type string."),
+    .custom((_, { req }) => {
+      if (!(req.body.profileImage === undefined)) {
+        throw new Error('The field you entered for profileImage is not an Image type.');
+      };
+      return true;
+    }),
 
   check("profileCoverImage")
-    .optional({ checkFalsy: true }) // This field is optional
-    .isString()
-    .withMessage("Profile cover image must be of type string."),
-
+    .custom((_, { req }) => {
+      if (!(req.body.profileCoverImage === undefined)) {
+        throw new Error('The field you entered for profileCoverImage is not an Image type.');
+      };
+      return true;
+    }),
+    
   check("password")
     .notEmpty()
     .withMessage("Password is required.")
@@ -105,7 +111,13 @@ exports.createUserValidator = [
 exports.updateUserValidator = [
   check("id")
     .isMongoId()
-    .withMessage("Invalid user id format."),
+    .withMessage("Invalid user id format.")
+    .custom(async (value, { req }) => {
+      const user = await userModel.findById(value);
+      if (!user) {
+        throw new Error(`No user for this id ${value}.`);
+      };
+    }),
 
   check("firstName")
     .optional()
@@ -168,14 +180,20 @@ exports.updateUserValidator = [
     .withMessage("Invalid phone number only accepted Morocco Phone numbers."),
 
   check("profileImage")
-    .optional({ checkFalsy: true }) // This field is optional
-    .isString()
-    .withMessage("Profile image must be of type string."),
+    .custom((_, { req }) => {
+      if (!(req.body.profileImage === undefined)) {
+        throw new Error('The field you entered for profileImage is not an Image type.');
+      };
+      return true;
+    }),
 
   check("profileCoverImage")
-    .optional({ checkFalsy: true }) // This field is optional
-    .isString()
-    .withMessage("Profile cover image must be of type string."),
+    .custom((_, { req }) => {
+      if (!(req.body.profileCoverImage === undefined)) {
+        throw new Error('The field you entered for profileCoverImage is not an Image type.');
+      };
+      return true;
+    }),
 
   check("role")
     .optional({ checkFalsy: true }) // This field is optional

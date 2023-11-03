@@ -3,6 +3,7 @@ const validatorMiddleware = require("../../middlewares/validatorMiddleware");
 const slugify = require("slugify");
 
 const categoryModel = require("../../models/categoryModel");
+const subCategoryModel = require('../../models/subCategoryModel')
 
 exports.getSubCategoryValidator = [
   check("id")
@@ -52,10 +53,12 @@ exports.createSubCategoryValidator = [
     }),
 
   check("image")
-    .notEmpty()
-    .withMessage("Sub category image is required.")
-    .isString()
-    .withMessage("Sub category image must be of type string."),
+    .custom((_, { req }) => {
+      if (!(req.body.image === undefined)) {
+        throw new Error('The field you entered for Image is not an Image type.');
+      };
+      return true;
+    }),
 
   validatorMiddleware,
 ];
@@ -63,7 +66,13 @@ exports.createSubCategoryValidator = [
 exports.updateSubCategoryValidator = [
   check("id")
     .isMongoId()
-    .withMessage("Invalid sub category id format."),
+    .withMessage("Invalid sub category id format.")
+    .custom(async (value, { req }) => {
+      const subCategory = await subCategoryModel.findById(value);
+      if (!subCategory) {
+        throw new Error(`No sub category for this id ${value}.`);
+      };
+    }),
 
   check("name")
     .optional()
@@ -78,24 +87,13 @@ exports.updateSubCategoryValidator = [
       return true;
     }),
 
-  check("category")
-    .optional()
-    .isMongoId()
-    .withMessage("Invalid category id format.")
-    .custom(async (value, { req }) => {
-      const ObjectId = req.body.category;
-      const category = await categoryModel.findById(ObjectId);
-      if (category) {
-        return true;
-      } else {
-        throw new Error(`No category for this id ${ObjectId}`);
-      }
-    }),
-
   check("image")
-    .optional()
-    .isString()
-    .withMessage("Sub category image must be of type string."),
+    .custom((_, { req }) => {
+      if (!(req.body.image === undefined)) {
+        throw new Error('The field you entered for Image is not an Image type.');
+      };
+      return true;
+    }),
 
   validatorMiddleware,
 ];
@@ -104,6 +102,14 @@ exports.deleteSubCategoryValidator = [
   check("id")
     .isMongoId()
     .withMessage("Invalid sub category id format."),
+
+  validatorMiddleware,
+];
+
+exports.imageValidator = [
+  check("image")
+    .notEmpty()
+    .withMessage("Sub category image is required."),
 
   validatorMiddleware,
 ];

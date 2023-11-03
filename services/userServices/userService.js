@@ -12,7 +12,6 @@ const {
   getAll,
   createOne,
 } = require("../handlersFactory");
-const ApiFeatures = require("../../utils/apiFeatures");
 const {
   uploadMultipleImages,
 } = require("../../middlewares/uploadImageMiddleware");

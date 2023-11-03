@@ -2,7 +2,6 @@ const sharp = require("sharp");
 const asyncHandler = require("express-async-handler");
 const { v4: uuidv4 } = require("uuid");
 
-const ApiError = require('../utils/apiErrore');
 const {
   deleteOne,
   updateOne,
