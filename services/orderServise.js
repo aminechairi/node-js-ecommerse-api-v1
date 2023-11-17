@@ -255,6 +255,7 @@ exports.checkoutSession = asyncHandler(async (req, res, next) => {
 
   // Stripe create session
   const price = cart.totalPriceAfterDiscount || cart.totalPrice;
+
   const session = await stripe.checkout.sessions.create({
     line_items: [
       {
