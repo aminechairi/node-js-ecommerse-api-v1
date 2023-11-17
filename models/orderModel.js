@@ -18,6 +18,13 @@ const orderSchema = new mongoose.Schema({
           min: 1,
           required: [true, "Quantity si required."]
         },
+        size: {
+          type: String,
+          trim: true,
+          uppercase: true,
+          minlength: [1, "Too short product size."],
+          maxlength: [8, "Too long product size."],
+        },
         color: {
           type: String,
           trim: true,

@@ -9,11 +9,21 @@ exports.loggedUserAddProductValidator = [
     .withMessage("Invalid product id format."),
 
   check("quantity")
-    .optional()
+    .notEmpty()
+    .withMessage('Quantity is required.')
     .isNumeric()
-    .withMessage("quantity must be of type number.")
+    .withMessage("Quantity must be of type number.")
     .isInt({ min: 1, })
-    .withMessage("Prodact quantity number cannot be less than 1 and must be a integer number."),
+    .withMessage("Quantity number cannot be less than 1 and must be a integer number."),
+
+  check('size')
+    .optional()
+    .isString()
+    .withMessage("Size must be of type string.")
+    .isLength({ min: 1 })
+    .withMessage("Too short size.")
+    .isLength({ max: 8 })
+    .withMessage("Too long size."),
 
   validatorMiddleware,
 ];
@@ -21,7 +31,7 @@ exports.loggedUserAddProductValidator = [
 exports.loggedUserRemoveProductValidator = [
   check("productId")
     .notEmpty()
-    .withMessage("product id is required.")
+    .withMessage("Product id is required.")
     .isMongoId()
     .withMessage("Invalid product id format."),
 
@@ -31,15 +41,15 @@ exports.loggedUserRemoveProductValidator = [
 exports.loggedUserUpdateProductQuantityValidator = [
   check("productId")
     .notEmpty()
-    .withMessage("product id is required.")
+    .withMessage("Product id is required.")
     .isMongoId()
     .withMessage("Invalid product id format."),
 
     check("quantity")
     .notEmpty()
-    .withMessage("quantity is required.")
+    .withMessage("Quantity is required.")
     .isNumeric()
-    .withMessage("quantity must be of type number.")
+    .withMessage("Quantity must be of type number.")
     .isInt({ min: 1, })
     .withMessage("Prodact quantity number cannot be less than 1 and must be a integer number."),
 

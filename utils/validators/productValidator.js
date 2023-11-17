@@ -1,6 +1,7 @@
-const { check } = require("express-validator");
+const { check, body } = require("express-validator");
 const validatorMiddleware = require("../../middlewares/validatorMiddleware");
 const slugify = require("slugify");
+const mongoose = require('mongoose');
 
 const categoryModel = require(`../../models/categoryModel`);
 const subCategoryModel = require("../../models/subCategoryModel");
@@ -8,12 +9,44 @@ const underSubCategoryModel = require('../../models/underSubCategoryModel');
 const brandModel = require("../../models/brandModel");
 const productModel = require("../../models/productModel");
 
-const mongoose = require('mongoose');
-
 // Custom validation function for MongoDB ObjectID
 const isValidObjectId = value => mongoose.Types.ObjectId.isValid(value);
 
 exports.createProductValidator = [
+
+  body()
+    .custom((_, { req }) => {
+      if (req.body.uniqueName) {
+        req.body.uniqueName = `${req.body.uniqueName}`.toUpperCase().replaceAll(" ", "");
+      };
+      return true;
+    }),
+
+  body()
+    .custom((_, { req }) => {
+
+      if (req.body.sizes === undefined) {
+
+      if (!req.body.price) {
+        throw new Error('Product price is required.');
+      };
+
+      if (!req.body.quantity) {
+        throw new Error('Product quantity is required.');
+      };
+
+      } else {
+  
+        req.body.price = undefined;
+        req.body.priceAfterDiscount = undefined;
+        req.body.quantity = undefined;
+
+      };
+
+      return true;
+
+    }),
+
   check("uniqueName")
     .notEmpty()
     .withMessage("Product unique name is required.")
@@ -46,38 +79,22 @@ exports.createProductValidator = [
     .isLength({ min: 32 })
     .withMessage("Too short product description."),
 
-  check("quantity")
-    .notEmpty()
-    .withMessage("Product quantity is required.")
-    .isNumeric()
-    .withMessage("Product quantity must be of type number.")
-    .isInt({ min: 1, })
-    .withMessage("Prodact quantity number cannot be less than 1 and must be a integer number."),
-
-  check("sold")
-    .optional()
-    .isNumeric()
-    .withMessage("Product sold must be of type number.")
-    .isInt({ min: 0, })
-    .withMessage("Prodact sold number cannot be less than 0 and must be a integer number."),
-
   check("price")
-    .notEmpty()
-    .withMessage("Product price is required.")
+    .optional()
     .isNumeric()
     .withMessage("Product price must be of type number.")
     .isFloat({ min: 0, })
-    .withMessage("Prodact price number cannot be less than 0."),
+    .withMessage("Product price number cannot be less than 0."),
 
   check("priceAfterDiscount")
     .optional()
     .isNumeric()
     .withMessage("Product price after discount must be of type number.")
     .isFloat({ min: 0, })
-    .withMessage("Prodact price after discount number cannot be less than 0.")
+    .withMessage("Product price after discount number cannot be less than 0.")
     .custom((value, { req }) => {
       if (+req.body.price <= +value) {
-        throw new Error("Prodact price after discount must be lower than price.");
+        throw new Error("Product price after discount must be lower than price.");
       };
       return true;
     }),
@@ -105,6 +122,111 @@ exports.createProductValidator = [
         throw new Error('The field you entered for Images is not an Image type.');
       };
       return true;
+    }),
+
+  check("quantity")
+    .optional()
+    .isNumeric()
+    .withMessage("Product quantity must be of type number.")
+    .isInt({ min: 1, })
+    .withMessage("Product quantity number cannot be less than 1 and must be a integer number."),
+
+  check('sizes')
+    .optional()
+    .isArray()
+    .withMessage("Product sizes must be an array.")
+    .custom((sizes, { req }) => {
+
+      for (let i = 0; i < sizes.length; i++) {
+
+        // Validate type itemes
+        if ( !(typeof sizes[i] === 'object') || Array.isArray(sizes[i])) {
+          throw new Error(`Sizes items must be of type object.`);
+        };
+
+        // Validate size
+        if (sizes[i].size === undefined) {
+
+          throw new Error(`Product size (index ${i}) is required.`);
+
+        } else if (!( typeof sizes[i].size === 'string' )) {
+
+          throw new Error(`Product size (index ${i}) must be of type string.`);
+
+        } else if (sizes[i].size.length < 1) {
+
+          throw new Error(`Too short product size (index ${i}).`);
+
+        } else if (sizes[i].size.length > 8) {
+
+          throw new Error(`Too long product size (index ${i}).`);
+
+        };
+
+        // Validate quantity
+        if (sizes[i].quantity === undefined) {
+
+          throw new Error(`Product quantity (index ${i}) is required.`);
+
+        } else if (isNaN(sizes[i].quantity)) {
+
+          throw new Error(`Product quantity (index ${i}) must be of type number.`);
+
+        } else if (!Number.isInteger(+sizes[i].quantity)) {
+
+          throw new Error(`Product quantity (index ${i}) must be of type integer.`);
+
+        } else if (sizes[i].quantity < 1) {
+
+          throw new Error(`Product quantity (index ${i}) cannot be less than 1.`);
+
+        };
+
+        // Validate price
+        if (sizes[i].price === undefined) {
+
+          throw new Error(`Product price (index ${i}) is required.`);
+
+        } else if (isNaN(sizes[i].price)) {
+
+          throw new Error(`Product price (index ${i}) must be of type number.`);
+
+        } else if (sizes[i].price < 1) {
+
+          throw new Error(`Product price (index ${i}) cannot be less than 1.`);
+
+        };
+
+        // Validate price after discount
+        if (!(sizes[i].priceAfterDiscount === undefined)) {
+
+          if (isNaN(sizes[i].priceAfterDiscount)) {
+
+            throw new Error(`Product price after discount (index ${i}) must be of type number.`);
+
+          } else if (sizes[i].priceAfterDiscount < 0) {
+
+            throw new Error(`Product price after discount (index ${i}) cannot be less than 0.`);
+
+          } else if (sizes[i].price <= +sizes[i].priceAfterDiscount) {
+
+            throw new Error(`Product price after discount (index ${i}) must be lower than price.`);
+
+          };
+
+        };
+
+      };
+
+      // Check if duplicate size
+      const uniqueSizes = new Set(sizes.map((size) => `${size.size}`.toUpperCase()));
+      const uniqueSizeCount = uniqueSizes.size;
+      if (uniqueSizeCount === sizes.length) {
+        return true;
+      } else {
+        throw new Error('There are duplicate sizes.')
+      };
+
     }),
 
   check("category")
@@ -251,6 +373,13 @@ exports.createProductValidator = [
       }
     }),
 
+  check("sold")
+    .optional()
+    .isNumeric()
+    .withMessage("Product sold must be of type number.")
+    .isInt({ min: 0, })
+    .withMessage("Product sold number cannot be less than 0 and must be a integer number."),
+
   check("ratingsAverage")
     .optional()
     .isNumeric()
@@ -278,6 +407,15 @@ exports.getProductValidator = [
 ];
 
 exports.updateProductValidator = [
+
+  body()
+    .custom((_, { req }) => {
+      if (req.body.uniqueName) {
+        req.body.uniqueName = `${req.body.uniqueName}`.toUpperCase().replaceAll(" ", "");
+      };
+      return true;
+    }),
+
   check("id")
     .isMongoId()
     .withMessage("Invalid product id formate.")
@@ -317,40 +455,44 @@ exports.updateProductValidator = [
     .isLength({ min: 32 })
     .withMessage("Too short product description."),
 
-  check("quantity")
-    .optional()
-    .isNumeric()
-    .withMessage("Product quantity must be of type number.")
-    .isInt({ min: 1, })
-    .withMessage("Prodact quantity number cannot be less than 1 and must be a integer number."),
-
-  check("sold")
-    .optional()
-    .isNumeric()
-    .withMessage("Product sold must be of type number.")
-    .isInt({ min: 0, })
-    .withMessage("Prodact sold number cannot be less than 0 and must be a integer number."),
-
   check("price")
     .optional()
+    .custom(async (_, { req }) => {
+      const product = await productModel.findById(req.params.id);
+      if (!product) {
+        throw new Error(`No product for this id ${req.params.id}`);
+      };
+      if (!product.price) {
+        throw new Error(`This product does not contain price field.`);
+      }
+    })
     .isNumeric()
     .withMessage("Product price must be of type number.")
     .isFloat({ min: 0, })
-    .withMessage("Prodact price number cannot be less than 0."),
+    .withMessage("Product price number cannot be less than 0."),
 
   check("priceAfterDiscount")
     .optional()
+    .custom(async (_, { req }) => {
+      const product = await productModel.findById(req.params.id);
+      if (!product) {
+        throw new Error(`No product for this id ${req.params.id}`);
+      };
+      if (product.sizes.length > 0) {
+        throw new Error(`This product does not contain price after discount field.`);
+      }
+    })
     .isNumeric()
     .withMessage("Product price after discount must be of type number.")
     .isFloat({ min: 0, })
-    .withMessage("Prodact price after discount number cannot be less than 0.")
+    .withMessage("Product price after discount number cannot be less than 0.")
     .custom(async (value, { req }) => {
       const product = await productModel.findById(req.params.id);
       if (!product) {
         throw new Error(`No product for this id ${req.params.id}`);
       }
       if (product.price <= +value) {
-        throw new Error("Prodact price after discount must be lower than price.");
+        throw new Error("Product price after discount must be lower than price.");
       }
       return true;
     }),
@@ -378,6 +520,129 @@ exports.updateProductValidator = [
         throw new Error('The field you entered for Images is not an Image type.');
       };
       return true;
+    }),
+
+  check("quantity")
+    .optional()
+    .custom(async (_, { req }) => {
+      const product = await productModel.findById(req.params.id);
+      if (!product) {
+        throw new Error(`No product for this id ${req.params.id}`);
+      };
+      if (!product.quantity) {
+        throw new Error(`This product does not contain quantity field.`);
+      }
+    })
+    .isNumeric()
+    .withMessage("Product quantity must be of type number.")
+    .isInt({ min: 1, })
+    .withMessage("Product quantity number cannot be less than 1 and must be a integer number."),
+
+  check('sizes')
+    .optional()
+    .custom(async (_, { req }) => {
+      const product = await productModel.findById(req.params.id);
+      if (!product) {
+        throw new Error(`No product for this id ${req.params.id}`);
+      };
+      if (product.sizes.length === 0) {
+        throw new Error(`This product does not contain sizes field.`);
+      }
+    })
+    .isArray()
+    .withMessage("Product sizes must be an array.")
+    .custom((sizes, { req }) => {
+
+      for (let i = 0; i < sizes.length; i++) {
+
+        // Validate type itemes
+        if ( !(typeof sizes[i] === 'object') || Array.isArray(sizes[i])) {
+          throw new Error(`Sizes items must be of type object.`);
+        };
+
+        // Validate size
+        if (sizes[i].size === undefined) {
+
+          throw new Error(`Product size (index ${i}) is required.`);
+
+        } else if (!( typeof sizes[i].size === 'string' )) {
+
+          throw new Error(`Product size (index ${i}) must be of type string.`);
+
+        } else if (sizes[i].size.length < 1) {
+
+          throw new Error(`Too short product size (index ${i}).`);
+
+        } else if (sizes[i].size.length > 8) {
+
+          throw new Error(`Too long product size (index ${i}).`);
+
+        };
+
+        // Validate quantity
+        if (sizes[i].quantity === undefined) {
+
+          throw new Error(`Product quantity (index ${i}) is required.`);
+
+        } else if (isNaN(sizes[i].quantity)) {
+
+          throw new Error(`Product quantity (index ${i}) must be of type number.`);
+
+        } else if (!Number.isInteger(+sizes[i].quantity)) {
+
+          throw new Error(`Product quantity (index ${i}) must be of type integer.`);
+
+        } else if (sizes[i].quantity < 1) {
+
+          throw new Error(`Product quantity (index ${i}) cannot be less than 1.`);
+
+        };
+
+        // Validate price
+        if (sizes[i].price === undefined) {
+
+          throw new Error(`Product price (index ${i}) is required.`);
+
+        } else if (isNaN(sizes[i].price)) {
+
+          throw new Error(`Product price (index ${i}) must be of type number.`);
+
+        } else if (sizes[i].price < 1) {
+
+          throw new Error(`Product price (index ${i}) cannot be less than 1.`);
+
+        };
+
+        // Validate quantity price after discount
+        if (!(sizes[i].priceAfterDiscount === undefined)) {
+
+          if (isNaN(sizes[i].priceAfterDiscount)) {
+
+            throw new Error(`Product price after discount (index ${i}) must be of type number.`);
+
+          } else if (sizes[i].priceAfterDiscount < 0) {
+
+            throw new Error(`Product price after discount (index ${i}) cannot be less than 0.`);
+
+          } else if (sizes[i].price <= +sizes[i].priceAfterDiscount) {
+
+            throw new Error(`Product price after discount (index ${i}) must be lower than price.`);
+
+          };
+
+        };
+
+      };
+
+      // Check if duplicate size
+      const uniqueSizes = new Set(sizes.map((size) => `${size.size}`.toUpperCase()));
+      const uniqueSizeCount = uniqueSizes.size;
+      if (uniqueSizeCount === sizes.length) {
+        return true;
+      } else {
+        throw new Error('There are duplicate sizes.')
+      };
+
     }),
 
   check("category")
@@ -560,6 +825,13 @@ exports.updateProductValidator = [
         throw new Error(`No brand for this id ${ObjectId}.`);
       }
     }),
+
+  check("sold")
+    .optional()
+    .isNumeric()
+    .withMessage("Product sold must be of type number.")
+    .isInt({ min: 0, })
+    .withMessage("Product sold number cannot be less than 0 and must be a integer number."),
 
   check("ratingsAverage")
     .optional()

@@ -29,19 +29,8 @@ const productSchema = new mongoose.Schema(
       trim: true,
       minlength: [20, "Too short product description."],    
     },
-    quantity: {
-      type: Number,
-      required: [true, "Product quantity is required."],
-      min: [1, "Prodact quantity number cannot be less than 1."],
-    },
-    sold: {
-      type: Number,
-      min: [0, "Prodact sold number cannot be less than 0."],
-      default: 0,
-    },
     price: {
       type: Number,
-      required: [true, "Product price is required."],
       min: [0, "Prodact price number cannot be less than 0."],
     },
     priceAfterDiscount: {
@@ -65,6 +54,33 @@ const productSchema = new mongoose.Schema(
         trim: true,
       },
     ],
+    quantity: {
+      type: Number,
+      min: [1, "Prodact quantity number cannot be less than 1."],
+    },
+    sizes: [
+      {
+        size: {
+          type: String,
+          trim: true,
+          uppercase: true,
+          minlength: [1, "Too short product size."],
+          maxlength: [8, "Too long product size."],
+        },
+        quantity: {
+          type: Number,
+          min: [1, "Prodact quantity number cannot be less than 1."],
+        },
+        price: {
+          type: Number,
+          min: [0, "Prodact price number cannot be less than 0."],
+        },
+        priceAfterDiscount: {
+          type: Number,
+          min: [0, "Prodact price after discount number cannot be less than 0."],
+        },
+      },
+    ],
     category: {
       type: mongoose.Schema.ObjectId,
       ref: "Category",
@@ -85,6 +101,11 @@ const productSchema = new mongoose.Schema(
     brand: {
       type: mongoose.Schema.ObjectId,
       ref: "Brand",
+    },
+    sold: {
+      type: Number,
+      min: [0, "Prodact sold number cannot be less than 0."],
+      default: 0,
     },
     ratingsAverage: {
       type: Number,

@@ -63,11 +63,6 @@ exports.resizeProductImages = asyncHandler(async (req, res, next) => {
   next();
 });
 
-exports.editeReqBody = (req, res, next) => {
-  req.body.uniqueName = `${req.body.uniqueName}`.toUpperCase().replaceAll(" ", "");
-  next();
-};
-
 // @desc Get list of products
 // @route GET /api/v1/products
 // @access Public

@@ -10,7 +10,6 @@ const {
 const {
   getProducts,
   getProduct,
-  editeReqBody,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -41,7 +40,6 @@ router
     createProductValidator,    
     resizeProductImages,
     imageValidator,
-    editeReqBody,
     createProduct
   );
 
@@ -54,9 +52,8 @@ router
     protect_allowedTo.protect(),
     protect_allowedTo.allowedTo("admin", "manager"),
     uploadProductImages,
-    updateProductValidator,    
+    updateProductValidator,
     resizeProductImages,
-    editeReqBody,
     updateProduct
   )
   .delete(

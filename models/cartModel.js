@@ -19,6 +19,13 @@ const cartSchema = new mongoose.Schema(
           default: 1,
           min: 1,
         },
+        size: {
+          type: String,
+          trim: true,
+          uppercase: true,
+          minlength: [1, "Too short product size."],
+          maxlength: [8, "Too long product size."],
+        },
         color: {
           type: String,
           trim: true,
@@ -68,7 +75,7 @@ const cartSchema = new mongoose.Schema(
 cartSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'cartItems.product',
-    select: 'title quantity sold price priceAfterDiscount imageCover images',
+    select: 'title price priceAfterDiscount imageCover images color quantity sizes sold',
   });
   next();
 });
