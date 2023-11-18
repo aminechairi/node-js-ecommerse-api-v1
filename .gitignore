@@ -1,9 +1,3 @@
 /node_modules
 /config.env
 /testCode.js
-/uploads/categories/*.jpeg
-/uploads/subCategories/*.jpeg
-/uploads/underSubCategories/*.jpeg
-/uploads/brands/*.jpeg
-/uploads/products/*.jpeg
-/uploads/users/*.jpeg
