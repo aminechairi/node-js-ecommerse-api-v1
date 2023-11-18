@@ -91,6 +91,7 @@ class ApiFeatures {
     this.paginationResults = pagination;
 
     this.mongooseQuery = this.mongooseQuery.skip(skip).limit(limit);
+
     return this;
   }
 };
