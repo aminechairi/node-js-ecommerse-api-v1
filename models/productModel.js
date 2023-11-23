@@ -1,4 +1,10 @@
 const mongoose = require('mongoose');
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const { GetObjectCommand } = require("@aws-sdk/client-s3");
+const s3Client = require('../config/s3Client');
+
+const awsBuckName = process.env.AWS_BUCKET_NAME;
+const expiresIn = process.env.EXPIRE_IN;
 
 const productSchema = new mongoose.Schema(
   {
@@ -144,29 +150,58 @@ productSchema.pre("findOne", function(next) {
   next();
 });
 
-const setImageUrl = (doc) => {
+const setImageUrl = async (doc) => {
+
   if (doc.imageCover) {
-    const imageUrl = `${process.env.BASE_URL}/products/${doc.imageCover}`;
+  
+    const getObjectParams = {
+      Bucket: awsBuckName,
+      Key: `products/${doc.imageCover}`,
+    };
+  
+    const command = new GetObjectCommand(getObjectParams);
+    const imageUrl = await getSignedUrl(s3Client, command, { expiresIn });
+  
     doc.imageCover = imageUrl;
-  }
+
+  };
+
   if (doc.images) {
+
     let imageList = [];
-    doc.images.forEach(img => {
-      const imgUrl = `${process.env.BASE_URL}/products/${img}`;
-      imageList.push(imgUrl);
-    });
+
+    await Promise.all(
+
+      doc.images.map(async (image) => {
+    
+        const getObjectParams = {
+          Bucket: awsBuckName,
+          Key: `products/${image}`,
+        };
+      
+        const command = new GetObjectCommand(getObjectParams);
+        const imageUrl = await getSignedUrl(s3Client, command, { expiresIn });
+  
+        imageList.push(imageUrl);
+  
+      })
+
+    );
+
     doc.images = imageList;
-  }
+
+  };
+
 };
 
 // findOne, findAll, update, delete
-productSchema.post("init", function (doc) {
-  setImageUrl(doc);
+productSchema.post("init", async function (doc) {
+  await setImageUrl(doc);
 });
 
 // create
-productSchema.post("save", function (doc) {
-  setImageUrl(doc);
+productSchema.post("save", async function (doc) {
+  await setImageUrl(doc);
 });
 
 module.exports = mongoose.model("Product", productSchema);

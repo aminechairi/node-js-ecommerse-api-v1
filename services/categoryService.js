@@ -1,8 +1,5 @@
-const sharp = require("sharp");
-const asyncHandler = require("express-async-handler");
-const { v4: uuidv4 } = require("uuid");
-
 const {
+  resizeImage,
   deleteOne,
   updateOne,
   createOne,
@@ -16,19 +13,7 @@ const categoryModel = require(`../models/categoryModel`);
 exports.uploadCategoryImage = uploadSingleImage("image");
 
 // Image processing
-exports.resizeImage = asyncHandler(async (req, res, next) => {
-  const fileName = `category-${uuidv4()}-${Date.now()}.jpeg`;
-  if (req.file) {
-    await sharp(req.file.buffer)
-      .resize(800, 800)
-      .toFormat("jpeg")
-      .jpeg({ quality: 90 })
-      .toFile(`uploads/categories/${fileName}`);
-    // Save image to Into Our db
-    req.body.image = `${fileName}`;
-  }
-  next();
-});
+exports.resizeImage = resizeImage('categories', 'category');
 
 // @desc Get list of categories
 // @route GET /api/v1/categories
@@ -48,9 +33,9 @@ exports.createCategories = createOne(categoryModel);
 // @desc Update category by id
 // @route PUT /api/v1/categories/:id
 // @access Private
-exports.updateCategory = updateOne(categoryModel, 'categories');
+exports.updateCategory = updateOne(categoryModel);
 
 // @desc Delete category by id
 // @route DELETE /api/v1/categories/:id
 // @access Private
-exports.deleteCategory = deleteOne(categoryModel, 'categories');
+exports.deleteCategory = deleteOne(categoryModel, true);

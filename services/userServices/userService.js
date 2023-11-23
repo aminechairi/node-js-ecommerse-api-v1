@@ -1,6 +1,5 @@
-const fs = require('fs');
-const path = require("path");
-
+const { PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const s3Client = require('../../config/s3Client');
 const sharp = require("sharp");
 const asyncHandler = require("express-async-handler");
 const { v4: uuidv4 } = require("uuid");
@@ -17,6 +16,8 @@ const {
 } = require("../../middlewares/uploadImageMiddleware");
 const { userPropertysPrivate } = require("../../utils/propertysPrivate");
 
+const awsBuckName = process.env.AWS_BUCKET_NAME;
+
 // Upload multiple images
 exports.uploadUserImages = uploadMultipleImages([
   {
@@ -31,38 +32,73 @@ exports.uploadUserImages = uploadMultipleImages([
 
 // Images processing
 exports.resizeUserImages = asyncHandler(async (req, res, next) => {
+
   // 1 - Image processing for profileImage
   if (req.files.profileImage) {
-    const profileImageFileName = `users-${uuidv4()}-${Date.now()}.jpeg`;
-    await sharp(req.files.profileImage[0].buffer)
-      .resize(800, 800)
-      .toFormat("jpeg")
-      .jpeg({ quality: 90 })
-      .toFile(`uploads/users/${profileImageFileName}`);
-    // Save profileImage to Into Our db
-    req.body.profileImage = `${profileImageFileName}`;
-  }
+
+    const imageFormat = 'jpeg';
+
+    const buffer = await sharp(req.files.profileImage[0].buffer)
+    .resize(800, 800)
+    .toFormat(imageFormat)
+    .jpeg({ quality: 100 })
+    .toBuffer();
+
+    const profileImageName = `user-${uuidv4()}-${Date.now()}.${imageFormat}`;
+
+    const params = {
+      Bucket: awsBuckName,
+      Key: `users/${profileImageName}`,
+      Body: buffer,
+      ContentType: `image/${imageFormat}`,
+    };
+
+    const command = new PutObjectCommand(params);
+    await s3Client.send(command);
+
+    // Save image name to Into Your db
+    req.body.profileImage = profileImageName;
+
+  };
+
   // 2 - Image processing for profileCoverImage
   if (req.files.profileCoverImage) {
-    const profileCoverImageFileName = `users-${uuidv4()}-${Date.now()}.jpeg`;
-    await sharp(req.files.profileCoverImage[0].buffer)
-      .toFormat("jpeg")
-      .jpeg({ quality: 90 })
-      .toFile(`uploads/users/${profileCoverImageFileName}`);
-    // Save profileCoverImage to Into Our db
-    req.body.profileCoverImage = `${profileCoverImageFileName}`;
-  }
+
+    const imageFormat = 'jpeg';
+
+    const buffer = await sharp(req.files.profileCoverImage[0].buffer)
+    .toFormat(imageFormat)
+    .jpeg({ quality: 100 })
+    .toBuffer();
+
+    const profileCoverImageName = `user-${uuidv4()}-${Date.now()}.${imageFormat}`;
+
+    const params = {
+      Bucket: awsBuckName,
+      Key: `users/${profileCoverImageName}`,
+      Body: buffer,
+      ContentType: `image/${imageFormat}`,
+    };
+
+    const command = new PutObjectCommand(params);
+    await s3Client.send(command);
+
+    // Save image name to Into Your db
+    req.body.profileCoverImage = profileCoverImageName;
+
+  };
+
   next();
 });
 
-// @desc Get list of users
-// @route GET /api/v1/users
-// @access Private admine
+// @desc    Get list of users
+// @route   GET /api/v1/users
+// @access  Private admine
 exports.getUsers = getAll(userModel, `User`);
 
-// @desc Get user by id
-// @route GET /api/v1/users/:id
-// @access Private admine
+// @desc    Get user by id
+// @route   GET /api/v1/users/:id
+// @access  Private admine
 exports.getUser = asyncHandler(async (req, res, next) => {
   const id = req.params.id;
   const document = await userModel.findById(id);
@@ -75,14 +111,14 @@ exports.getUser = asyncHandler(async (req, res, next) => {
   });
 });
 
-// @desc Create user
-// @route POST /api/v1/users
-// @access Private admine
+// @desc    Create user
+// @route   POST /api/v1/users
+// @access  Private admine
 exports.createUser = createOne(userModel);
 
-// @desc Update user by id
-// @route PUT /api/v1/users/:id
-// @access Private admine
+// @desc    Update user by id
+// @route   PUT /api/v1/users/:id
+// @access  Private admine
 exports.updateUser = asyncHandler(async (req, res, next) => {
 
   const { id } = req.params;
@@ -96,7 +132,7 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
   // Check if the user is an admin
   if (userCheck.role === "admin") {
     return next(
-      new ApiError(`This user cannot be updated data because is an admin.`, 404)
+      new ApiError(`This user cannot be updated data because is an admin.`, 403)
     );
   };
 
@@ -125,17 +161,29 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
       allUrlsImages.push(user.profileCoverImage);
     };
 
-    const allNamesImages = allUrlsImages.map((item) => {
+    const keys = allUrlsImages.map((item) => {
       const imageUrl = item;
-      const baseUrl = `${process.env.BASE_URL}/users/`;
-      const imageName = imageUrl.replace(baseUrl, '');
-      return imageName;
+      const baseUrl = `${process.env.AWS_BASE_URL}/`;
+      const restOfUrl = imageUrl.replace(baseUrl, '');
+      const key = restOfUrl.slice(0, restOfUrl.indexOf('?'));
+      return key;
     });
   
-    for (let i = 0; i < allNamesImages.length; i++) {
-      const imagePath = path.join(__dirname, '..', '..', 'uploads', 'users', `${allNamesImages[i]}`);
-      fs.unlink(imagePath, (err) => {});
-    };
+    await Promise.all(
+  
+      keys.map(async (key) => {
+  
+        const params = {
+          Bucket: awsBuckName,
+          Key: key,
+        };
+  
+        const command = new DeleteObjectCommand(params);
+        await s3Client.send(command);
+  
+      })
+  
+    );
 
     user = await userModel.find({ _id: id });
 
@@ -168,9 +216,9 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
 
 });
 
-// @desc Change user password
-// @route PUT /api/v1/users/changepassword/:id
-// @access Private admine
+// @desc    Change user password
+// @route   PUT /api/v1/users/changepassword/:id
+// @access  Private admine
 exports.changeUserPassword = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const userCheck = await userModel.findById(id);
@@ -181,7 +229,7 @@ exports.changeUserPassword = asyncHandler(async (req, res, next) => {
   // Check if the user is an admin
   if (userCheck.role === "admin") {
     return next(
-      new ApiError(`This user cannot be change password because is an admin.`, 404)
+      new ApiError(`This user cannot be change password because is an admin.`, 403)
     );
   };
   const isCorrectPassword = await bcrypt.compare(
@@ -205,9 +253,9 @@ exports.changeUserPassword = asyncHandler(async (req, res, next) => {
   res.status(200).json({ data: user });
 });
 
-// @desc Block specific user
-// @route PUT /api/v1/users/userblock/:id
-// @access Private admine
+// @desc    Block specific user
+// @route   PUT /api/v1/users/userblock/:id
+// @access  Private admine
 exports.userBlock = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const userCheck = await userModel.findById(id);
@@ -218,7 +266,7 @@ exports.userBlock = asyncHandler(async (req, res, next) => {
   // Check if the user is an admin
   if (userCheck.role === "admin") {
     return next(
-      new ApiError(`This user cannot be blocked because is an admin.`, 404)
+      new ApiError(`This user cannot be blocked because is an admin.`, 403)
     );
   };
   const document = await userModel.findByIdAndUpdate(
@@ -234,9 +282,9 @@ exports.userBlock = asyncHandler(async (req, res, next) => {
   res.status(200).json({ data: user });
 });
 
-// @desc Delete user by id
-// @route DELETE /api/v1/users/:id
-// @access Private admine
+// @desc    Delete user by id
+// @route   DELETE /api/v1/users/:id
+// @access  Private admine
 exports.deleteUser = asyncHandler(async (req, res, next) => {
 
   const { id } = req.params;
@@ -246,15 +294,17 @@ exports.deleteUser = asyncHandler(async (req, res, next) => {
   if (!userCheck) {
     return next(new ApiError(`No user for this id ${id}.`, 404));
   };
+
   // Check if the user is an admin
   if (userCheck.role === "admin") {
     return next(
-      new ApiError(`This user cannot be deleted because is an admin.`, 404)
+      new ApiError(`This user cannot be deleted because is an admin.`, 403)
     );
   };
 
   // Delete user
   let user = await userModel.findByIdAndDelete({ _id: id });
+
   // Delete images
   if (user.profileImage || user.profileCoverImage) {
 
@@ -266,17 +316,29 @@ exports.deleteUser = asyncHandler(async (req, res, next) => {
       allUrlsImages.push(user.profileCoverImage);
     };
 
-    const allNamesImages = allUrlsImages.map((item) => {
+    const keys = allUrlsImages.map((item) => {
       const imageUrl = item;
-      const baseUrl = `${process.env.BASE_URL}/users/`;
-      const imageName = imageUrl.replace(baseUrl, '');
-      return imageName;
+      const baseUrl = `${process.env.AWS_BASE_URL}/`;
+      const restOfUrl = imageUrl.replace(baseUrl, '');
+      const key = restOfUrl.slice(0, restOfUrl.indexOf('?'));
+      return key;
     });
   
-    for (let i = 0; i < allNamesImages.length; i++) {
-      const imagePath = path.join(__dirname, '..', '..', 'uploads', 'users', `${allNamesImages[i]}`);
-      fs.unlink(imagePath, (err) => {});
-    };
+    await Promise.all(
+  
+      keys.map(async (key) => {
+  
+        const params = {
+          Bucket: awsBuckName,
+          Key: key,
+        };
+  
+        const command = new DeleteObjectCommand(params);
+        await s3Client.send(command);
+  
+      })
+  
+    );
 
     user = userPropertysPrivate(user);
 

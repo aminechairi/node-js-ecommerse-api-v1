@@ -1,8 +1,5 @@
-const sharp = require("sharp");
-const asyncHandler = require("express-async-handler");
-const { v4: uuidv4 } = require("uuid");
-
 const {
+  resizeImage,
   deleteOne,
   updateOne,
   createOne,
@@ -16,19 +13,7 @@ const brandModel = require("../models/brandModel");
 exports.uploadBrandImage = uploadSingleImage("image");
 
 // Image processing
-exports.resizeImage = asyncHandler(async (req, res, next) => {
-  const fileName = `brand-${uuidv4()}-${Date.now()}.jpeg`;
-  if (req.file) {
-    await sharp(req.file.buffer)
-      .resize(800, 800)
-      .toFormat("jpeg")
-      .jpeg({ quality: 90 })
-      .toFile(`uploads/brands/${fileName}`);
-    // Save image to Into Our db
-    req.body.image = `${fileName}`;
-  }
-  next();
-});
+exports.resizeImage = resizeImage('brands', 'brand');
 
 // @desc Get List of brands
 // @route GET /api/v1/brands
@@ -48,9 +33,9 @@ exports.createBrand = createOne(brandModel);
 // @desc Update Brand by id
 // @route PUT /api/v1/brands/:id
 // @access Private
-exports.updateBrand = updateOne(brandModel, 'brands');
+exports.updateBrand = updateOne(brandModel);
 
 // @desc Delete brand by id
 // @route DELETE /api/v1/brand/:id
 // @access Private
-exports.deleteBrand = deleteOne(brandModel, 'brands');
+exports.deleteBrand = deleteOne(brandModel, true);

@@ -1,5 +1,11 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const { GetObjectCommand } = require("@aws-sdk/client-s3");
+const s3Client = require('../config/s3Client');
+
+const awsBuckName = process.env.AWS_BUCKET_NAME;
+const expiresIn = process.env.EXPIRE_IN;
 
 const userSchema = new mongoose.Schema(
   {
@@ -109,25 +115,46 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const setImageUrl = (doc) => {
+const setImageUrl = async (doc) => {
+
   if (doc.profileImage) {
-    const imageUrl = `${process.env.BASE_URL}/users/${doc.profileImage}`;
+  
+    const getObjectParams = {
+      Bucket: awsBuckName,
+      Key: `users/${doc.profileImage}`,
+    };
+  
+    const command = new GetObjectCommand(getObjectParams);
+    const imageUrl = await getSignedUrl(s3Client, command, { expiresIn });
+  
     doc.profileImage = imageUrl;
+    
   };
+
   if (doc.profileCoverImage) {
-    const imageUrl = `${process.env.BASE_URL}/users/${doc.profileCoverImage}`;
+  
+    const getObjectParams = {
+      Bucket: awsBuckName,
+      Key: `users/${doc.profileCoverImage}`,
+    };
+  
+    const command = new GetObjectCommand(getObjectParams);
+    const imageUrl = await getSignedUrl(s3Client, command, { expiresIn });
+  
     doc.profileCoverImage = imageUrl;
+
   };
+
 };
 
 // findOne, findAll, update, delete
-userSchema.post("init", function (doc) {
-  setImageUrl(doc);
+userSchema.post("init", async function (doc) {
+  await setImageUrl(doc);
 });
 
-// create a new category
-userSchema.post("save", function (doc) {
-  setImageUrl(doc);
+// create
+userSchema.post("save", async function (doc) {
+  await setImageUrl(doc);
 });
 
 userSchema.pre("save", async function (next) {

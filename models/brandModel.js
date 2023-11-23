@@ -1,4 +1,7 @@
 const mongoose = require("mongoose");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const { GetObjectCommand } = require("@aws-sdk/client-s3");
+const s3Client = require('../config/s3Client');
 
 const brandSchema = new mongoose.Schema(
   {
@@ -8,7 +11,7 @@ const brandSchema = new mongoose.Schema(
       unique: true,
       trim: true,
       lowercase: true,
-      minlength: [3, "Too short brand name."],
+      minlength: [2, "Too short brand name."],
       maxlength: [32, "Too long brand name."],
     },
     slug: {
@@ -26,21 +29,35 @@ const brandSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const setImageUrl = (doc) => {
+const setImageUrl = async (doc) => {
+
   if (doc.image) {
-    const imageUrl = `${process.env.BASE_URL}/brands/${doc.image}`;
+
+    const awsBuckName = process.env.AWS_BUCKET_NAME;
+    const expiresIn = process.env.EXPIRE_IN;
+  
+    const getObjectParams = {
+      Bucket: awsBuckName,
+      Key: `brands/${doc.image}`,
+    };
+  
+    const command = new GetObjectCommand(getObjectParams);
+    const imageUrl = await getSignedUrl(s3Client, command, { expiresIn });
+  
     doc.image = imageUrl;
-  }
+
+  };
+
 };
 
 // findOne, findAll, update, delete
-brandSchema.post("init", function (doc) {
-  setImageUrl(doc);
+brandSchema.post("init", async function (doc) {
+  await setImageUrl(doc);
 });
 
-// create a new category
-brandSchema.post("save", function (doc) {
-  setImageUrl(doc);
+// create
+brandSchema.post("save", async function (doc) {
+  await setImageUrl(doc);
 });
 
 module.exports = mongoose.model("Brand", brandSchema);

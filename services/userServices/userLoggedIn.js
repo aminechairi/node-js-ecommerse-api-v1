@@ -1,7 +1,7 @@
-const fs = require('fs');
-const path = require("path");
 const crypto = require("crypto");
 
+const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const s3Client = require('../../config/s3Client');
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcryptjs");
 
@@ -116,9 +116,9 @@ exports.emailVerifyCode = asyncHandler(async (req, res, next) => {
   res.json({ status: "Success", message: "Email has been verified." });
 });
 
-// @desc Get my data
-// @route GET /api/v1/users/mydata
-// @access user logged in
+// @desc    Get my data
+// @route   GET /api/v1/users/mydata
+// @access  user logged in
 exports.getMyData = asyncHandler(async (req, res) => {
   const id = req.user._id;
   const document = await userModel.findById(id);
@@ -126,9 +126,9 @@ exports.getMyData = asyncHandler(async (req, res) => {
   res.status(200).json({ data: user });
 });
 
-// @desc Update my data
-// @route PUT /api/v1/users/updatemydata
-// @access user logged in
+// @desc    Update my data
+// @route   PUT /api/v1/users/updatemydata
+// @access  user logged in
 exports.updateMyData = asyncHandler(async (req, res) => {
 
   const id = req.user._id;
@@ -156,17 +156,31 @@ exports.updateMyData = asyncHandler(async (req, res) => {
       allUrlsImages.push(user.profileCoverImage);
     };
 
-    const allNamesImages = allUrlsImages.map((item) => {
+    const keys = allUrlsImages.map((item) => {
       const imageUrl = item;
-      const baseUrl = `${process.env.BASE_URL}/users/`;
-      const imageName = imageUrl.replace(baseUrl, '');
-      return imageName;
+      const baseUrl = `${process.env.AWS_BASE_URL}/`;
+      const restOfUrl = imageUrl.replace(baseUrl, '');
+      const key = restOfUrl.slice(0, restOfUrl.indexOf('?'));
+      return key;
     });
+
+    const awsBuckName = process.env.AWS_BUCKET_NAME;
+
+    await Promise.all(
   
-    for (let i = 0; i < allNamesImages.length; i++) {
-      const imagePath = path.join(__dirname, '..', '..', 'uploads', 'users', `${allNamesImages[i]}`);
-      fs.unlink(imagePath, (err) => {});
-    };
+      keys.map(async (key) => {
+  
+        const params = {
+          Bucket: awsBuckName,
+          Key: key,
+        };
+  
+        const command = new DeleteObjectCommand(params);
+        await s3Client.send(command);
+  
+      })
+  
+    );
 
     user = await userModel.find({ _id: id });
 
@@ -196,9 +210,9 @@ exports.updateMyData = asyncHandler(async (req, res) => {
 
 });
 
-// @desc Change my password
-// @route PUT /api/v1/users/changemypassword
-// @access user logged in
+// @desc    Change my password
+// @route   PUT /api/v1/users/changemypassword
+// @access  user logged in
 exports.changeMyPassword = asyncHandler(async (req, res, next) => {
   const id = req.user._id;
   const userCheck = await userModel.findById(id);
@@ -228,9 +242,9 @@ exports.changeMyPassword = asyncHandler(async (req, res, next) => {
   res.status(200).json({ data: user, token: token });
 });
 
-// @desc Change my email
-// @route PUT /api/v1/users/changemyemail
-// @access user logged in
+// @desc    Change my email
+// @route   PUT /api/v1/users/changemyemail
+// @access  user logged in
 exports.changeMyEmail = asyncHandler(async (req, res, next) => {
   const id = req.user._id;
   const userCheck = await userModel.findById(id);

@@ -1,8 +1,5 @@
-const sharp = require("sharp");
-const asyncHandler = require("express-async-handler");
-const { v4: uuidv4 } = require("uuid");
-
 const {
+  resizeImage,
   deleteOne,
   updateOne,
   createOne,
@@ -12,24 +9,11 @@ const {
 const { uploadSingleImage } = require("../middlewares/uploadImageMiddleware");
 const underSubCategoryModel = require("../models/underSubCategoryModel");
 
-
 // Upload single image
 exports.uploadUnderSubCategoryImage = uploadSingleImage("image");
 
 // Image processing
-exports.resizeImage = asyncHandler(async (req, res, next) => {
-  const fileName = `underSubCategory-${uuidv4()}-${Date.now()}.jpeg`;
-  if (req.file) {
-    await sharp(req.file.buffer)
-      .resize(800, 800)
-      .toFormat("jpeg")
-      .jpeg({ quality: 90 })
-      .toFile(`uploads/underSubCategories/${fileName}`);
-    // Save image to Into Our db
-    req.body.image = `${fileName}`;
-  }
-  next();
-});
+exports.resizeImage = resizeImage('underSubCategories', 'underSubCategory');
 
 // Nested route
 // GET /api/v1/subcategories/:subCategoryId/undersubcategories
@@ -64,9 +48,9 @@ exports.createUnderSubCategory = createOne(underSubCategoryModel);
 // @desc Update underSubCategory by id
 // @route PUT /api/v1/undersubcategories/:id
 // @access Private
-exports.updateUnderSubCategory = updateOne(underSubCategoryModel, 'underSubCategories');
+exports.updateUnderSubCategory = updateOne(underSubCategoryModel);
 
 // @desc Delete underSubCategory by id
 // @route DELETE /api/v1/undersubcategories/:id
 // @access Private
-exports.deleteUnderSubCategory = deleteOne(underSubCategoryModel, 'underSubCategories');
+exports.deleteUnderSubCategory = deleteOne(underSubCategoryModel, true);
