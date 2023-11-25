@@ -123,7 +123,7 @@ exports.updateOne = (models) =>
         return next(new ApiError(`No document for this id ${id}`, 404));
       };
 
-      const imageUrl = document.image;
+      const imageUrl = `${document.image}`;
       const baseUrl = `${process.env.AWS_BASE_URL}/`;
       const restOfUrl = imageUrl.replace(baseUrl, '');
       const key = restOfUrl.slice(0, restOfUrl.indexOf('?'));
@@ -171,7 +171,7 @@ exports.deleteOne = (models, containsImage = false) =>
       res.status(200).json({ data: document });
     } else {
 
-      const imageUrl = document.image;
+      const imageUrl = `${document.image}`;
       const baseUrl = `${process.env.AWS_BASE_URL}/`;
       const restOfUrl = imageUrl.replace(baseUrl, '');
       const key = restOfUrl.slice(0, restOfUrl.indexOf('?'));

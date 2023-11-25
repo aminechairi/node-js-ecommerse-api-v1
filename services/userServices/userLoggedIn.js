@@ -157,7 +157,7 @@ exports.updateMyData = asyncHandler(async (req, res) => {
     };
 
     const keys = allUrlsImages.map((item) => {
-      const imageUrl = item;
+      const imageUrl = `${item}`;
       const baseUrl = `${process.env.AWS_BASE_URL}/`;
       const restOfUrl = imageUrl.replace(baseUrl, '');
       const key = restOfUrl.slice(0, restOfUrl.indexOf('?'));
