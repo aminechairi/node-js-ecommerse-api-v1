@@ -34,7 +34,7 @@ const reviewSchema = new mongoose.Schema(
 reviewSchema.pre(/^find/, function (next) {
   this.populate({
     path: "user",
-    select: "firstName lastName email profileCoverImage",
+    select: "firstName lastName email profileImage",
   });
   next();
 });

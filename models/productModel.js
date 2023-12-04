@@ -141,11 +141,23 @@ productSchema.virtual(
   }
 );
 
+productSchema.virtual(
+  "saves",
+  {
+    ref: "Save",
+    foreignField: "productId",
+    localField: "_id",
+  }
+);
+
 // mongoose query middleware
 productSchema.pre("findOne", function(next) {
   this.populate({
     path: "category subCategories underSubCategories brand",
     select: "name image"
+  }).populate({
+    path: "reviews",
+    select: "title ratings -product"
   })
   next();
 });

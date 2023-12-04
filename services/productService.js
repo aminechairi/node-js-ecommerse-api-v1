@@ -5,19 +5,58 @@ const asyncHandler = require("express-async-handler");
 const { v4: uuidv4 } = require("uuid");
 
 const ApiError = require("../utils/apiErrore");
-const {
-  createOne,
-  getOne,
-  getAll,
-} = require("./handlersFactory");
-const {
-  uploadMultipleImages,
-} = require("../middlewares/uploadImageMiddleware");
+const { createOne } = require("./handlersFactory");
+const { uploadMultipleImages } = require("../middlewares/uploadImageMiddleware");
+const ApiFeatures = require("../utils/apiFeatures");
 const productModel = require("../models/productModel");
+const { checkTheToken } = require('./authServises/protect&allowedTo');
 const reviewModel = require("../models/reviewModel");
 const saveModel = require("../models/saveModel");
 
 const awsBuckName = process.env.AWS_BUCKET_NAME;
+
+// Function check if user saved product
+const checkIfUserSavedProduct = (products, userId) => {
+
+  for (let i = 0; i < products.length; i++) {
+
+    // c Can't change original document mongodb
+    let product =  JSON.parse(JSON.stringify(products[i]));
+
+    if (product.saves.length > 0) {
+
+      // Check user if saved product
+      const check = product.saves.some(
+        item => `${item.userId}`.toString() === userId
+      );
+
+      if (check) {
+
+        delete product.saves;
+        product.save = true;
+        products[i] = product;
+
+      } else {
+
+        delete product.saves;
+        product.save = false;
+        products[i] = product;
+
+      };
+
+    } else {
+
+      delete product.saves;
+      product.save = false;
+      products[i] = product;
+
+    };
+
+  };
+
+  return products;
+
+};
 
 // Upload multiple images
 exports.uploadProductImages = uploadMultipleImages([
@@ -106,14 +145,94 @@ exports.resizeProductImages = asyncHandler(async (req, res, next) => {
 // @desc    Get list of products
 // @route   GET /api/v1/products
 // @access  Public
-exports.getProducts = getAll(productModel, `Product`);
+exports.getProducts = asyncHandler(async (req, res) => {
+
+    // Get count of products
+    const countDocuments = await productModel.countDocuments();
+
+    // Build query
+    const apiFeatures = new ApiFeatures(productModel.find({}), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .search('Product')
+      .paginate(countDocuments);
+
+    const { mongooseQuery, paginationResults } = apiFeatures;
+    let products;
+
+    if (req.headers.authorization) {
+
+      const currentUser = await checkTheToken(req);
+      const userId = `${currentUser._id}`.toString();
+
+      // Execute Query
+      products = await mongooseQuery.populate({
+        path: "saves",
+        select: "userId -productId -_id"
+      });
+
+      //check if user saved product
+      products = checkIfUserSavedProduct(products, userId);
+
+    } else {
+
+      // Execute Query
+      products = await mongooseQuery;
+
+    };
+
+    res.status(200).json({
+      result: products.length,
+      paginationResults,
+      data: products,
+    });
+
+});
 
 // @desc    Get product by id
 // @route   GET /api/v1/products/:id
 // @access  Public
-exports.getProduct = getOne(productModel, {
-  path: "reviews",
-  select: "title ratings -product"
+exports.getProduct = asyncHandler(async (req, res, next) => {
+
+  const { id } = req.params;
+  let products;
+
+  if (req.headers.authorization) {
+
+    const currentUser = await checkTheToken(req);
+    const userId = `${currentUser._id}`.toString();
+
+    // Execute Query
+    products = await productModel.findById(id).populate({
+      path: "saves",
+      select: "userId -productId -_id"
+    });
+
+    if (!products) {
+      return next(new ApiError(`No product for this id ${id}`, 404));
+    };
+
+    products = [products];
+
+    //check if user saved product
+    products = checkIfUserSavedProduct(products, userId);
+
+  } else {
+
+    // Execute Query
+    products = await productModel.findById(id);
+
+    if (!products) {
+      return next(new ApiError(`No product for this id ${id}`, 404));
+    };
+
+    products = [products];
+
+  };
+
+  res.status(200).json({ data: products[0] });
+
 });
 
 // @desc    Create product
