@@ -8,14 +8,6 @@ const expiresIn = process.env.EXPIRE_IN;
 
 const productSchema = new mongoose.Schema(
   {
-    uniqueName: {
-      type: String,
-      required: [true, "Product unique name is required."],
-      trim: true,
-      uppercase: true,
-      minlength: [3, "Too short product unique name."],
-      maxlength: [32, "Too long product unique name."],
-    },
     title: {
       type: String,
       required: [true, "Product title is required."],
@@ -108,6 +100,10 @@ const productSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: "Brand",
     },
+    group: {
+      type: mongoose.Schema.ObjectId,
+      ref: "productsGroup",
+    },
     sold: {
       type: Number,
       min: [0, "Prodact sold number cannot be less than 0."],
@@ -155,7 +151,12 @@ productSchema.pre("findOne", function(next) {
   this.populate({
     path: "category subCategories underSubCategories brand",
     select: "name image"
-  }).populate({
+  })
+  .populate({
+    path: "group",
+    select: "groupName productsIDs -_id"
+  })
+  .populate({
     path: "reviews",
     select: "title ratings -product"
   })

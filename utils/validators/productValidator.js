@@ -16,14 +16,6 @@ exports.createProductValidator = [
 
   body()
     .custom((_, { req }) => {
-      if (req.body.uniqueName) {
-        req.body.uniqueName = `${req.body.uniqueName}`.toUpperCase().replaceAll(" ", "");
-      };
-      return true;
-    }),
-
-  body()
-    .custom((_, { req }) => {
 
       if (req.body.sizes === undefined) {
 
@@ -45,17 +37,12 @@ exports.createProductValidator = [
 
       return true;
 
+    })
+    // Properties that cannot be entered by the user
+    .custom((_, { req }) => {
+      req.body.group = undefined;
+      return true;
     }),
-
-  check("uniqueName")
-    .notEmpty()
-    .withMessage("Product unique name is required.")
-    .isString()
-    .withMessage("Product unique name must be of type string.")
-    .isLength({ min: 3 })
-    .withMessage("Too short product unique name.")
-    .isLength({ max: 32 })
-    .withMessage("Too long product unique name."),
 
   check("title")
     .notEmpty()
@@ -69,7 +56,7 @@ exports.createProductValidator = [
     .custom((value, { req }) => {
       req.body.slug = `${slugify(value)}`.toLowerCase();
       return true;
-    }), 
+    }),
 
   check("description")
     .notEmpty()
@@ -233,7 +220,7 @@ exports.createProductValidator = [
     .notEmpty()
     .withMessage("Product must be belong to a category.")
     .isMongoId()
-    .withMessage("Invalid category id formate.")
+    .withMessage("Invalid category id format.")
     .custom(async (_, { req }) => {
       const ObjectId = req.body.category;
       const category = await categoryModel.findById(ObjectId);
@@ -252,9 +239,9 @@ exports.createProductValidator = [
     .custom((value) => {
       if (!( Array.isArray(value) && value.every(isValidObjectId) )) {
         if (value.length > 1) {
-          throw new Error('Invalid sub categories ids formate.');
+          throw new Error('Invalid sub categories ids format.');
         } else {
-          throw new Error('Invalid sub category id formate.')
+          throw new Error('Invalid sub category id format.')
         };
       };
       return true;
@@ -309,9 +296,9 @@ exports.createProductValidator = [
     .custom((value) => {
       if (!( Array.isArray(value) && value.every(isValidObjectId) )) {
         if (value.length > 1) {
-          throw new Error('Invalid under sub categories ids formate.');
+          throw new Error('Invalid under sub categories ids format.');
         } else {
-          throw new Error('Invalid under sub category id formate.');
+          throw new Error('Invalid under sub category id format.');
         };
       };
       return true;
@@ -322,7 +309,7 @@ exports.createProductValidator = [
           _id: { $in: underSubCategoriesIds },
         });
         if (underSubCategories.length !== underSubCategoriesIds.length) {
-          if (underSubCategories.length > 1) {
+          if (underSubCategoriesIds.length > 1) {
             throw new Error(`No under sub categories for this ids ${underSubCategoriesIds}.`);
           } else {
             throw new Error(`No under sub category for this id ${underSubCategoriesIds}.`);
@@ -362,8 +349,8 @@ exports.createProductValidator = [
   check("brand")
     .optional()
     .isMongoId()
-    .withMessage("Invalid brand id formate.")
-    .custom(async (value, { req }) => {
+    .withMessage("Invalid brand id format.")
+    .custom(async (_, { req }) => {
       const ObjectId = req.body.brand;
       const brand = await brandModel.findById(ObjectId);
       if (brand) {
@@ -402,38 +389,28 @@ exports.createProductValidator = [
 exports.getProductValidator = [
   check("id")
     .isMongoId()
-    .withMessage("Invalid product id formate."),
+    .withMessage("Invalid product id format."),
   validatorMiddleware,
 ];
 
 exports.updateProductValidator = [
 
   body()
+    // Properties that cannot be entered by the user
     .custom((_, { req }) => {
-      if (req.body.uniqueName) {
-        req.body.uniqueName = `${req.body.uniqueName}`.toUpperCase().replaceAll(" ", "");
-      };
+      req.body.group = undefined;
       return true;
     }),
 
   check("id")
     .isMongoId()
-    .withMessage("Invalid product id formate.")
+    .withMessage("Invalid product id format.")
     .custom(async (value, { req }) => {
       const product = await productModel.findById(value);
       if (!product) {
         throw new Error(`No product for this id ${value}.`);
       };
     }),
-
-  check("uniqueName")
-    .optional()
-    .isString()
-    .withMessage("Product unique name must be of type string.")
-    .isLength({ min: 3 })
-    .withMessage("Too short product unique name.")
-    .isLength({ max: 32 })
-    .withMessage("Too long product unique name."),
 
     check("title")
     .optional()
@@ -648,16 +625,20 @@ exports.updateProductValidator = [
   check("category")
     .optional()
     .isMongoId()
-    .withMessage("Invalid category id formate.")
+    .withMessage("Invalid category id format.")
     .custom((_, { req }) => {
       if (!req.body.subCategories) {
         throw new Error(`You must update sub categories.`);
       };
       return true;
     })
-    .custom((_, { req }) => {
-      if (!req.body.underSubCategories) {
-        throw new Error(`You must update under sub categories.`);
+    .custom(async (_, { req }) => {
+      const { id } = req.params;
+      const product = await productModel.findById(id);
+      if (product.underSubCategories.length > 1) {
+        if (!req.body.underSubCategories) {
+          throw new Error(`You must update under sub categories.`);
+        };
       };
       return true;
     })
@@ -675,25 +656,29 @@ exports.updateProductValidator = [
     .optional()
     .isArray()
     .withMessage("Product sub categories must be an array.")
-    .withMessage("Invalid sub category id formate.")
+    .withMessage("Invalid sub category id format.")
     .custom((_, { req }) => {
       if (!req.body.category) {
         throw new Error(`You must update category.`);
       };
       return true;
     })
-    .custom((_, { req }) => {
-      if (!req.body.underSubCategories) {
-        throw new Error(`You must update under sub categories.`);
+    .custom(async (_, { req }) => {
+      const { id } = req.params;
+      const product = await productModel.findById(id);
+      if (product.underSubCategories.length > 1) {
+        if (!req.body.underSubCategories) {
+          throw new Error(`You must update under sub categories.`);
+        };        
       };
       return true;
     })
     .custom((value) => {
       if (!( Array.isArray(value) && value.every(isValidObjectId) )) {
         if (value.length > 1) {
-          throw new Error('Invalid sub categories ids formate.');
+          throw new Error('Invalid sub categories ids format.');
         } else {
-          throw new Error('Invalid sub category id formate.')
+          throw new Error('Invalid sub category id format.')
         };
       };
       return true;
@@ -755,9 +740,9 @@ exports.updateProductValidator = [
     .custom((value) => {
       if (!( Array.isArray(value) && value.every(isValidObjectId) )) {
         if (value.length > 1) {
-          throw new Error('Invalid under sub categories ids formate.');
+          throw new Error('Invalid under sub categories ids format.');
         } else {
-          throw new Error('Invalid under sub category id formate.');
+          throw new Error('Invalid under sub category id format.');
         };
       };
       return true;
@@ -768,7 +753,7 @@ exports.updateProductValidator = [
           _id: { $in: underSubCategoriesIds },
         });
         if (underSubCategories.length !== underSubCategoriesIds.length) {
-          if (underSubCategories.length > 1) {
+          if (underSubCategoriesIds.length > 1) {
             throw new Error(`No under sub categories for this ids ${underSubCategoriesIds}.`);
           } else {
             throw new Error(`No under sub category for this id ${underSubCategoriesIds}.`);
@@ -815,8 +800,8 @@ exports.updateProductValidator = [
   check("brand")
     .optional()
     .isMongoId()
-    .withMessage("Invalid brand id formate.")
-    .custom(async (value, { req }) => {
+    .withMessage("Invalid brand id format.")
+    .custom(async (_, { req }) => {
       const ObjectId = req.body.brand;
       const brand = await brandModel.findById(ObjectId);
       if (brand) {
@@ -855,7 +840,7 @@ exports.updateProductValidator = [
 exports.deleteProductValidator = [
   check("id")
     .isMongoId()
-    .withMessage("Invalid product id formate."),
+    .withMessage("Invalid product id format."),
 
   validatorMiddleware,
 ];
