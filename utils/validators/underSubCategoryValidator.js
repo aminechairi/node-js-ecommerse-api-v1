@@ -9,7 +9,7 @@ exports.getUnderSubCategoriesValidator = [
   check("subCategoryId")
     .optional()
     .isMongoId()
-    .withMessage("Invalid sub category id format"),
+    .withMessage("Invalid sub category ID format"),
 
   validatorMiddleware,
 ];
@@ -17,7 +17,7 @@ exports.getUnderSubCategoriesValidator = [
 exports.getUnderSubCategoryValidator = [
   check("id")
     .isMongoId()
-    .withMessage("Invalid under sub category id format."),
+    .withMessage("Invalid under sub category ID format."),
 
   validatorMiddleware,
 ];
@@ -29,9 +29,9 @@ exports.createUnderSubCategoryValidator = [
     .isString()
     .withMessage("Under sub category name must be of type string.")
     .isLength({ min: 2 })
-    .withMessage("Too short under sub category name.")
+    .withMessage("Under sub category name must be at least 2 characters.")
     .isLength({ max: 32 })
-    .withMessage("Too long under sub category name.")
+    .withMessage("Under sub category name cannot exceed 32 characters.")
     .custom((value, { req }) => {
       req.body.slug = `${slugify(value)}`.toLowerCase();
       return true;
@@ -41,14 +41,14 @@ exports.createUnderSubCategoryValidator = [
     .notEmpty()
     .withMessage("Under sub category must be beloong to sub category.")
     .isMongoId()
-    .withMessage("Invalid sub category id format.")
-    .custom(async (value, { req }) => {
+    .withMessage("Invalid sub category ID format.")
+    .custom(async (_, { req }) => {
       const ObjectId = req.body.subCategory;
       const subCategory = await subCategoryModel.findById(ObjectId);
       if (subCategory) {
         return true;
       } else {
-        throw new Error(`No sub category for this id ${ObjectId}`);
+        throw new Error(`No sub category for this ID ${ObjectId}.`);
       }
     }),
 
@@ -66,12 +66,10 @@ exports.createUnderSubCategoryValidator = [
 exports.updateUnderSubCategoryValidator = [
   check("id")
     .isMongoId()
-    .withMessage("Invalid under sub category id format.")
-    .custom(async (value, { req }) => {
-      const underSubCategory = await underSubCategoryModel.findById(value);
-      if (!underSubCategory) {
-        throw new Error(`No under sub category for this id ${value}.`);
-      };
+    .withMessage("Invalid under sub category ID format.")
+    .custom(async (id) => {
+      const underSubCategory = await underSubCategoryModel.findById(id);
+      if (!underSubCategory) throw new Error(`No under sub category for this ID ${id}.`);
     }),
 
   check("name")
@@ -79,9 +77,9 @@ exports.updateUnderSubCategoryValidator = [
     .isString()
     .withMessage("Under sub category name must be of type string.")
     .isLength({ min: 2 })
-    .withMessage("Too short under sub category name.")
+    .withMessage("Under sub category name must be at least 2 characters.")
     .isLength({ max: 32 })
-    .withMessage("Too long under sub category name.")
+    .withMessage("Under sub category name cannot exceed 32 characters.")
     .custom((value, { req }) => {
       req.body.slug = `${slugify(value)}`.toLowerCase();
       return true;
@@ -101,7 +99,7 @@ exports.updateUnderSubCategoryValidator = [
 exports.deleteUnderSubCategoryValidator = [
   check("id")
     .isMongoId()
-    .withMessage("Invalid under sub category id format."),
+    .withMessage("Invalid under sub category ID format."),
 
   validatorMiddleware,
 ];

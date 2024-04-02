@@ -39,7 +39,7 @@ exports.updateCoupon = asyncHandler(async (req, res, next) => {
     { new: true }
   );
   if (!coupon) {
-    return next(new ApiError(`No coupon for this id ${req.params.id}`, 404));
+    return next(new ApiError(`No coupon for this id ${req.params.id}.`, 404));
   };
   res.status(200).json({
     data: coupon,

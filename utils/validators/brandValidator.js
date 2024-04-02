@@ -7,7 +7,7 @@ const brandModel = require("../../models/brandModel");
 exports.getBrandValidator = [
   check("id")
     .isMongoId()
-    .withMessage("Invalid brand id format."),
+    .withMessage("Invalid brand ID format."),
 
   validatorMiddleware,
 ];
@@ -19,14 +19,14 @@ exports.createBrandValidator = [
     .isString()
     .withMessage("Brand name must be of type string.")
     .isLength({ min: 2 })
-    .withMessage("Too short brand name.")
+    .withMessage("Brand name must be at least 2 characters.")
     .isLength({ max: 32 })
-    .withMessage("Too long brand name.")
+    .withMessage("Brand name cannot exceed 32 characters.")
     .custom(async (value, { req }) => {
       req.body.slug = slugify(value);
       const brand = await brandModel.findOne({ name: value });
       if (brand) {
-        throw new Error(`I've used this name before.`);
+        throw new Error(`This brand name already used.`);
       };
       return true;
     }),
@@ -45,12 +45,10 @@ exports.createBrandValidator = [
 exports.updateBrandValidator = [
   check("id")
     .isMongoId()
-    .withMessage("Invalid brand id format.")
-    .custom(async (value, { req }) => {
-      const brand = await brandModel.findById(value);
-      if (!brand) {
-        throw new Error(`No brand for this id ${value}.`);
-      };
+    .withMessage("Invalid brand ID format.")
+    .custom(async (id) => {
+      const brand = await brandModel.findById(id);
+      if (!brand) throw new Error(`No brand for this ID ${id}.`);
     }),
 
   check("name")
@@ -58,14 +56,14 @@ exports.updateBrandValidator = [
     .isString()
     .withMessage("Brand name must be of type string.")
     .isLength({ min: 2 })
-    .withMessage("Too short brand name.")
+    .withMessage("Brand name must be at least 2 characters.")
     .isLength({ max: 32 })
-    .withMessage("Too long brand name.")
+    .withMessage("Brand name cannot exceed 32 characters.")
     .custom(async (value, { req }) => {
       req.body.slug = slugify(value);
       const brand = await brandModel.findOne({ name: value });
       if (brand) {
-        throw new Error(`I've used this name before.`);
+        throw new Error(`This brand name already used.`);
       };
       return true;
     }),
@@ -84,7 +82,7 @@ exports.updateBrandValidator = [
 exports.deleteBrandValidator = [
   check("id")
     .isMongoId()
-    .withMessage("Invalid brand id format."),
+    .withMessage("Invalid brand ID format."),
 
   validatorMiddleware,
 ];

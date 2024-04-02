@@ -145,7 +145,7 @@ exports.resizeProductImages = asyncHandler(async (req, res, next) => {
 // @desc    Get list of products
 // @route   GET /api/v1/products
 // @access  Public
-exports.getProducts = asyncHandler(async (req, res) => {
+exports.getProducts = asyncHandler(async (req, res, next) => {
 
     // Get count of products
     const countDocuments = await productModel.countDocuments();
@@ -163,7 +163,7 @@ exports.getProducts = asyncHandler(async (req, res) => {
 
     if (req.headers.authorization) {
 
-      const currentUser = await checkTheToken(req);
+      const currentUser = await checkTheToken(req, next);
       const userId = `${currentUser._id}`.toString();
 
       // Execute Query
@@ -200,7 +200,7 @@ exports.getProduct = asyncHandler(async (req, res, next) => {
 
   if (req.headers.authorization) {
 
-    const currentUser = await checkTheToken(req);
+    const currentUser = await checkTheToken(req, next);
     const userId = `${currentUser._id}`.toString();
 
     // Execute Query

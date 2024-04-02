@@ -43,7 +43,7 @@ router
     protect_allowedTo.protect(),
     protect_allowedTo.allowedTo("admin", "manager"),
     uploadBrandImage,
-    updateBrandValidator,    
+    updateBrandValidator,
     resizeImage,
     updateBrand
   ).delete(

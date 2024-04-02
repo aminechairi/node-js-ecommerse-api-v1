@@ -19,7 +19,7 @@ exports.emailVerify = asyncHandler(async (req, res, next) => {
   const user = await userModel.findOne({ email: req.user.email });
   if (!user) {
     return next(
-      new ApiError(`There is no user with that email ${req.user.email}`, 404)
+      new ApiError(`There is no user with that email ${req.user.email}.`, 404)
     );
   };
 
@@ -27,6 +27,7 @@ exports.emailVerify = asyncHandler(async (req, res, next) => {
   const emailVerifyCode = Math.floor(
     100000 + Math.random() * 900000
   ).toString();
+
   const hashedEmailVerifyCode = crypto
     .createHash("sha256")
     .update(emailVerifyCode)
@@ -75,12 +76,12 @@ exports.emailVerify = asyncHandler(async (req, res, next) => {
         emailVerifyCodeExpires: null,
       }
     );
-    return next(new ApiError("There is an error in sending email", 500));
+    return next(new ApiError("There is an error in sending email.", 500));
   };
 
   res
     .status(200)
-    .json({ status: "Success", message: "Verify code sent to email" });
+    .json({ status: "Success", message: "Verify code sent to email." });
 });
 
 // @desc    Email verify code
@@ -98,7 +99,7 @@ exports.emailVerifyCode = asyncHandler(async (req, res, next) => {
     emailVerifyCodeExpires: { $gt: Date.now() },
   });
   if (!user) {
-    return next(new ApiError("Email verify code invalid or expired"));
+    return next(new ApiError("Email verify code invalid or expired."));
   }
 
   // 2) Email verify valid
@@ -218,14 +219,14 @@ exports.changeMyPassword = asyncHandler(async (req, res, next) => {
   const userCheck = await userModel.findById(id);
   // Check user exist
   if (!userCheck) {
-    return next(new ApiError(`No user for this id ${id}`, 404));
+    return next(new ApiError(`No user for this id ${id}.`, 404));
   }
   const isCorrectPassword = await bcrypt.compare(
     req.body.currentPassword,
     userCheck.password
   );
   if (!isCorrectPassword) {
-    return next(new ApiError("Incorrect current password", 401));
+    return next(new ApiError("Incorrect current password.", 401));
   };
   const document = await userModel.findByIdAndUpdate(
     id,

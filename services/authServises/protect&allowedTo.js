@@ -92,7 +92,7 @@ exports.allowedTo = (...roles) =>
   });
 
 // check the token
-exports.checkTheToken = async (req) => {
+exports.checkTheToken = async (req, next) => {
 
   // 1) Check if token exist, if exist get
   let token;
@@ -100,7 +100,7 @@ exports.checkTheToken = async (req) => {
     token = req.headers.authorization.split(" ")[1];
   }
   if (!token) {
-    return next(
+    throw next(
       new ApiError(
         "You are not login, Please login to get access this route.",
         401
@@ -114,7 +114,7 @@ exports.checkTheToken = async (req) => {
   // 3) Check if user exists
   const currentUser = await userModel.findById(decoded.userId);
   if (!currentUser) {
-    return next(
+    throw next(
       new ApiError(
         "The user that belong to this token does no longer exist.",
         401
@@ -124,12 +124,12 @@ exports.checkTheToken = async (req) => {
 
   // 4) Check user if verified email
   if (!currentUser.emailVerify) {
-    return next(new ApiError("This user email is not verified.", 401));
+    throw next(new ApiError("This user email is not verified.", 401));
   }
 
   // 5) Check user if block
   if (currentUser.userBlock) {
-    return next(new ApiError("The user has been banned.", 401));
+    throw next(new ApiError("The user has been banned.", 401));
   }
 
   // 6) Check if user change his password after token created
@@ -140,7 +140,7 @@ exports.checkTheToken = async (req) => {
     );
     // Password changed after token created (Error)
     if (passChangedTimestamp > decoded.iat) {
-      return next(
+      throw next(
         new ApiError(
           "User recently changed his password. please login again..",
           401

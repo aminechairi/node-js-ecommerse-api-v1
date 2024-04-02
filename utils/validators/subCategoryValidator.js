@@ -3,12 +3,12 @@ const validatorMiddleware = require("../../middlewares/validatorMiddleware");
 const slugify = require("slugify");
 
 const categoryModel = require("../../models/categoryModel");
-const subCategoryModel = require('../../models/subCategoryModel')
+const subCategoryModel = require('../../models/subCategoryModel');
 
 exports.getSubCategoryValidator = [
   check("id")
     .isMongoId()
-    .withMessage("Invalid sub category id format."),
+    .withMessage("Invalid sub category ID format."),
 
   validatorMiddleware,
 ];
@@ -17,7 +17,7 @@ exports.getSubCategoriesValidator = [
   check("categoryId")
     .optional()
     .isMongoId()
-    .withMessage("Invalid category id format"),
+    .withMessage("Invalid category ID format."),
 
   validatorMiddleware,
 ];
@@ -29,9 +29,9 @@ exports.createSubCategoryValidator = [
     .isString()
     .withMessage("Sub category name must be of type string.")
     .isLength({ min: 2 })
-    .withMessage("Too short sub category name.")
+    .withMessage("Sub category name must be at least 2 characters.")
     .isLength({ max: 32 })
-    .withMessage("Too long sub category name.")
+    .withMessage("Sub category name cannot exceed 32 characters.")
     .custom((value, { req }) => {
       req.body.slug = `${slugify(value)}`.toLowerCase();
       return true;
@@ -41,14 +41,14 @@ exports.createSubCategoryValidator = [
     .notEmpty()
     .withMessage("Sub category must be beloong to category.")
     .isMongoId()
-    .withMessage("Invalid category id format.")
-    .custom(async (value, { req }) => {
+    .withMessage("Invalid category ID format.")
+    .custom(async (_, { req }) => {
       const ObjectId = req.body.category;
       const category = await categoryModel.findById(ObjectId);
       if (category) {
         return true;
       } else {
-        throw new Error(`No category for this id ${ObjectId}`);
+        throw new Error(`No category for this ID ${ObjectId}.`);
       }
     }),
 
@@ -66,12 +66,10 @@ exports.createSubCategoryValidator = [
 exports.updateSubCategoryValidator = [
   check("id")
     .isMongoId()
-    .withMessage("Invalid sub category id format.")
-    .custom(async (value, { req }) => {
-      const subCategory = await subCategoryModel.findById(value);
-      if (!subCategory) {
-        throw new Error(`No sub category for this id ${value}.`);
-      };
+    .withMessage("Invalid sub category ID format.")
+    .custom(async (id) => {
+      const subCategory = await subCategoryModel.findById(id);
+      if (!subCategory) throw new Error(`No sub category for this ID ${id}.`);
     }),
 
   check("name")
@@ -79,9 +77,9 @@ exports.updateSubCategoryValidator = [
     .isString()
     .withMessage("Sub category name must be of type string.")
     .isLength({ min: 2 })
-    .withMessage("Too short sub category name.")
+    .withMessage("Sub category name must be at least 2 characters.")
     .isLength({ max: 32 })
-    .withMessage("Too long sub category name.")
+    .withMessage("Sub category name cannot exceed 32 characters.")
     .custom((value, { req }) => {
       req.body.slug = `${slugify(value)}`.toLowerCase();
       return true;
@@ -101,7 +99,7 @@ exports.updateSubCategoryValidator = [
 exports.deleteSubCategoryValidator = [
   check("id")
     .isMongoId()
-    .withMessage("Invalid sub category id format."),
+    .withMessage("Invalid sub category ID format."),
 
   validatorMiddleware,
 ];

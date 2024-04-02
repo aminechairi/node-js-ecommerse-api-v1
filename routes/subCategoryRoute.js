@@ -55,7 +55,7 @@ router
     protect_allowedTo.protect(),
     protect_allowedTo.allowedTo("admin", "manager"),
     uploadSubCategoryImage,
-    updateSubCategoryValidator,    
+    updateSubCategoryValidator,
     resizeImage,
     updateSubCategory
   )

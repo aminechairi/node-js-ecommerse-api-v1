@@ -7,7 +7,7 @@ const categoryModel = require("../../models/categoryModel");
 exports.getCategoryValidator = [
   check("id")
   .isMongoId()
-  .withMessage("Invalid category id format."),
+  .withMessage("Invalid category ID format."),
 
   validatorMiddleware,
 ];
@@ -18,15 +18,15 @@ exports.createCategoryValidator = [
     .withMessage("Category name is required.")
     .isString()
     .withMessage("Category name must be of type string.")
-    .isLength({ min: 3 })
-    .withMessage("Too short category name.")
+    .isLength({ min: 2 })
+    .withMessage("Category name must be at least 2 characters.")
     .isLength({ max: 32 })
-    .withMessage("Too long category name.")
+    .withMessage("Category name cannot exceed 32 characters.")
     .custom(async (value, { req }) => {
       req.body.slug = slugify(value);
       const category = await categoryModel.findOne({ name: value });
       if (category) {
-        throw new Error(`I've used this name before.`);
+        throw new Error(`This category name already used.`);
       };
       return true;
     }),
@@ -45,27 +45,25 @@ exports.createCategoryValidator = [
 exports.updateCategoryValidator = [
   check(`id`)
     .isMongoId()
-    .withMessage(`Invalid category id format.`)
-    .custom(async (value, { req }) => {
-      const category = await categoryModel.findById(value);
-      if (!category) {
-        throw new Error(`No category for this id ${value}.`);
-      };
+    .withMessage(`Invalid category ID format.`)
+    .custom(async (id) => {
+      const category = await categoryModel.findById(id);
+      if (!category) throw new Error(`No category for this ID ${id}.`);
     }),
 
   check("name")
     .optional()
     .isString()
     .withMessage("Category name must be of type string.")
-    .isLength({ min: 3 })
-    .withMessage("Too short category name.")
+    .isLength({ min: 2 })
+    .withMessage("Category name must be at least 2 characters.")
     .isLength({ max: 32 })
-    .withMessage("Too long category name.")
+    .withMessage("Category name cannot exceed 32 characters.")
     .custom(async (value, { req }) => {
       req.body.slug = slugify(value);
       const category = await categoryModel.findOne({ name: value });
       if (category) {
-        throw new Error(`I've used this name before.`);
+        throw new Error(`This category name already used.`);
       };
       return true;
     }),
@@ -84,7 +82,8 @@ exports.updateCategoryValidator = [
 exports.deleteCategoryValidator = [
   check("id")
   .isMongoId()
-  .withMessage("Invalid category id format."),
+  .withMessage("Invalid category ID format."),
+
   validatorMiddleware,
 ];
 

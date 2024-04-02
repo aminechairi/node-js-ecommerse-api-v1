@@ -10,8 +10,8 @@ const underSubCategorySchema = new mongoose.Schema(
       required: [true, "Under sub category name is required."],
       trim: true,
       lowercase: true,
-      minlength: [3, "Too short under sub category name."],
-      maxlength: [32, "Too long under sub category name."],
+      minlength: [2, "Under sub category name must be at least 2 characters."],
+      maxlength: [32, "Under sub category name cannot exceed 32 characters."],
     },
     slug: {
       type: String,

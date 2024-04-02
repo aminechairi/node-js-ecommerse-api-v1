@@ -102,10 +102,13 @@ exports.getUsers = getAll(userModel, `User`);
 exports.getUser = asyncHandler(async (req, res, next) => {
   const id = req.params.id;
   const document = await userModel.findById(id);
+
   if (!document) {
     return next(new ApiError(`No user for this id ${id}.`, 404));
   };
-  const user = userPropertysPrivate(document)
+
+  const user = userPropertysPrivate(document);
+
   res.status(200).json({
     data: user,
   });
@@ -128,7 +131,8 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
   // Check user exist
   if (!userCheck) {
     return next(new ApiError(`No user for this id ${id}.`, 404));
-  }
+  };
+
   // Check if the user is an admin
   if (userCheck.role === "admin") {
     return next(
@@ -222,23 +226,28 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
 exports.changeUserPassword = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const userCheck = await userModel.findById(id);
+
   // Check user exist
   if (!userCheck) {
     return next(new ApiError(`No user for this id ${id}.`, 404));
   };
+
   // Check if the user is an admin
   if (userCheck.role === "admin") {
     return next(
       new ApiError(`This user cannot be change password because is an admin.`, 403)
     );
   };
+
   const isCorrectPassword = await bcrypt.compare(
     req.body.currentPassword,
     userCheck.password
   );
+
   if (!isCorrectPassword) {
     return next(new ApiError("Incorrect current password.", 401));
   };
+
   const document = await userModel.findByIdAndUpdate(
     id,
     {
@@ -249,7 +258,9 @@ exports.changeUserPassword = asyncHandler(async (req, res, next) => {
       new: true,
     }
   );
+
   const user = userPropertysPrivate(document);
+
   res.status(200).json({ data: user });
 });
 
@@ -259,16 +270,19 @@ exports.changeUserPassword = asyncHandler(async (req, res, next) => {
 exports.userBlock = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const userCheck = await userModel.findById(id);
+
   // Check user exist
   if (!userCheck) {
     return next(new ApiError(`No user for this id ${id}.`, 404));
-  }
+  };
+
   // Check if the user is an admin
   if (userCheck.role === "admin") {
     return next(
       new ApiError(`This user cannot be blocked because is an admin.`, 403)
     );
   };
+
   const document = await userModel.findByIdAndUpdate(
     id,
     {
@@ -278,7 +292,9 @@ exports.userBlock = asyncHandler(async (req, res, next) => {
       new: true,
     }
   );
+
   const user = userPropertysPrivate(document);
+
   res.status(200).json({ data: user });
 });
 

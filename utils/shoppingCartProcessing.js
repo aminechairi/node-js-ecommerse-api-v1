@@ -86,7 +86,7 @@ exports.checkProductsIfDeletedOrVariable = (cart) => {
 exports.calcTotalCartPrice = async (cart) => {
 
   // Get app settings
-  const appSettings = await appSettingsModel.findOne({});
+  const appSettings = await appSettingsModel.findOne({}) || {};
   const taxPrice = appSettings.taxPrice || 0;
   const shippingPrice = appSettings.shippingPrice || 0;
 
