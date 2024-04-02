@@ -2,10 +2,10 @@
   "name": "node-js-ecommerse-api-v1",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node server.js",
-    "start:dev": "nodemon server.js"
+    "start": "node index.js",
+    "start:dev": "nodemon index.js"
   },
   "author": "amine chairi",
   "license": "ISC",
