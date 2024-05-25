@@ -71,7 +71,8 @@ exports.createProductValidator = [
     .isNumeric()
     .withMessage("Product price must be of type number.")
     .isFloat({ min: 0, })
-    .withMessage("Product price number cannot be less than 0."),
+    .withMessage("Product price number cannot be less than 0.")
+    .customSanitizer(value => parseFloat(value).toFixed(2)),
 
   check("priceAfterDiscount")
     .optional()
@@ -84,7 +85,8 @@ exports.createProductValidator = [
         throw new Error("Product price after discount must be lower than price.");
       };
       return true;
-    }),
+    })
+    .customSanitizer(value => parseFloat(value).toFixed(2)),
 
   check("color")
     .optional()
@@ -182,6 +184,10 @@ exports.createProductValidator = [
 
           throw new Error(`Product price (index ${i}) cannot be less than 1.`);
 
+        } else {
+
+          sizes[i].price = parseFloat(sizes[i].price).toFixed(2);
+
         };
 
         // Validate price after discount
@@ -199,6 +205,10 @@ exports.createProductValidator = [
 
             throw new Error(`Product price after discount (index ${i}) must be lower than price.`);
 
+          } else {
+
+            sizes[i].priceAfterDiscount = parseFloat(sizes[i].priceAfterDiscount).toFixed(2);
+  
           };
 
         };
@@ -374,7 +384,8 @@ exports.createProductValidator = [
     .isFloat({ min: 1 })
     .withMessage("Rating must be above or equal 1.0")
     .isFloat({ max: 5 })
-    .withMessage("Rating must be below or equal 5.0"),
+    .withMessage("Rating must be below or equal 5.0")
+    .customSanitizer(value => parseFloat(value).toFixed(2)),
 
   check("ratingsQuantity")
     .optional()
@@ -446,7 +457,8 @@ exports.updateProductValidator = [
     .isNumeric()
     .withMessage("Product price must be of type number.")
     .isFloat({ min: 0, })
-    .withMessage("Product price number cannot be less than 0."),
+    .withMessage("Product price number cannot be less than 0.")
+    .customSanitizer(value => parseFloat(value).toFixed(2)),
 
   check("priceAfterDiscount")
     .optional()
@@ -472,7 +484,8 @@ exports.updateProductValidator = [
         throw new Error("Product price after discount must be lower than price.");
       }
       return true;
-    }),
+    })
+    .customSanitizer(value => parseFloat(value).toFixed(2)),
 
   check("color")
     .optional()
@@ -588,6 +601,10 @@ exports.updateProductValidator = [
 
           throw new Error(`Product price (index ${i}) cannot be less than 1.`);
 
+        } else {
+
+          sizes[i].price = parseFloat(sizes[i].price).toFixed(2);
+
         };
 
         // Validate quantity price after discount
@@ -604,6 +621,10 @@ exports.updateProductValidator = [
           } else if (sizes[i].price <= +sizes[i].priceAfterDiscount) {
 
             throw new Error(`Product price after discount (index ${i}) must be lower than price.`);
+
+          } else {
+            
+            sizes[i].priceAfterDiscount = parseFloat(sizes[i].priceAfterDiscount).toFixed(2);
 
           };
 
@@ -825,7 +846,8 @@ exports.updateProductValidator = [
     .isFloat({ min: 1 })
     .withMessage("Rating must be above or equal 1.0")
     .isFloat({ max: 5 })
-    .withMessage("Rating must be below or equal 5.0"),
+    .withMessage("Rating must be below or equal 5.0")
+    .customSanitizer(value => parseFloat(value).toFixed(2)),
 
   check("ratingsQuantity")
     .optional()
