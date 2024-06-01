@@ -24,8 +24,8 @@ const router = express.Router();
 router
   .route("/signup")
   .post(
-  signUpValidator,
-  signUp,
+    signUpValidator,
+    signUp,
   );
 
 router

@@ -16,7 +16,7 @@ exports.signUp = asyncHandler(async (req, res) => {
     lastName: req.body.lastName,
     slug: req.body.slug,
     email: req.body.email,
-    phone: req.body.phone,
+    phoneNumber: req.body.phoneNumber,
     password: req.body.password,
   });
   const user = userPropertysPrivate(document);

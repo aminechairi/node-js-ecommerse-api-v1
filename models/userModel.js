@@ -41,9 +41,8 @@ const userSchema = new mongoose.Schema(
     },
     emailVerifyCode: String,
     emailVerifyCodeExpires: Date,
-    phone: {
+    phoneNumber: {
       type: String,
-      required: [true, "Phone number is required."],
       trim: true,
     },
     profileImage: {

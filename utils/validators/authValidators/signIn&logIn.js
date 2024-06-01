@@ -21,7 +21,7 @@ exports.signUpValidator = [
     .withMessage("Last name must be of type string.")
     .isLength({ min: 2, max: 16 })
     .withMessage("Last name should be between 2 and 16 characters.")
-    .custom((value, { req }) => {
+    .custom((_, { req }) => {
       const frisrName = req.body.firstName;
       const lastName = req.body.lastName;
       req.body.slug = slugify(`${frisrName} ${lastName}`);
@@ -38,18 +38,17 @@ exports.signUpValidator = [
     .custom(async (val) => {
       const user = await userModel.findOne({ email: val });
       if (user) {
-        throw new Error("E-mail already in user.");
-      }
+        throw new Error(`This email (${val}) already exist.`);
+      };
       return true;
     }),
 
-  check("phone")
-    .notEmpty()
-    .withMessage("Phone number is required.")
+  check("phoneNumber")
+    .optional()
     .isString()
-    .withMessage("Phone must be of type string.")
-    .isMobilePhone(["ar-MA"])
-    .withMessage("Invalid phone number only accepted Morocco Phone numbers."),
+    .withMessage("Phone number must be of type string."),
+    // .isMobilePhone(["ar-MA"])
+    // .withMessage("Invalid phone number only accepted Morocco Phone numbers."),
 
   check("password")
     .notEmpty()
@@ -57,16 +56,16 @@ exports.signUpValidator = [
     .isString()
     .withMessage("Password must be of type string.")
     .isLength({ min: 8 })
-    .withMessage("Password should be at least 8 characters long"),
+    .withMessage("Password should be at least 8 characters long."),
 
-  check("passwordConfirm")
+  check("confirmPassword")
     .notEmpty()
-    .withMessage("Password confirm is required.")
+    .withMessage("Confirm password is required.")
     .isString()
-    .withMessage("Password confirm must be of type string.")
+    .withMessage("Confirm password must be of type string.")
     .custom((value, { req }) => {
       if (value !== req.body.password) {
-        throw new Error("Password confirm dose not match password");
+        throw new Error("Confirm password does not match password.");
       }
       return true;
     }),
@@ -85,7 +84,7 @@ exports.logInValidator = [
 
   check("password")
     .notEmpty()
-    .withMessage("Password is required")
+    .withMessage("Password is required.")
     .isString()
     .withMessage("Password must be of type string."),
 
