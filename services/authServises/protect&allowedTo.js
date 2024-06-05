@@ -7,7 +7,6 @@ const ApiError = require("../../utils/apiErrore");
 // @desc make sure the user is logged in
 exports.protect = (emailVerify = false) =>
   asyncHandler(async (req, res, next) => {
-
     // 1) Check if token exist, if exist get
     let token;
     if (
@@ -18,10 +17,7 @@ exports.protect = (emailVerify = false) =>
     }
     if (!token) {
       return next(
-        new ApiError(
-          "You are not login, Please login to get access this route.",
-          401
-        )
+        new ApiError("Access denied. Please log in to access this route.", 401)
       );
     }
 
@@ -33,7 +29,7 @@ exports.protect = (emailVerify = false) =>
     if (!currentUser) {
       return next(
         new ApiError(
-          "The user that belong to this token does no longer exist.",
+          "The user associated with this token no longer exists.",
           401
         )
       );
@@ -42,13 +38,23 @@ exports.protect = (emailVerify = false) =>
     // 4) Check user if verified email
     if (!emailVerify) {
       if (!currentUser.emailVerify) {
-        return next(new ApiError("This user email is not verified.", 401));
+        return next(
+          new ApiError(
+            "Your email is not verified. Please verify your email to proceed.",
+            401
+          )
+        );
       }
     }
 
     // 5) Check user if block
     if (currentUser.userBlock) {
-      return next(new ApiError("The user has been banned.", 401));
+      return next(
+        new ApiError(
+          "Your account has been blocked. Please contact support for further assistance.",
+          401
+        )
+      );
     }
 
     // 6) Check if user change his password after token created
@@ -61,17 +67,16 @@ exports.protect = (emailVerify = false) =>
       if (passChangedTimestamp > decoded.iat) {
         return next(
           new ApiError(
-            "User recently changed his password. please login again..",
+            "Your password was recently changed. Please log in again.",
             401
           )
         );
-      };
-    };
+      }
+    }
 
     req.user = currentUser;
 
     next();
-
   });
 
 // @desc  Authorization (User Permissions)
@@ -85,15 +90,13 @@ exports.allowedTo = (...roles) =>
       return next(
         new ApiError("You are not allowed to access this route.", 403)
       );
-    };
+    }
 
     next();
-
   });
 
 // check the token
 exports.checkTheToken = async (req, next) => {
-
   // 1) Check if token exist, if exist get
   let token;
   if (req.headers.authorization.startsWith("Bearer")) {
@@ -101,10 +104,7 @@ exports.checkTheToken = async (req, next) => {
   }
   if (!token) {
     throw next(
-      new ApiError(
-        "You are not login, Please login to get access this route.",
-        401
-      )
+      new ApiError("Access denied. Please log in to access this route.", 401)
     );
   }
 
@@ -115,21 +115,28 @@ exports.checkTheToken = async (req, next) => {
   const currentUser = await userModel.findById(decoded.userId);
   if (!currentUser) {
     throw next(
-      new ApiError(
-        "The user that belong to this token does no longer exist.",
-        401
-      )
+      new ApiError("The user associated with this token no longer exists.", 401)
     );
   }
 
   // 4) Check user if verified email
   if (!currentUser.emailVerify) {
-    throw next(new ApiError("This user email is not verified.", 401));
+    throw next(
+      new ApiError(
+        "Your email is not verified. Please verify your email to proceed.",
+        401
+      )
+    );
   }
 
   // 5) Check user if block
   if (currentUser.userBlock) {
-    throw next(new ApiError("The user has been banned.", 401));
+    throw next(
+      new ApiError(
+        "Your account has been blocked. Please contact support for further assistance.",
+        401
+      )
+    );
   }
 
   // 6) Check if user change his password after token created
@@ -142,13 +149,12 @@ exports.checkTheToken = async (req, next) => {
     if (passChangedTimestamp > decoded.iat) {
       throw next(
         new ApiError(
-          "User recently changed his password. please login again..",
+          "Your password was recently changed. Please log in again.",
           401
         )
       );
-    };
-  };
+    }
+  }
 
   return currentUser;
-
 };

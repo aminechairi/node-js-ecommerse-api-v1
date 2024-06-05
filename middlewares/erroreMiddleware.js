@@ -17,11 +17,11 @@ const sendErroreForProd = (err, res) => {
 };
 
 const handleJwtInvalidSignature = () => {
-  return new ApiError(`Invalid token plesse login again...`, 401);
+  return new ApiError(`Invalid token. Please log in again.`, 401);
 };
 
 const handleJwtExpired = () => {
-    return new ApiError(`Expired token plesse login again...`, 401);
+  return new ApiError(`Expired token. Please log in again.`, 401);
 };
 
 const globalErrore = (err, req, res, next) => {
