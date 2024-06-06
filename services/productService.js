@@ -163,17 +163,22 @@ exports.getProducts = asyncHandler(async (req, res, next) => {
 
     if (req.headers.authorization) {
 
-      const currentUser = await checkTheToken(req, next);
+      const currentUser = await checkTheToken(req);
       const userId = `${currentUser._id}`.toString();
 
-      // Execute Query
-      products = await mongooseQuery.populate({
-        path: "saves",
-        select: "userId -productId -_id"
-      });
+      if ( !(userId === "undefined") ) {
+        // Execute Query
+        products = await mongooseQuery.populate({
+          path: "saves",
+          select: "userId -productId -_id"
+        });
 
-      //check if user saved product
-      products = checkIfUserSavedProduct(products, userId);
+        // check if user saved product
+        products = checkIfUserSavedProduct(products, userId);
+      } else {
+        // Execute Query
+        products = await mongooseQuery;
+      }
 
     } else {
 
@@ -200,23 +205,34 @@ exports.getProduct = asyncHandler(async (req, res, next) => {
 
   if (req.headers.authorization) {
 
-    const currentUser = await checkTheToken(req, next);
+    const currentUser = await checkTheToken(req);
     const userId = `${currentUser._id}`.toString();
 
-    // Execute Query
-    products = await productModel.findById(id).populate({
-      path: "saves",
-      select: "userId -productId -_id"
-    });
+    if ( !(userId === "undefined") ) {
+      // Execute Query
+      products = await productModel.findById(id).populate({
+        path: "saves",
+        select: "userId -productId -_id"
+      });
 
-    if (!products) {
-      return next(new ApiError(`No product for this id ${id}`, 404));
-    };
+      if (!products) {
+        return next(new ApiError(`No product for this id ${id}`, 404));
+      };
 
-    products = [products];
+      products = [products];
 
-    //check if user saved product
-    products = checkIfUserSavedProduct(products, userId);
+      //check if user saved product
+      products = checkIfUserSavedProduct(products, userId);
+    } else {
+      // Execute Query
+      products = await productModel.findById(id);
+
+      if (!products) {
+        return next(new ApiError(`No product for this id ${id}`, 404));
+      };
+
+      products = [products];
+    }
 
   } else {
 
