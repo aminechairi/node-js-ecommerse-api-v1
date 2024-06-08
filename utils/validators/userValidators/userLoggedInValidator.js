@@ -7,7 +7,7 @@ const userModel = require("../../../models/userModel");
 exports.emailVerifyCodeValidator = [
   check("emailVerifyCode")
     .notEmpty()
-    .withMessage("Please write email verify code.")
+    .withMessage("Email verify code is required.")
     .isString()
     .withMessage("Email verify code must be of type string."),
 
