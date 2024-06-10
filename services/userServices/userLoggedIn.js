@@ -14,40 +14,45 @@ const { userPropertysPrivate } = require("../../utils/propertysPrivate");
 // @desc    Email verify
 // @route   POST /api/v1/auth/emailverify
 // @access  User logged in
-exports.emailVerify = asyncHandler(async (req, res, next) => {
+exports.emailVerification = asyncHandler(async (req, res, next) => {
   // 1) Get user by email
   const user = await userModel.findOne({ email: req.user.email });
 
   // 2) Check if email is already verified
-  if (user.emailVerify) {
-    return next(new ApiError("Email has already been verified.", 409));
+  if (user.emailVerification) {
+    return res.status(200).json({
+      status: "Verified",
+      message: "Your email has already been verified.",
+    });
   }
 
   // 3) Check if the verification code is still valid
-  if (user.emailVerifyCodeExpires) {
-    if (new Date(user.emailVerifyCodeExpires) > new Date()) {
-      return next(
-        new ApiError("Verification code already sent to email.", 400)
-      );
+  if (user.emailVerificationCodeExpires) {
+    if (new Date(user.emailVerificationCodeExpires) > new Date()) {
+      return res.status(200).json({
+        status: "Code_sent",
+        message: "Verification code already sent to your email.",
+      });
     }
   }
 
   // 4) Generate a new verification code
-  const emailVerifyCode = Math.floor(
+  const emailVerificationCode = Math.floor(
     100000 + Math.random() * 900000
   ).toString();
-  const hashedEmailVerifyCode = crypto
+  // Hash verification code
+  const hashedEmailVerificationCode = crypto
     .createHash("sha256")
-    .update(emailVerifyCode)
+    .update(emailVerificationCode)
     .digest("hex");
 
   // 5) Update user with new verification code and expiration time
   await userModel.updateOne(
     { email: req.user.email },
     {
-      emailVerifyCode: hashedEmailVerifyCode,
-      emailVerifyCodeExpires: Date.now() + 10 * 60 * 1000, // 10 minutes
-      emailVerify: false,
+      emailVerificationCode: hashedEmailVerificationCode,
+      emailVerificationCodeExpires: Date.now() + 10 * 60 * 1000, // 10 minutes
+      emailVerification: false,
     }
   );
 
@@ -61,7 +66,7 @@ exports.emailVerify = asyncHandler(async (req, res, next) => {
         Enter this code to confirm your email.
       </p>
       <h2 style="margin: 0;padding: 0;font-size: 24px;font-weight: 600;margin-bottom: 4px">
-        ${emailVerifyCode}
+        ${emailVerificationCode}
       </h2>
     </div>
   `;
@@ -77,8 +82,8 @@ exports.emailVerify = asyncHandler(async (req, res, next) => {
     await userModel.updateOne(
       { email: req.user.email },
       {
-        emailVerifyCode: null,
-        emailVerifyCodeExpires: null,
+        emailVerificationCode: null,
+        emailVerificationCodeExpires: null,
       }
     );
     return next(
@@ -88,51 +93,54 @@ exports.emailVerify = asyncHandler(async (req, res, next) => {
 
   // 7) Send response to client
   res.status(200).json({
-    status: "Success",
-    message: "Verification code sent to email.",
+    status: "Code_sent",
+    message: "Verification code sent to your email.",
   });
 });
 
 // @desc    Email verify code
 // @route   POST /api/v1/auth/emailverifycode
 // @access  User logged in
-exports.emailVerifyCode = asyncHandler(async (req, res, next) => {
+exports.emailVerificationCode = asyncHandler(async (req, res, next) => {
   // 1) Get user by email
   const user = await userModel.findOne({ email: req.user.email });
 
   // 2) Check if email is already verified
-  if (user.emailVerify) {
-    return next(new ApiError("Email has already been verified.", 409));
+  if (user.emailVerification) {
+    return res.status(200).json({
+      status: "Verified",
+      message: "Your email has already been verified.",
+    });
   }
 
-  // 3) Hash the provided email verify code
-  const hashedEmailVerifyCode = crypto
+  // 3) Hash the provided email verification code
+  const hashedEmailVerificationCode = crypto
     .createHash("sha256")
-    .update(req.body.emailVerifyCode)
+    .update(req.body.emailVerificationCode)
     .digest("hex");
 
   // 4) Check if the provided code matches and is not expired
   if (
-    user.emailVerifyCode !== hashedEmailVerifyCode ||
-    new Date() > new Date(user.emailVerifyCodeExpires)
+    user.emailVerificationCode !== hashedEmailVerificationCode ||
+    new Date() > new Date(user.emailVerificationCodeExpires)
   ) {
-    return next(new ApiError("Email verify code invalid or expired.", 400));
+    return next(new ApiError("Email verification code invalid or expired.", 400));
   }
 
   // 5) Mark email as verified and clear verification code and expiration time
   await userModel.updateOne(
     { email: user.email },
     {
-      emailVerify: true,
-      emailVerifyCode: null,
-      emailVerifyCodeExpires: null,
+      emailVerification: true,
+      emailVerificationCode: null,
+      emailVerificationCodeExpires: null,
     }
   );
 
   // 6) Send success response
   res.status(200).json({
-    status: "Success",
-    message: "Email has been verified.",
+    status: "Verified",
+    message: "Your email has been verified.",
   });
 });
 

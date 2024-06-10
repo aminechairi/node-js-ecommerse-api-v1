@@ -4,12 +4,12 @@ const slugify = require("slugify");
 
 const userModel = require("../../../models/userModel");
 
-exports.emailVerifyCodeValidator = [
-  check("emailVerifyCode")
+exports.emailVerificationCodeValidator = [
+  check("emailVerificationCode")
     .notEmpty()
-    .withMessage("Email verify code is required.")
+    .withMessage("Email verification code is required.")
     .isString()
-    .withMessage("Email verify code must be of type string."),
+    .withMessage("Email verification code must be of type string."),
 
   validatorMiddleware,
 ];

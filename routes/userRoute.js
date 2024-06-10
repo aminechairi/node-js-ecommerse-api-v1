@@ -11,7 +11,7 @@ const {
 const {
   updateMyDataValidator,
   changeMyPasswordValidator,
-  emailVerifyCodeValidator,
+  emailVerificationCodeValidator,
   changeMyEmailValidator
 } = require("../utils/validators/userValidators/userLoggedInValidator");
 const {
@@ -26,8 +26,8 @@ const {
   deleteUser,
 } = require("../services/userServices/userService");
 const {
-  emailVerify,
-  emailVerifyCode,
+  emailVerification,
+  emailVerificationCode,
   getMyData,
   updateMyData,
   changeMyPassword,
@@ -38,16 +38,16 @@ const protect_allowedTo = require("../services/authServises/protect&allowedTo");
 const router = express.Router();
 
 router.get(
-  "/emailverify",
+  "/emailverification",
   protect_allowedTo.protect(true),
-  emailVerify
+  emailVerification
 );
 
 router.post(
-  "/emailverifycode",
+  "/emailverificationcode",
   protect_allowedTo.protect(true),
-  emailVerifyCodeValidator,
-  emailVerifyCode
+  emailVerificationCodeValidator,
+  emailVerificationCode
 );
 
 router.get(

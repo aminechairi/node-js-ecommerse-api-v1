@@ -5,7 +5,7 @@ const userModel = require("../../models/userModel");
 const ApiError = require("../../utils/apiErrore");
 
 // @desc make sure the user is logged in
-exports.protect = (emailVerify = false) =>
+exports.protect = (emailVerification = false) =>
   asyncHandler(async (req, _, next) => {
     // 1) Check if token exist, if exist get
     let token;
@@ -36,8 +36,8 @@ exports.protect = (emailVerify = false) =>
     }
 
     // 4) Check user if verified email
-    if (!emailVerify) {
-      if (!currentUser.emailVerify) {
+    if (!emailVerification) {
+      if (!currentUser.emailVerification) {
         return next(
           new ApiError(
             "Your email is not verified. Please verify your email to proceed.",

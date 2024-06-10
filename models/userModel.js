@@ -35,12 +35,12 @@ const userSchema = new mongoose.Schema(
       trim: true,
       match: [/^\S+@\S+\.\S+$/, "Please provide a valid email address."],
     },
-    emailVerify: {
+    emailVerification: {
       type: Boolean,
       default: false,
     },
-    emailVerifyCode: String,
-    emailVerifyCodeExpires: Date,
+    emailVerificationCode: String,
+    emailVerificationCodeExpires: Date,
     phoneNumber: {
       type: String,
       trim: true,
