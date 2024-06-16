@@ -41,7 +41,7 @@ exports.protect = (emailVerification = false) =>
         return next(
           new ApiError(
             "Your email is not verified. Please verify your email to proceed.",
-            401
+            403
           )
         );
       }
@@ -82,7 +82,7 @@ exports.protect = (emailVerification = false) =>
 // @desc  Authorization (User Permissions)
 // ["admin", "manager"]
 exports.allowedTo = (...roles) =>
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, _, next) => {
     // 1) access roles
     // 2) access registered user (req.user.role)
 
