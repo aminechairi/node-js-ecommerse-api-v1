@@ -1,9 +1,7 @@
 const asyncHandler = require("express-async-handler");
-const ApiError = require('../utils/apiErrore');
+const ApiError = require("../utils/apiErrore");
 
-const {
-  getAll,
-} = require("./handlersFactory");
+const { getAll } = require("./handlersFactory");
 const saveModel = require("../models/saveModel");
 
 // @desc    Logged user add product to saves
@@ -29,17 +27,17 @@ exports.removeProductFromeSaves = asyncHandler(async (req, res, next) => {
     productId: productId,
   });
   if (!save) {
-    throw new ApiError(`No saved product for this id ${productId}`, 404);
-  };
+    throw new ApiError(`No saved product for this id ${productId}.`, 404);
+  }
   res.status(200).json({
     data: save,
   });
 });
 
-exports.createFilterObj = (req, res, next) => {
+exports.createFilterObj = (req, _, next) => {
   req.filterObj = {
     userId: req.user._id,
-   };;
+  };
   next();
 };
 

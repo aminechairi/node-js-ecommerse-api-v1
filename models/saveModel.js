@@ -19,7 +19,7 @@ const saveSchema = new mongoose.Schema(
 saveSchema.pre("find", function (next) {
   this.populate({
     path: 'productId',
-    select: 'title quantity sold price priceAfterDiscount imageCover images',
+    select: 'title price priceAfterDiscount imageCover quantity sold ratingsAverage ratingsQuantity',
   });
   next();
 });
