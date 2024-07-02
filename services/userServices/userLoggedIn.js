@@ -47,14 +47,11 @@ exports.emailVerification = asyncHandler(async (req, res, next) => {
     .digest("hex");
 
   // 5) Update user with new verification code and expiration time
-  await userModel.updateOne(
-    { email: req.user.email },
-    {
-      emailVerificationCode: hashedEmailVerificationCode,
-      emailVerificationCodeExpires: Date.now() + 10 * 60 * 1000, // 10 minutes
-      emailVerification: false,
-    }
-  );
+  user.emailVerificationCode = hashedEmailVerificationCode;
+  user.emailVerificationCodeExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+  user.emailVerification = false;
+
+  await user.save();
 
   // 6) Send the verification code via email
   const message = `
@@ -79,13 +76,10 @@ exports.emailVerification = asyncHandler(async (req, res, next) => {
     });
   } catch (err) {
     // If email sending fails, clear the verification code and expiration time
-    await userModel.updateOne(
-      { email: req.user.email },
-      {
-        emailVerificationCode: null,
-        emailVerificationCodeExpires: null,
-      }
-    );
+    user.emailVerificationCode = undefined;
+    user.emailVerificationCodeExpires = undefined;
+    await user.save();
+
     return next(
       new ApiError("Error sending email. Please try again later.", 500)
     );
@@ -124,18 +118,17 @@ exports.emailVerificationCode = asyncHandler(async (req, res, next) => {
     user.emailVerificationCode !== hashedEmailVerificationCode ||
     new Date() > new Date(user.emailVerificationCodeExpires)
   ) {
-    return next(new ApiError("Email verification code invalid or expired.", 400));
+    return next(
+      new ApiError("Email verification code invalid or expired.", 400)
+    );
   }
 
   // 5) Mark email as verified and clear verification code and expiration time
-  await userModel.updateOne(
-    { email: user.email },
-    {
-      emailVerification: true,
-      emailVerificationCode: null,
-      emailVerificationCodeExpires: null,
-    }
-  );
+  user.emailVerification = true;
+  user.emailVerificationCode = undefined;
+  user.emailVerificationCodeExpires = undefined;
+
+  await user.save();
 
   // 6) Send success response
   res.status(200).json({

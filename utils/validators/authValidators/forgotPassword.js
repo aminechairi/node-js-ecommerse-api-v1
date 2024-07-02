@@ -13,12 +13,12 @@ exports.forgotPasswordValidator = [
   validatorMiddleware,
 ];
 
-exports.verifyPassResetCodeValidator = [
-  check("resetCode")
+exports.passwordResetCodeValidator = [
+  check("passwordResetCode")
     .notEmpty()
-    .withMessage("Please write reset code.")
+    .withMessage("Password reset code is required.")
     .isString()
-    .withMessage("Reset code must be of type string."),
+    .withMessage("Password reset code must be of type string."),
 
   validatorMiddleware,
 ];

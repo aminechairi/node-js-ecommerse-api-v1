@@ -1,7 +1,7 @@
 exports.userPropertysPrivate = (document) => {
   const propertys = [
-    `emailVerifyCode`,
-    `emailVerifyCodeExpires`,
+    `emailVerificationCode`,
+    `emailVerificationCodeExpires`,
     `password`,
     `passwordChangedAt`,
     `passwordResetCode`,

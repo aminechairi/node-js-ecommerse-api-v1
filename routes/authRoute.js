@@ -6,7 +6,7 @@ const {
 } = require("../utils/validators/authValidators/signIn&logIn");
 const {
   forgotPasswordValidator,
-  verifyPassResetCodeValidator,
+  passwordResetCodeValidator,
   resetPasswordValidator,
 } = require("../utils/validators/authValidators/forgotPassword");
 const {
@@ -15,7 +15,7 @@ const {
 } = require("../services/authServises/signIn&logIn");
 const {
   forgotPassword,
-  verifyPassResetCode,
+  passwordResetCode,
   resetPassword,
 } = require("../services/authServises/forgotPassword");
 
@@ -43,10 +43,10 @@ router
   );
 
 router
-  .route("/verifyResetCode")
+  .route("/passwordResetCode")
   .post(
-    verifyPassResetCodeValidator,
-    verifyPassResetCode
+    passwordResetCodeValidator,
+    passwordResetCode
   );
 
 router
