@@ -7,7 +7,6 @@ const {
 const {
   forgotPasswordValidator,
   passwordResetCodeValidator,
-  resetPasswordValidator,
 } = require("../utils/validators/authValidators/forgotPassword");
 const {
   signUp,
@@ -16,7 +15,6 @@ const {
 const {
   forgotPassword,
   passwordResetCode,
-  resetPassword,
 } = require("../services/authServises/forgotPassword");
 
 const router = express.Router();
@@ -35,6 +33,8 @@ router
     logIn
   );
 
+
+
 router
   .route("/forgotPassword")
   .post(
@@ -44,16 +44,9 @@ router
 
 router
   .route("/passwordResetCode")
-  .post(
+  .put(
     passwordResetCodeValidator,
     passwordResetCode
-  );
-
-router
-  .route("/resetPassword")
-  .put(
-    resetPasswordValidator,
-    resetPassword
   );
 
 module.exports = router;

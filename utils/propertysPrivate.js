@@ -6,7 +6,6 @@ exports.userPropertysPrivate = (document) => {
     `passwordChangedAt`,
     `passwordResetCode`,
     `passwordResetExpires`,
-    `passwordResetVerified`,
     'addressesList',
   ];
   for (let i = 0; i < propertys.length; i++) {

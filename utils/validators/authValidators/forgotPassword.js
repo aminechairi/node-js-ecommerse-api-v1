@@ -20,19 +20,7 @@ exports.passwordResetCodeValidator = [
     .isString()
     .withMessage("Password reset code must be of type string."),
 
-  validatorMiddleware,
-];
-
-exports.resetPasswordValidator = [
-  check("email")
-    .notEmpty()
-    .withMessage("Email is required.")
-    .isString()
-    .withMessage("Email must be of type string.")
-    .isEmail()
-    .withMessage("Please provide a valid email address."),
-
-  check("newPassword")
+    check("newPassword")
     .notEmpty()
     .withMessage("New password is required")
     .isString()
@@ -40,17 +28,48 @@ exports.resetPasswordValidator = [
     .isLength({ min: 8 })
     .withMessage("New password should be at least 8 characters long"),
 
-  check("newPasswordConfirm")
+  check("confirmNewPassword")
     .notEmpty()
-    .withMessage("New password confirm is required.")
+    .withMessage("Confirm new password is required.")
     .isString()
-    .withMessage("New password confirm must be of type string.")
+    .withMessage("Confirm new password must be of type string.")
     .custom((value, { req }) => {
       if (value !== req.body.newPassword) {
-        throw new Error("New password confirm dose not match new password.");
+        throw new Error("Confirm new password dose not match new password.");
       }
       return true;
     }),
 
   validatorMiddleware,
 ];
+
+//   check("email")
+//     .notEmpty()
+//     .withMessage("Email is required.")
+//     .isString()
+//     .withMessage("Email must be of type string.")
+//     .isEmail()
+//     .withMessage("Please provide a valid email address."),
+
+//   check("newPassword")
+//     .notEmpty()
+//     .withMessage("New password is required")
+//     .isString()
+//     .withMessage("New password must be of type string.")
+//     .isLength({ min: 8 })
+//     .withMessage("New password should be at least 8 characters long"),
+
+//   check("newPasswordConfirm")
+//     .notEmpty()
+//     .withMessage("New password confirm is required.")
+//     .isString()
+//     .withMessage("New password confirm must be of type string.")
+//     .custom((value, { req }) => {
+//       if (value !== req.body.newPassword) {
+//         throw new Error("New password confirm dose not match new password.");
+//       }
+//       return true;
+//     }),
+
+//   validatorMiddleware,
+// ];
