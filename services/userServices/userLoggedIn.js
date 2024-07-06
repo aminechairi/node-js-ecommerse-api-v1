@@ -31,7 +31,7 @@ exports.emailVerification = asyncHandler(async (req, res, next) => {
     if (new Date(user.emailVerificationCodeExpires) > new Date()) {
       return res.status(200).json({
         status: "Code_sent",
-        message: "Verification code sent to your email.",
+        message: "Verification code already sent to your email.",
       });
     }
   }

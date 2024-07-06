@@ -36,7 +36,7 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
     if (new Date(user.passwordResetExpires) > new Date()) {
       return res.status(200).json({
         status: "Success",
-        message: "Password reset code sent to your email.",
+        message: "Password reset code already sent to your email.",
       });
     }
   }
