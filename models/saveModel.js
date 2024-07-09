@@ -11,15 +11,22 @@ const saveSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: `Product`,
       required: [true, "Product id is required."],
-    }
+    },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
+
+saveSchema.virtual("productId.save").get(function () {
+  return true;
+});
+
+saveSchema.set("toJSON", { virtuals: true });
 
 saveSchema.pre("find", function (next) {
   this.populate({
-    path: 'productId',
-    select: 'title price priceAfterDiscount imageCover quantity sold ratingsAverage ratingsQuantity',
+    path: "productId",
+    select:
+      "title price priceAfterDiscount imageCover quantity sold ratingsAverage ratingsQuantity",
   });
   next();
 });
