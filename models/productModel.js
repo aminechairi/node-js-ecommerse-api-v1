@@ -12,8 +12,8 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: [true, "Product title is required."],
       trim: true,
-      minlength: [3, "Too short product title."],
-      maxlength: [200, "Too long product title."],
+      minlength: [3, "Product title must be at least 3 characters."],
+      maxlength: [200, "Product title cannot exceed 200 characters."],
     },
     slug: {
       type: String,
@@ -25,21 +25,24 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: [true, "Product description is required."],
       trim: true,
-      minlength: [20, "Too short product description."],    
+      minlength: [32, "Product description must be at least 32 characters."],
+      maxlength: [1000, "Product description cannot exceed 1000 characters."],
     },
     price: {
       type: Number,
-      min: [0, "Prodact price number cannot be less than 0."],
+      min: [0, "Product price must be between 0 and 10000."],
+      max: [1000, "Product price must be between 0 and 10000."],
     },
     priceAfterDiscount: {
       type: Number,
-      min: [0, "Prodact price after discount number cannot be less than 0."],
+      min: [0, "Product price after discount must be between 0 and 10000."],
+      max: [10000, "Product price after discount must be between 0 and 10000."],
     },
     color: {
       type: String,
       trim: true,
-      minlength: [3, "Too short product color name."],
-      maxlength: [32, "Too long product color name."],
+      minlength: [3, "Product color name must be at least 3 characters."],
+      maxlength: [32, "Product color name cannot exceed 32 characters."],
     },
     imageCover: {
       type: String,
@@ -54,7 +57,8 @@ const productSchema = new mongoose.Schema(
     ],
     quantity: {
       type: Number,
-      min: [1, "Prodact quantity number cannot be less than 1."],
+      min: [1, "Product quantity must be between 1 and 1000."],
+      max: [1000, "Product quantity must be between 1 and 1000."],
     },
     sizes: [
       {
@@ -106,18 +110,19 @@ const productSchema = new mongoose.Schema(
     },
     sold: {
       type: Number,
-      min: [0, "Prodact sold number cannot be less than 0."],
+      min: [0, "Product sold must be between 0 and 1000."],
+      max: [1000, "Product sold must be between 0 and 1000."],
       default: 0,
     },
     ratingsAverage: {
       type: Number,
-      min: [1, "Rating must be abave or equal 1.0"],
-      max: [5, "Rating must be below or equal 5.0"],
+      min: [1, "Product ratings average must be between 1 and 5."],
+      max: [5, "Product ratings average must be between 1 and 5."],
     },
     ratingsQuantity: {
       type: Number,
       default: 0,
-      min: 0,
+      min: [0, "Product ratings quantity must be 0 or greater."],
     },
   },
   {

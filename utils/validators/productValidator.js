@@ -50,9 +50,9 @@ exports.createProductValidator = [
     .isString()
     .withMessage("Product title must be of type string.")
     .isLength({ min: 3 })
-    .withMessage("Too short product title.")
+    .withMessage("Product title must be at least 3 characters.")
     .isLength({ max: 200 })
-    .withMessage("Too long product title.")
+    .withMessage("Product title cannot exceed 200 characters.")
     .custom((value, { req }) => {
       req.body.slug = `${slugify(value)}`.toLowerCase();
       return true;
@@ -64,22 +64,24 @@ exports.createProductValidator = [
     .isString()
     .withMessage("Product description must be of type string.")
     .isLength({ min: 32 })
-    .withMessage("Too short product description."),
+    .withMessage("Product description must be at least 32 characters.")
+    .isLength({ max: 1000 })
+    .withMessage("Product description cannot exceed 1000 characters."),
 
   check("price")
     .optional()
     .isNumeric()
     .withMessage("Product price must be of type number.")
-    .isFloat({ min: 0, })
-    .withMessage("Product price number cannot be less than 0.")
+    .isFloat({ min: 0, max: 10000 })
+    .withMessage("Product price must be between 0 and 10000.")
     .customSanitizer(value => parseFloat(value).toFixed(2)),
 
   check("priceAfterDiscount")
     .optional()
     .isNumeric()
     .withMessage("Product price after discount must be of type number.")
-    .isFloat({ min: 0, })
-    .withMessage("Product price after discount number cannot be less than 0.")
+    .isFloat({ min: 0, max: 10000 })
+    .withMessage('Product price after discount must be between 0 and 10000.')
     .custom((value, { req }) => {
       if (+req.body.price <= +value) {
         throw new Error("Product price after discount must be lower than price.");
@@ -93,9 +95,9 @@ exports.createProductValidator = [
     .isString()
     .withMessage("Product color name must be of type string.")
     .isLength({ min: 3 })
-    .withMessage("Too short product color name.")
+    .withMessage("Product color name must be at least 3 characters.")
     .isLength({ max: 32 })
-    .withMessage("Too long product color name."),
+    .withMessage("Product color name cannot exceed 32 characters."),
 
   check("imageCover")
     .custom((_, { req }) => {
@@ -117,8 +119,8 @@ exports.createProductValidator = [
     .optional()
     .isNumeric()
     .withMessage("Product quantity must be of type number.")
-    .isInt({ min: 1, })
-    .withMessage("Product quantity number cannot be less than 1 and must be a integer number."),
+    .isInt({ min: 1, max: 1000 })
+    .withMessage("Product quantity must be an integer between 1 and 1000."),
 
   check('sizes')
     .optional()
@@ -374,25 +376,23 @@ exports.createProductValidator = [
     .optional()
     .isNumeric()
     .withMessage("Product sold must be of type number.")
-    .isInt({ min: 0, })
-    .withMessage("Product sold number cannot be less than 0 and must be a integer number."),
+    .isInt({ min: 0, max: 1000 })
+    .withMessage("Product sold must be an integer between 0 and 1000."),
 
   check("ratingsAverage")
     .optional()
     .isNumeric()
-    .withMessage("Rating average must be of type number.")
-    .isFloat({ min: 1 })
-    .withMessage("Rating must be above or equal 1.0")
-    .isFloat({ max: 5 })
-    .withMessage("Rating must be below or equal 5.0")
+    .withMessage("Product ratings average must be of type number.")
+    .isFloat({ min: 1, max: 5 })
+    .withMessage("Product ratings average must be between 1 and 5.")
     .customSanitizer(value => parseFloat(value).toFixed(2)),
 
   check("ratingsQuantity")
     .optional()
     .isNumeric()
-    .withMessage("Rating quantity must be of type number.")
-    .isInt({ min: 0, })
-    .withMessage("Rating quantity number cannot be less than 0 and must be a integer number."),
+    .withMessage("Product ratings quantity must be of type number.")
+    .isInt({ min: 0 })
+    .withMessage("Product ratings quantity must be an integer 0 or greater."),
 
   validatorMiddleware,
 ];
@@ -416,21 +416,21 @@ exports.updateProductValidator = [
   check("id")
     .isMongoId()
     .withMessage("Invalid product id format.")
-    .custom(async (value, { req }) => {
+    .custom(async (value) => {
       const product = await productModel.findById(value);
       if (!product) {
         throw new Error(`No product for this id ${value}.`);
       };
     }),
 
-    check("title")
+  check("title")
     .optional()
     .isString()
     .withMessage("Product title must be of type string.")
     .isLength({ min: 3 })
-    .withMessage("Too short product title.")
+    .withMessage("Product title must be at least 3 characters.")
     .isLength({ max: 200 })
-    .withMessage("Too long product title.")
+    .withMessage("Product title cannot exceed 200 characters.")
     .custom((value, { req }) => {
       req.body.slug = `${slugify(value)}`.toLowerCase();
       return true;
@@ -441,7 +441,9 @@ exports.updateProductValidator = [
     .isString()
     .withMessage("Product description must be of type string.")
     .isLength({ min: 32 })
-    .withMessage("Too short product description."),
+    .withMessage("Product description must be at least 32 characters.")
+    .isLength({ max: 1000 })
+    .withMessage("Product description cannot exceed 1000 characters."),
 
   check("price")
     .optional()
@@ -456,8 +458,8 @@ exports.updateProductValidator = [
     })
     .isNumeric()
     .withMessage("Product price must be of type number.")
-    .isFloat({ min: 0, })
-    .withMessage("Product price number cannot be less than 0.")
+    .isFloat({ min: 0, max: 10000 })
+    .withMessage("Product price must be between 0 and 10000.")
     .customSanitizer(value => parseFloat(value).toFixed(2)),
 
   check("priceAfterDiscount")
@@ -473,8 +475,8 @@ exports.updateProductValidator = [
     })
     .isNumeric()
     .withMessage("Product price after discount must be of type number.")
-    .isFloat({ min: 0, })
-    .withMessage("Product price after discount number cannot be less than 0.")
+    .isFloat({ min: 0, max: 10000 })
+    .withMessage("Product price after discount must be between 0 and 10000.")
     .custom(async (value, { req }) => {
       const product = await productModel.findById(req.params.id);
       if (!product) {
@@ -492,9 +494,9 @@ exports.updateProductValidator = [
     .isString()
     .withMessage("Product color name must be of type string.")
     .isLength({ min: 3 })
-    .withMessage("Too short product color name.")
+    .withMessage("Product color name must be at least 3 characters.")
     .isLength({ max: 32 })
-    .withMessage("Too long product color name."),
+    .withMessage("Product color name cannot exceed 32 characters."),
 
   check("imageCover")
     .custom((_, { req }) => {
@@ -525,8 +527,8 @@ exports.updateProductValidator = [
     })
     .isNumeric()
     .withMessage("Product quantity must be of type number.")
-    .isInt({ min: 1, })
-    .withMessage("Product quantity number cannot be less than 1 and must be a integer number."),
+    .isInt({ min: 1, max: 1000 })
+    .withMessage("Product quantity must be an integer between 1 and 1000."),
 
   check('sizes')
     .optional()
@@ -836,25 +838,23 @@ exports.updateProductValidator = [
     .optional()
     .isNumeric()
     .withMessage("Product sold must be of type number.")
-    .isInt({ min: 0, })
-    .withMessage("Product sold number cannot be less than 0 and must be a integer number."),
+    .isInt({ min: 0, max: 1000 })
+    .withMessage("Product sold must be an integer between 0 and 1000."),
 
   check("ratingsAverage")
     .optional()
     .isNumeric()
-    .withMessage("Rating average must be of type number.")
-    .isFloat({ min: 1 })
-    .withMessage("Rating must be above or equal 1.0")
-    .isFloat({ max: 5 })
-    .withMessage("Rating must be below or equal 5.0")
+    .withMessage("Product ratings average must be of type number.")
+    .isFloat({ min: 1, max: 5 })
+    .withMessage("Product ratings average must be between 1 and 5.")
     .customSanitizer(value => parseFloat(value).toFixed(2)),
 
   check("ratingsQuantity")
     .optional()
     .isNumeric()
-    .withMessage("Rating quantity must be of type number.")
-    .isInt({ min: 0, })
-    .withMessage("Rating quantity number cannot be less than 0 and must be a integer number."),
+    .withMessage("Product ratings quantity must be of type number.")
+    .isInt({ min: 0 })
+    .withMessage("Product ratings quantity must be an integer 0 or greater."),
 
   validatorMiddleware,
 ];
