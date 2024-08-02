@@ -16,8 +16,7 @@ exports.createProductValidator = [
 
   body()
     .custom((_, { req }) => {
-
-      if (req.body.sizes === undefined) {
+      if (req.body.sizes === undefined && Object.keys(req.body).length !== 0) {
 
       if (!req.body.price) {
         throw new Error('Product price is required.');
@@ -126,7 +125,11 @@ exports.createProductValidator = [
     .optional()
     .isArray()
     .withMessage("Product sizes must be an array.")
-    .custom((sizes, { req }) => {
+    .custom((sizes) => {
+
+      if (sizes.length === 0) {
+        throw new Error(`Size is required.`);
+      };
 
       for (let i = 0; i < sizes.length; i++) {
 
@@ -146,11 +149,11 @@ exports.createProductValidator = [
 
         } else if (sizes[i].size.length < 1) {
 
-          throw new Error(`Too short product size (index ${i}).`);
+          throw new Error(`Product size (index ${i}) must be at least 1 characters.`);
 
         } else if (sizes[i].size.length > 8) {
 
-          throw new Error(`Too long product size (index ${i}).`);
+          throw new Error(`Product size (index ${i}) cannot exceed 8 characters.`);
 
         };
 
@@ -543,7 +546,11 @@ exports.updateProductValidator = [
     })
     .isArray()
     .withMessage("Product sizes must be an array.")
-    .custom((sizes, { req }) => {
+    .custom((sizes) => {
+
+      if (sizes.length === 0) {
+        throw new Error(`Size is required.`);
+      };
 
       for (let i = 0; i < sizes.length; i++) {
 
@@ -563,11 +570,11 @@ exports.updateProductValidator = [
 
         } else if (sizes[i].size.length < 1) {
 
-          throw new Error(`Too short product size (index ${i}).`);
+          throw new Error(`Product size (index ${i}) must be at least 1 characters.`);
 
         } else if (sizes[i].size.length > 8) {
 
-          throw new Error(`Too long product size (index ${i}).`);
+          throw new Error(`Product size (index ${i}) cannot exceed 8 characters.`);
 
         };
 

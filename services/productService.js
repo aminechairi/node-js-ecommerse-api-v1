@@ -71,10 +71,10 @@ exports.uploadProductImages = uploadMultipleImages([
 ]);
 
 // Images processing
-exports.resizeProductImages = asyncHandler(async (req, res, next) => {
+exports.resizeProductImages = asyncHandler(async (req, _, next) => {
 
   // 1 - Image processing for imageCover
-  if (req.files.imageCover) {
+  if (req.files?.imageCover) {
 
     const imageFormat = 'jpeg';
 
@@ -102,7 +102,7 @@ exports.resizeProductImages = asyncHandler(async (req, res, next) => {
   };
 
   // 2 - Image processing for images
-  if (req.files.images) {
+  if (req.files?.images) {
 
     req.body.images = [];
 

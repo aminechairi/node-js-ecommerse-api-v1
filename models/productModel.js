@@ -31,7 +31,7 @@ const productSchema = new mongoose.Schema(
     price: {
       type: Number,
       min: [0, "Product price must be between 0 and 10000."],
-      max: [1000, "Product price must be between 0 and 10000."],
+      max: [10000, "Product price must be between 0 and 10000."],
     },
     priceAfterDiscount: {
       type: Number,
@@ -66,8 +66,8 @@ const productSchema = new mongoose.Schema(
           type: String,
           trim: true,
           uppercase: true,
-          minlength: [1, "Too short product size."],
-          maxlength: [8, "Too long product size."],
+          min: [1, "Product size must be at least 1 characters."],
+          max: [8, "Product size cannot exceed 8 characters."],
         },
         quantity: {
           type: Number,
