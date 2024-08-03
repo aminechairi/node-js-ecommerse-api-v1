@@ -24,9 +24,9 @@ exports.creteProductsGroupValidator = [
     .isString()
     .withMessage("Group name must be of type string.")
     .isLength({ min: 2 })
-    .withMessage("Too short group name.")
+    .withMessage("Group name must be at least 2 characters.")
     .isLength({ max: 32 })
-    .withMessage("Too long group name."),
+    .withMessage("Group name cannot exceed 32 characters."),
 
   check("productsIDs")
     .notEmpty()
@@ -55,9 +55,9 @@ exports.creteProductsGroupValidator = [
       if (IDs.length !== products.length) {
 
         if (IDs.length > 1) {
-          throw new Error('Invalid products IDs.');
+          throw new Error(`No products for these IDs. ${IDs}.`);
         } else {
-          throw new Error('Invalid product ID.');
+          throw new Error(`No product for this ID ${IDs}.`);
         };
 
       };
@@ -87,9 +87,9 @@ exports.updateProductsGroupValidator = [
     .isString()
     .withMessage("Group name must be of type string.")
     .isLength({ min: 2 })
-    .withMessage("Too short group name.")
+    .withMessage("Group name must be at least 2 characters.")
     .isLength({ max: 32 })
-    .withMessage("Too long group name."),
+    .withMessage("Group name cannot exceed 32 characters."),
 
   validatorMiddleware,
 ];
@@ -138,9 +138,9 @@ exports.addProductsToGroupValidator = [
       if (IDs.length !== products.length) {
 
         if (IDs.length > 1) {
-          throw new Error('Invalid products IDs.');
+          throw new Error(`No products for these IDs. ${IDs}.`);
         } else {
-          throw new Error('Invalid product ID.');
+          throw new Error(`No product for this ID ${IDs}.`);
         };
 
       };
