@@ -172,11 +172,11 @@ exports.createProductValidator = [
 
         } else if (sizes[i].quantity < 1) {
 
-          throw new Error(`Product quantity (index ${i}) must be an integer between 1 and 1000.`);
+          throw new Error(`Product quantity (index ${i}) must be between 1 and 1000.`);
 
         } else if (sizes[i].quantity > 1000) {
 
-          throw new Error(`Product quantity (index ${i}) must be an integer between 1 and 1000.`);
+          throw new Error(`Product quantity (index ${i}) must be between 1 and 1000.`);
 
         };
 
@@ -605,11 +605,11 @@ exports.updateProductValidator = [
 
         } else if (sizes[i].quantity < 1) {
 
-          throw new Error(`Product quantity (index ${i}) must be an integer between 1 and 1000.`);
+          throw new Error(`Product quantity (index ${i}) must be between 1 and 1000.`);
 
         } else if (sizes[i].quantity > 1000) {
 
-          throw new Error(`Product quantity (index ${i}) must be an integer between 1 and 1000.`);
+          throw new Error(`Product quantity (index ${i}) must be between 1 and 1000.`);
 
         };
 
@@ -656,9 +656,9 @@ exports.updateProductValidator = [
             throw new Error(`Product price after discount (index ${i}) must be lower than price.`);
 
           } else {
-
+            
             sizes[i].priceAfterDiscount = parseFloat(sizes[i].priceAfterDiscount).toFixed(2);
-  
+
           };
 
         };
