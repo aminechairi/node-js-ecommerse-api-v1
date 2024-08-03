@@ -26,7 +26,7 @@ saveSchema.pre("find", function (next) {
   this.populate({
     path: "productId",
     select:
-      "title price priceAfterDiscount imageCover quantity sold ratingsAverage ratingsQuantity",
+      "title price priceAfterDiscount imageCover quantity sizes sold ratingsAverage ratingsQuantity",
   });
   next();
 });
