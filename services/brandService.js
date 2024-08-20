@@ -13,7 +13,7 @@ const brandModel = require("../models/brandModel");
 exports.uploadBrandImage = uploadSingleImage("image");
 
 // Image processing
-exports.resizeImage = resizeImage('brands', 'brand');
+exports.resizeImage = resizeImage(['brands', 'brand'], 800, 400);
 
 // @desc Get List of brands
 // @route GET /api/v1/brands

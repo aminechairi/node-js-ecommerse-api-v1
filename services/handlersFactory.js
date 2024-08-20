@@ -8,15 +8,15 @@ const ApiFeatures = require("../utils/apiFeatures");
 
 const awsBuckName = process.env.AWS_BUCKET_NAME;
 
-exports.resizeImage = (...names) => 
-  asyncHandler(async (req, res, next) => {
+exports.resizeImage = (names, width, height) => 
+  asyncHandler(async (req, _, next) => {
 
     if (req.file) {
 
       const imageFormat = 'jpeg';
 
       const buffer = await sharp(req.file.buffer)
-      .resize(800, 800)
+      .resize(width, height)
       .toFormat(imageFormat)
       .jpeg({ quality: 100 })
       .toBuffer();
