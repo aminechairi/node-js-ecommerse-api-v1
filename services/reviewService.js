@@ -39,7 +39,7 @@ exports.setProductIdAndUserIdToBody = (req, res, next) => {
 // @access  Private
 exports.createReview = asyncHandler(async (req, res) => {
   let review = await reviewModel.create({
-    title: req.body.title,
+    comment: req.body.comment,
     ratings: req.body.ratings,
     user: req.user._id,
     product: req.body.product,
@@ -56,7 +56,7 @@ exports.updateReview = asyncHandler(async (req, res) => {
   const review = await reviewModel.findByIdAndUpdate(
     req.params.id,
     {
-      title: req.body.title,
+      comment: req.body.comment,
       ratings: req.body.ratings,
     },
     {

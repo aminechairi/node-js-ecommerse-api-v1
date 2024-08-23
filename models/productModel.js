@@ -134,15 +134,6 @@ const productSchema = new mongoose.Schema(
 
 // mongoose virtual populate
 productSchema.virtual(
-  "reviews",
-  {
-    ref: "Review",
-    foreignField: "product",
-    localField: "_id",
-  }
-);
-
-productSchema.virtual(
   "saves",
   {
     ref: "Save",
@@ -154,16 +145,8 @@ productSchema.virtual(
 // mongoose query middleware
 productSchema.pre("findOne", function(next) {
   this.populate({
-    path: "category subCategories underSubCategories brand",
-    select: "name image"
-  })
-  .populate({
     path: "group",
-    select: "groupName productsIDs -_id"
-  })
-  .populate({
-    path: "reviews",
-    select: "title ratings -product"
+    select: "productsIDs"
   })
   next();
 });

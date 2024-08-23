@@ -88,7 +88,7 @@ exports.getOne = (Model, populationOpt) =>
     const document = await query;
 
     if (!document) {
-      return next(new ApiError(`No document for this id ${id}`, 404));
+      return next(new ApiError(`No document for this id ${id}.`, 404));
     };
 
     res.status(200).json({ data: document });
@@ -120,7 +120,7 @@ exports.updateOne = (models) =>
       );
 
       if (!document) {
-        return next(new ApiError(`No document for this id ${id}`, 404));
+        return next(new ApiError(`No document for this id ${id}.`, 404));
       };
 
       const imageUrl = `${document.image}`;
@@ -148,7 +148,7 @@ exports.updateOne = (models) =>
       );
 
       if (!document) {
-        return next(new ApiError(`No document for this id ${id}`, 404));
+        return next(new ApiError(`No document for this id ${id}.`, 404));
       };
 
       res.status(200).json({ data: document });
@@ -164,7 +164,7 @@ exports.deleteOne = (models, containsImage = false) =>
 
     const document = await models.findByIdAndDelete({ _id: id });
     if (!document) {
-      return next(new ApiError(`No document for this id ${id}`, 404));
+      return next(new ApiError(`No document for this id ${id}.`, 404));
     };
 
     if (!containsImage) {

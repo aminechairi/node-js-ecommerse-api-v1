@@ -8,7 +8,7 @@ exports.getReviewsValidator = [
   check("productId")
     .optional()
     .isMongoId()
-    .withMessage("Invalid product id format."),
+    .withMessage("Invalid product ID format."),
 
   validatorMiddleware,
 ];
@@ -16,18 +16,18 @@ exports.getReviewsValidator = [
 exports.getReviewValidator = [
   check("id")
     .isMongoId()
-    .withMessage("Invalid review id format."),
+    .withMessage("Invalid review ID format."),
 
   validatorMiddleware,
 ];
 
 exports.createReviewValidator = [
-  check("title")
+  check("comment")
     .optional()
     .isString()
-    .withMessage("title must be of type string.")
+    .withMessage("Comment must be of type string.")
     .isLength({ max: 200 })
-    .withMessage("Too long review title."),
+    .withMessage("Comment cannot exceed 200 characters."),
 
   check("ratings")
     .notEmpty()
@@ -35,27 +35,27 @@ exports.createReviewValidator = [
     .isNumeric()
     .withMessage("Ratings must be of type number.")
     .isFloat({ min: 1, max: 5 })
-    .withMessage("Ratings value must be between 1 to 5"),
+    .withMessage("Ratings value must be between 1 to 5."),
 
   check("product")
     .notEmpty()
-    .withMessage("Product id is required.")
+    .withMessage("Product ID is required.")
     .isMongoId()
-    .withMessage("Invalid product id format.")
-    .custom(async (val, { req }) => {
+    .withMessage("Invalid product ID format.")
+    .custom(async (val) => {
       const checkProduct = await productModel.findById(val);
       if (!checkProduct) {
-        throw new Error(`No product for this id ${val}.`);
+        throw new Error(`No product for this ID ${val}.`);
       };
       return true;
     })
-    .custom(async (val, { req }) => {
+    .custom(async (_, { req }) => {
       const checReview = await reviewModel.findOne({
         user: req.user._id,
         product: req.body.product,
       });
       if (checReview) {
-        throw new Error("You already created a review before.");
+        throw new Error("You have already submitted a review for this product.");
       };
       return true;
     }),
@@ -64,49 +64,51 @@ exports.createReviewValidator = [
 ];
 
 exports.updateReviewValidator = [
-  check(`id`)
+  check("id")
     .isMongoId()
-    .withMessage(`Invalid review id format.`)
+    .withMessage("Invalid review ID format.")
     .custom(async (val, { req }) => {
       // Check review ownership before update
       const checkUser = await reviewModel.findById(val);
       if (!checkUser) {
-        throw new Error(`No review for this id ${val}.`);
+        throw new Error(`No review for this ID ${val}.`);
       };
       if (checkUser.user._id.toString() !== req.user._id.toString()) {
-        throw new Error(`Your are not allowed to perform this action.`);
+        throw new Error("You are not authorized to update this review.");
       };
       return true;
     }),
 
-  check("title")
+  check("comment")
     .optional()
     .isString()
-    .withMessage("title must be of type string."),
+    .withMessage("Comment must be of type string.")
+    .isLength({ max: 200 })
+    .withMessage("Comment cannot exceed 200 characters."),
 
   check("ratings")
     .optional()
     .isNumeric()
     .withMessage("Ratings must be of type number.")
     .isFloat({ min: 1, max: 5 })
-    .withMessage("Ratings value must be between 1.0 to 5.0"),
+    .withMessage("Ratings value must be between 1 to 5."),
 
   validatorMiddleware,
 ];
 
 exports.deleteReviewValidator = [
-  check(`id`)
+  check("id")
     .isMongoId()
-    .withMessage(`Invalid review id format.`)
+    .withMessage("Invalid review ID format.")
     .custom(async (val, { req }) => {
       if (req.user.role === "user") {
         // Check review ownership before update
         const checkUser = await reviewModel.findById(val);
         if (!checkUser) {
-          throw new Error(`No review for this id ${val}`);
+          throw new Error(`No review for this ID ${val}.`);
         };
         if (checkUser.user._id.toString() !== req.user._id.toString()) {
-          throw new Error(`Your are not allowed to perform this action`);
+          throw new Error(`You are not authorized to delete this review.`);
         };
       }
       return true;

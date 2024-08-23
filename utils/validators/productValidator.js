@@ -245,7 +245,7 @@ exports.createProductValidator = [
 
   check("category")
     .notEmpty()
-    .withMessage("Product must be belong to a category.")
+    .withMessage("Product category is required.")
     .isMongoId()
     .withMessage("Invalid category id format.")
     .custom(async (_, { req }) => {
