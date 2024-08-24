@@ -1,7 +1,7 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const { GetObjectCommand } = require("@aws-sdk/client-s3");
-const s3Client = require('../config/s3Client');
+const s3Client = require("../config/s3Client");
 
 const awsBuckName = process.env.AWS_BUCKET_NAME;
 const expiresIn = process.env.EXPIRE_IN;
@@ -43,6 +43,7 @@ const productSchema = new mongoose.Schema(
       trim: true,
       minlength: [3, "Product color name must be at least 3 characters."],
       maxlength: [32, "Product color name cannot exceed 32 characters."],
+      lowercase: true,
     },
     imageCover: {
       type: String,
@@ -79,7 +80,10 @@ const productSchema = new mongoose.Schema(
         },
         priceAfterDiscount: {
           type: Number,
-          min: [0, "Prodact price after discount number cannot be less than 0."],
+          min: [
+            0,
+            "Prodact price after discount number cannot be less than 0.",
+          ],
         },
       },
     ],
@@ -87,7 +91,7 @@ const productSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: "Category",
       required: [true, "Product must belong to category."],
-    }, 
+    },
     subCategories: [
       {
         type: mongoose.Schema.ObjectId,
@@ -133,66 +137,56 @@ const productSchema = new mongoose.Schema(
 );
 
 // mongoose virtual populate
-productSchema.virtual(
-  "saves",
-  {
-    ref: "Save",
-    foreignField: "productId",
-    localField: "_id",
-  }
-);
+productSchema.virtual("saves", {
+  ref: "Save",
+  foreignField: "productId",
+  localField: "_id",
+});
 
 // mongoose query middleware
-productSchema.pre("findOne", function(next) {
+productSchema.pre("findOne", function (next) {
   this.populate({
+    path: "category brand",
+    select: "name",
+  }).populate({
     path: "group",
-    select: "productsIDs"
-  })
+    select: "productsIDs",
+  });
   next();
 });
 
 const setImageUrl = async (doc) => {
-
   if (doc.imageCover) {
-  
     const getObjectParams = {
       Bucket: awsBuckName,
       Key: `products/${doc.imageCover}`,
     };
-  
+
     const command = new GetObjectCommand(getObjectParams);
     const imageUrl = await getSignedUrl(s3Client, command, { expiresIn });
-  
-    doc.imageCover = imageUrl;
 
-  };
+    doc.imageCover = imageUrl;
+  }
 
   if (doc.images) {
-
     let imageList = [];
 
     await Promise.all(
-
       doc.images.map(async (image) => {
-    
         const getObjectParams = {
           Bucket: awsBuckName,
           Key: `products/${image}`,
         };
-      
+
         const command = new GetObjectCommand(getObjectParams);
         const imageUrl = await getSignedUrl(s3Client, command, { expiresIn });
-  
-        imageList.push(imageUrl);
-  
-      })
 
+        imageList.push(imageUrl);
+      })
     );
 
     doc.images = imageList;
-
-  };
-
+  }
 };
 
 // findOne, findAll, update, delete
