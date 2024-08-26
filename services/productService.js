@@ -147,16 +147,19 @@ exports.resizeProductImages = asyncHandler(async (req, _, next) => {
 // @access  Public
 exports.getProducts = asyncHandler(async (req, res, next) => {
 
-    // Get count of products
-    const countDocuments = await productModel.countDocuments();
-
     // Build query
     const apiFeatures = new ApiFeatures(productModel.find({}), req.query)
       .filter()
       .sort()
       .limitFields()
       .search('Product')
-      .paginate(countDocuments);
+
+    // Clone the query before counting documents
+    const queryForCount = apiFeatures.mongooseQuery.clone();
+    const countDocuments = await queryForCount.countDocuments();
+
+    // Apply pagination after getting the count
+    apiFeatures.paginate(countDocuments);
 
     const { mongooseQuery, paginationResults } = apiFeatures;
     let products;
