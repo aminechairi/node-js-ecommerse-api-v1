@@ -6,16 +6,48 @@ class ApiFeatures {
   filter() {
     const queryStringObject = { ...this.reqQuery };
     const excludesFields = [`page`, `sort`, `limit`, `fields`, `search`];
+
+    // Exclude certain fields
     for (let i = 0; i < excludesFields.length; i++) {
       delete queryStringObject[excludesFields[i]];
     }
+
+    // Modify query string for MongoDB operators like gt, gte, lt, lte, in
     let queryStr = JSON.stringify(queryStringObject);
     queryStr = queryStr.replace(
       /\b(gt|gte|lt|lte|in)\b/g,
-      (match) => `$${match}`
+      (match) => `$${match}` // Add '$' for MongoDB operators
     );
     queryStr = JSON.parse(queryStr);
-    this.mongooseQuery = this.mongooseQuery.find(queryStr);
+
+    // Initialize an empty sizesFilter to include size-related filters
+    const sizesFilter = {};
+
+    // Check if queryStr contains filters for sizes array
+    if (queryStr.size) {
+      sizesFilter["sizes.size"] = queryStr.size;
+    }
+    if (queryStr.quantity) {
+      sizesFilter["sizes.quantity"] = queryStr.quantity;
+    }
+    if (queryStr.price) {
+      sizesFilter["sizes.price"] = queryStr.price;
+    }
+    if (queryStr.priceAfterDiscount) {
+      sizesFilter["sizes.priceAfterDiscount"] = queryStr.priceAfterDiscount;
+    }
+
+    // Apply query for products with or without sizes
+    if (Object.keys(sizesFilter).length > 0) {
+      this.mongooseQuery = this.mongooseQuery.find({
+        $or: [
+          sizesFilter, // Products with sizes array that match the query
+          queryStr, // Products without sizes, applying the other filters
+        ],
+      });
+    } else {
+      this.mongooseQuery = this.mongooseQuery.find(queryStr);
+    }
     return this;
   }
   sort() {
@@ -94,6 +126,6 @@ class ApiFeatures {
 
     return this;
   }
-};
+}
 
 module.exports = ApiFeatures;
