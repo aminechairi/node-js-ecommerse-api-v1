@@ -33,10 +33,10 @@ const productSchema = new mongoose.Schema(
       min: [0, "Product price must be between 0 and 10000."],
       max: [10000, "Product price must be between 0 and 10000."],
     },
-    priceAfterDiscount: {
+    priceBeforeDiscount: {
       type: Number,
-      min: [0, "Product price after discount must be between 0 and 10000."],
-      max: [10000, "Product price after discount must be between 0 and 10000."],
+      min: [0, "Product price before discount must be between 0 and 10000."],
+      max: [10000, "Product price before discount must be between 0 and 10000."],
     },
     color: {
       type: String,
@@ -66,24 +66,24 @@ const productSchema = new mongoose.Schema(
         size: {
           type: String,
           trim: true,
-          uppercase: true,
-          min: [1, "Product size must be at least 1 characters."],
-          max: [8, "Product size cannot exceed 8 characters."],
+          lowercase: true,
+          min: [1, "Sizes: product size must be at least 1 characters."],
+          max: [8, "Sizes: product size cannot exceed 8 characters."],
         },
         quantity: {
           type: Number,
-          min: [1, "Prodact quantity number cannot be less than 1."],
+          min: [1, "Sizes: product quantity must be between 1 and 1000."],
+          max: [1000, "Sizes: product quantity must be between 1 and 1000."],
         },
         price: {
           type: Number,
-          min: [0, "Prodact price number cannot be less than 0."],
+          min: [0, "Sizes: product price must be between 0 and 10000."],
+          max: [10000, "Sizes: product price must be between 0 and 10000."],
         },
-        priceAfterDiscount: {
+        priceBeforeDiscount: {
           type: Number,
-          min: [
-            0,
-            "Prodact price after discount number cannot be less than 0.",
-          ],
+          min: [0, "Sizes: product price before discount must be between 0 and 10000."],
+          max: [10000, "Sizes: product price before discount must be between 0 and 10000."],
         },
       },
     ],

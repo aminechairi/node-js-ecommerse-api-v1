@@ -29,7 +29,7 @@ exports.createProductValidator = [
       } else {
   
         req.body.price = undefined;
-        req.body.priceAfterDiscount = undefined;
+        req.body.priceBeforeDiscount = undefined;
         req.body.quantity = undefined;
 
       };
@@ -75,15 +75,15 @@ exports.createProductValidator = [
     .withMessage("Product price must be between 0 and 10000.")
     .customSanitizer(value => parseFloat(value).toFixed(2)),
 
-  check("priceAfterDiscount")
+  check("priceBeforeDiscount")
     .optional()
     .isNumeric()
-    .withMessage("Product price after discount must be of type number.")
+    .withMessage("Product price before discount must be of type number.")
     .isFloat({ min: 0, max: 10000 })
-    .withMessage('Product price after discount must be between 0 and 10000.')
+    .withMessage('Product price before discount must be between 0 and 10000.')
     .custom((value, { req }) => {
-      if (+req.body.price <= +value) {
-        throw new Error("Product price after discount must be lower than price.");
+      if (+req.body.price >= +value) {
+        throw new Error("Product price before discount must be greater than price.");
       };
       return true;
     })
@@ -203,28 +203,28 @@ exports.createProductValidator = [
 
         };
 
-        // Validate price after discount
-        if (!(sizes[i].priceAfterDiscount === undefined)) {
+        // Validate price before discount
+        if (!(sizes[i].priceBeforeDiscount === undefined)) {
 
-          if (isNaN(sizes[i].priceAfterDiscount)) {
+          if (isNaN(sizes[i].priceBeforeDiscount)) {
 
-            throw new Error(`Product price after discount (index ${i}) must be of type number.`);
+            throw new Error(`Product price before discount (index ${i}) must be of type number.`);
 
-          } else if (sizes[i].priceAfterDiscount < 0) {
+          } else if (sizes[i].priceBeforeDiscount < 0) {
 
-            throw new Error(`Product price after discount (index ${i}) must 0 and 10000.`);
+            throw new Error(`Product price before discount (index ${i}) must 0 and 10000.`);
 
-          } else if (sizes[i].priceAfterDiscount > 10000) {
+          } else if (sizes[i].priceBeforeDiscount > 10000) {
 
-            throw new Error(`Product price after discount (index ${i}) must 0 and 10000.`);
+            throw new Error(`Product price before discount (index ${i}) must 0 and 10000.`);
 
-          } else if (sizes[i].price <= +sizes[i].priceAfterDiscount) {
+          } else if (sizes[i].price >= +sizes[i].priceBeforeDiscount) {
 
-            throw new Error(`Product price after discount (index ${i}) must be lower than price.`);
+            throw new Error(`Product price before discount (index ${i}) must be greater than price.`);
 
           } else {
 
-            sizes[i].priceAfterDiscount = parseFloat(sizes[i].priceAfterDiscount).toFixed(2);
+            sizes[i].priceBeforeDiscount = parseFloat(sizes[i].priceBeforeDiscount).toFixed(2);
   
           };
 
@@ -462,7 +462,12 @@ exports.updateProductValidator = [
 
   check("price")
     .optional()
-    .custom(async (_, { req }) => {
+    .isNumeric()
+    .withMessage("Product price must be of type number.")
+    .isFloat({ min: 0, max: 10000 })
+    .withMessage("Product price must be between 0 and 10000.")
+    .customSanitizer(value => parseFloat(value).toFixed(2))
+    .custom(async (value, { req }) => {
       const product = await productModel.findById(req.params.id);
       if (!product) {
         throw new Error(`No product for this id ${req.params.id}`);
@@ -470,37 +475,39 @@ exports.updateProductValidator = [
       if (!product.price) {
         throw new Error(`This product does not contain price field.`);
       }
-    })
-    .isNumeric()
-    .withMessage("Product price must be of type number.")
-    .isFloat({ min: 0, max: 10000 })
-    .withMessage("Product price must be between 0 and 10000.")
-    .customSanitizer(value => parseFloat(value).toFixed(2)),
+      if (!req.body.priceBeforeDiscount) {
+        if (product.priceBeforeDiscount && product.priceBeforeDiscount <= value) {
+          await productModel.updateOne(
+            { _id: req.params.id },
+            { $unset: { priceBeforeDiscount: "" } }
+          );
+        }
+      }
+    }),
 
-  check("priceAfterDiscount")
+  check("priceBeforeDiscount")
     .optional()
-    .custom(async (_, { req }) => {
+    .isNumeric()
+    .withMessage("Product price before discount must be of type number.")
+    .isFloat({ min: 0, max: 10000 })
+    .withMessage("Product price before discount must be between 0 and 10000.")
+    .custom(async (value, { req }) => {
       const product = await productModel.findById(req.params.id);
       if (!product) {
         throw new Error(`No product for this id ${req.params.id}`);
       };
       if (product.sizes.length > 0) {
-        throw new Error(`This product does not contain price after discount field.`);
+        throw new Error(`This product does not contain price before discount field.`);
       }
-    })
-    .isNumeric()
-    .withMessage("Product price after discount must be of type number.")
-    .isFloat({ min: 0, max: 10000 })
-    .withMessage("Product price after discount must be between 0 and 10000.")
-    .custom(async (value, { req }) => {
-      const product = await productModel.findById(req.params.id);
-      if (!product) {
-        throw new Error(`No product for this id ${req.params.id}`);
+      if (req.body.price) {
+        if (+req.body.price >= +value) {
+          throw new Error("Product price before discount must be greater than price.");
+        }
+      } else {
+        if (product.price >= +value) {
+          throw new Error("Product price before discount must be greater than price.");
+        }
       }
-      if (product.price <= +value) {
-        throw new Error("Product price after discount must be lower than price.");
-      }
-      return true;
     })
     .customSanitizer(value => parseFloat(value).toFixed(2)),
 
@@ -636,29 +643,29 @@ exports.updateProductValidator = [
 
         };
 
-        // Validate price after discount
-        if (!(sizes[i].priceAfterDiscount === undefined)) {
+        // Validate price before discount
+        if (!(sizes[i].priceBeforeDiscount === undefined)) {
 
-          if (isNaN(sizes[i].priceAfterDiscount)) {
+          if (isNaN(sizes[i].priceBeforeDiscount)) {
 
-            throw new Error(`Product price after discount (index ${i}) must be of type number.`);
+            throw new Error(`Product price before discount (index ${i}) must be of type number.`);
 
-          } else if (sizes[i].priceAfterDiscount < 0) {
+          } else if (sizes[i].priceBeforeDiscount < 0) {
 
-            throw new Error(`Product price after discount (index ${i}) must 0 and 10000.`);
+            throw new Error(`Product price before discount (index ${i}) must 0 and 10000.`);
 
-          } else if (sizes[i].priceAfterDiscount > 10000) {
+          } else if (sizes[i].priceBeforeDiscount > 10000) {
 
-            throw new Error(`Product price after discount (index ${i}) must 0 and 10000.`);
+            throw new Error(`Product price before discount (index ${i}) must 0 and 10000.`);
 
-          } else if (sizes[i].price <= +sizes[i].priceAfterDiscount) {
+          } else if (sizes[i].price >= +sizes[i].priceBeforeDiscount) {
 
-            throw new Error(`Product price after discount (index ${i}) must be lower than price.`);
+            throw new Error(`Product price before discount (index ${i}) must be greater than price.`);
 
           } else {
-            
-            sizes[i].priceAfterDiscount = parseFloat(sizes[i].priceAfterDiscount).toFixed(2);
 
+            sizes[i].priceBeforeDiscount = parseFloat(sizes[i].priceBeforeDiscount).toFixed(2);
+  
           };
 
         };
