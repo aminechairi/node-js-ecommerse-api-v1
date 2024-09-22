@@ -48,10 +48,12 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
     .update(resetCode)
     .digest("hex");
 
-  user.passwordResetCode = hashedResetCode;
-  user.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
-
-  await user.save();
+  await userModel.findByIdAndUpdate(user._id, {
+    $set: {
+      passwordResetCode: hashedResetCode,
+      passwordResetExpires: Date.now() + 10 * 60 * 1000, // 10 minutes
+    },
+  });
 
   // Send the reset code via email
   const message = `
@@ -84,10 +86,13 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
     });
   } catch (error) {
     // Revert reset code details if email sending fails
-    user.passwordResetCode = undefined;
-    user.passwordResetExpires = undefined;
+    await userModel.findByIdAndUpdate(user._id, {
+      $unset: {
+        passwordResetCode: 1,
+        passwordResetExpires: 1,
+      },
+    });
 
-    await user.save();
     return next(
       new ApiError("Error sending email. Please try again later.", 500)
     );
@@ -129,17 +134,18 @@ exports.passwordResetCode = asyncHandler(async (req, res, next) => {
 
   // Update user's password and reset fields
   await userModel.updateOne(
+    { email: user.email },
     {
-      email: user.email,
-    },
-    {
-      password: await bcrypt.hash(newPassword, 12),
-      passwordChangedAt: Date.now(),
+      $set: {
+        password: await bcrypt.hash(newPassword, 12),
+        passwordChangedAt: Date.now(),
+      },
+      $unset: {
+        passwordResetCode: 1,
+        passwordResetExpires: 1,
+      },
     }
   );
-  user.passwordResetCode = undefined;
-  user.passwordResetExpires = undefined;
-  await user.save();
 
   // Generate token
   const token = createToken(user._id);

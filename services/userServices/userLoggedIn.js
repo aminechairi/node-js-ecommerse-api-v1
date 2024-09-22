@@ -47,11 +47,13 @@ exports.emailVerification = asyncHandler(async (req, res, next) => {
     .digest("hex");
 
   // 5) Update user with new verification code and expiration time
-  user.emailVerificationCode = hashedEmailVerificationCode;
-  user.emailVerificationCodeExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
-  user.emailVerification = false;
-
-  await user.save();
+  await userModel.findByIdAndUpdate(user._id, {
+    $set: {
+      emailVerificationCode: hashedEmailVerificationCode,
+      emailVerificationCodeExpires: Date.now() + 10 * 60 * 1000, // 10 minutes
+      emailVerification: false,
+    },
+  });
 
   // 6) Send the verification code via email
   const message = `
@@ -76,9 +78,12 @@ exports.emailVerification = asyncHandler(async (req, res, next) => {
     });
   } catch (err) {
     // If email sending fails, clear the verification code and expiration time
-    user.emailVerificationCode = undefined;
-    user.emailVerificationCodeExpires = undefined;
-    await user.save();
+    await userModel.findByIdAndUpdate(user._id, {
+      $unset: {
+        emailVerificationCode: 1,
+        emailVerificationCodeExpires: 1,
+      },
+    });
 
     return next(
       new ApiError("Error sending email. Please try again later.", 500)
@@ -124,11 +129,15 @@ exports.emailVerificationCode = asyncHandler(async (req, res, next) => {
   }
 
   // 5) Mark email as verified and clear verification code and expiration time
-  user.emailVerification = true;
-  user.emailVerificationCode = undefined;
-  user.emailVerificationCodeExpires = undefined;
-
-  await user.save();
+  await userModel.findByIdAndUpdate(user._id, {
+    $set: {
+      emailVerification: true,
+    },
+    $unset: {
+      emailVerificationCode: 1,
+      emailVerificationCodeExpires: 1,
+    },
+  });  
 
   // 6) Send success response
   res.status(200).json({
