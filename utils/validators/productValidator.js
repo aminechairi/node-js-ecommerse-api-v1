@@ -488,7 +488,7 @@ exports.updateProductValidator = [
       if (!product) {
         throw new Error(`No product for this id ${req.params.id}.`);
       };
-      if (!product.sizes.length > 0) {
+      if (product.sizes.length > 0) {
         throw new Error(`This product does not contain price field.`);
       }
       if (!req.body.priceBeforeDiscount) {
