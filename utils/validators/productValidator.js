@@ -12,6 +12,133 @@ const productModel = require("../../models/productModel");
 // Custom validation function for MongoDB ObjectID
 const isValidObjectId = value => mongoose.Types.ObjectId.isValid(value);
 
+const sizesValidations = (sizes) => {
+  if (sizes.length === 0) {
+    throw new Error(`Size is required.`);
+  };
+
+  for (let i = 0; i < sizes.length; i++) {
+
+    // Validate type itemes
+    if ( !(typeof sizes[i] === 'object') || Array.isArray(sizes[i])) {
+      throw new Error(`Sizes items must be of type object.`);
+    };
+
+    // Validate size
+    if (sizes[i].size === undefined) {
+
+      throw new Error(`Product size (index ${i}) is required.`);
+
+    } else if (!( typeof sizes[i].size === 'string' )) {
+
+      throw new Error(`Product size (index ${i}) must be of type string.`);
+
+    } else if (sizes[i].size.length < 1) {
+
+      throw new Error(`Product size (index ${i}) must be at least 1 characters.`);
+
+    } else if (sizes[i].size.length > 8) {
+
+      throw new Error(`Product size (index ${i}) cannot exceed 8 characters.`);
+
+    };
+
+    // Validate quantity
+    if (sizes[i].quantity === undefined) {
+
+      throw new Error(`Product quantity (index ${i}) is required.`);
+
+    } else if (isNaN(sizes[i].quantity)) {
+
+      throw new Error(`Product quantity (index ${i}) must be of type number.`);
+
+    } else if (!Number.isInteger(+sizes[i].quantity)) {
+
+      throw new Error(`Product quantity (index ${i}) must be of type integer.`);
+
+    } else if (sizes[i].quantity < 1) {
+
+      throw new Error(`Product quantity (index ${i}) must be between 1 and 1000.`);
+
+    } else if (sizes[i].quantity > 1000) {
+
+      throw new Error(`Product quantity (index ${i}) must be between 1 and 1000.`);
+
+    };
+
+    // Validate price
+    if (sizes[i].price === undefined) {
+
+      throw new Error(`Product price (index ${i}) is required.`);
+
+    } else if (isNaN(sizes[i].price)) {
+
+      throw new Error(`Product price (index ${i}) must be of type number.`);
+
+    } else if (sizes[i].price < 0) {
+
+      throw new Error(`Product price (index ${i}) must be between 0 and 10000.`);
+
+    } else if (sizes[i].price > 10000) {
+
+      throw new Error(`Product price (index ${i}) must be between 0 and 10000.`);
+
+    } else {
+
+      sizes[i].price = parseFloat(sizes[i].price).toFixed(2);
+
+    };
+
+    // Validate price before discount
+    if (!(sizes[i].priceBeforeDiscount === undefined)) {
+
+      if (isNaN(sizes[i].priceBeforeDiscount)) {
+
+        throw new Error(`Product price before discount (index ${i}) must be of type number.`);
+
+      } else if (sizes[i].priceBeforeDiscount < 0) {
+
+        throw new Error(`Product price before discount (index ${i}) must 0 and 10000.`);
+
+      } else if (sizes[i].priceBeforeDiscount > 10000) {
+
+        throw new Error(`Product price before discount (index ${i}) must 0 and 10000.`);
+
+      } else if (sizes[i].price >= +sizes[i].priceBeforeDiscount) {
+
+        throw new Error(`Product price before discount (index ${i}) must be greater than price.`);
+
+      } else {
+
+        sizes[i].priceBeforeDiscount = parseFloat(sizes[i].priceBeforeDiscount).toFixed(2);
+
+      };
+
+    };
+
+  };
+
+  // Check if duplicate size
+  const uniqueSizes = new Set(sizes.map((size) => `${size.size}`.toUpperCase()));
+  const uniqueSizeCount = uniqueSizes.size;
+  if (uniqueSizeCount !== sizes.length) {
+    throw new Error('There are duplicate sizes.');
+  }
+
+  // Calculate discount percent.
+  sizes = sizes.map((item) => {
+    const price = +item.price;
+    const priceBeforeDiscount = +item.priceBeforeDiscount;
+    if (price < priceBeforeDiscount) {
+      const discount = (priceBeforeDiscount - price) / priceBeforeDiscount;
+      item.discountPercent = Math.round(discount * 100);
+    }
+    return item;
+  })
+
+  return true;
+};
+
 exports.createProductValidator = [
 
   body()
@@ -84,7 +211,12 @@ exports.createProductValidator = [
     .custom((value, { req }) => {
       if (+req.body.price >= +value) {
         throw new Error("Product price before discount must be greater than price.");
-      };
+      }
+      const { priceBeforeDiscount, price } = req.body;
+      if (priceBeforeDiscount > price) {
+        const discount = (priceBeforeDiscount - price) / priceBeforeDiscount;
+        req.body.discountPercent = Math.round(discount * 100);
+      }
       return true;
     })
     .customSanitizer(value => parseFloat(value).toFixed(2)),
@@ -125,123 +257,7 @@ exports.createProductValidator = [
     .optional()
     .isArray()
     .withMessage("Product sizes must be an array.")
-    .custom((sizes) => {
-
-      if (sizes.length === 0) {
-        throw new Error(`Size is required.`);
-      };
-
-      for (let i = 0; i < sizes.length; i++) {
-
-        // Validate type itemes
-        if ( !(typeof sizes[i] === 'object') || Array.isArray(sizes[i])) {
-          throw new Error(`Sizes items must be of type object.`);
-        };
-
-        // Validate size
-        if (sizes[i].size === undefined) {
-
-          throw new Error(`Product size (index ${i}) is required.`);
-
-        } else if (!( typeof sizes[i].size === 'string' )) {
-
-          throw new Error(`Product size (index ${i}) must be of type string.`);
-
-        } else if (sizes[i].size.length < 1) {
-
-          throw new Error(`Product size (index ${i}) must be at least 1 characters.`);
-
-        } else if (sizes[i].size.length > 8) {
-
-          throw new Error(`Product size (index ${i}) cannot exceed 8 characters.`);
-
-        };
-
-        // Validate quantity
-        if (sizes[i].quantity === undefined) {
-
-          throw new Error(`Product quantity (index ${i}) is required.`);
-
-        } else if (isNaN(sizes[i].quantity)) {
-
-          throw new Error(`Product quantity (index ${i}) must be of type number.`);
-
-        } else if (!Number.isInteger(+sizes[i].quantity)) {
-
-          throw new Error(`Product quantity (index ${i}) must be of type integer.`);
-
-        } else if (sizes[i].quantity < 1) {
-
-          throw new Error(`Product quantity (index ${i}) must be between 1 and 1000.`);
-
-        } else if (sizes[i].quantity > 1000) {
-
-          throw new Error(`Product quantity (index ${i}) must be between 1 and 1000.`);
-
-        };
-
-        // Validate price
-        if (sizes[i].price === undefined) {
-
-          throw new Error(`Product price (index ${i}) is required.`);
-
-        } else if (isNaN(sizes[i].price)) {
-
-          throw new Error(`Product price (index ${i}) must be of type number.`);
-
-        } else if (sizes[i].price < 0) {
-
-          throw new Error(`Product price (index ${i}) must be between 0 and 10000.`);
-
-        } else if (sizes[i].price > 10000) {
-
-          throw new Error(`Product price (index ${i}) must be between 0 and 10000.`);
-
-        } else {
-
-          sizes[i].price = parseFloat(sizes[i].price).toFixed(2);
-
-        };
-
-        // Validate price before discount
-        if (!(sizes[i].priceBeforeDiscount === undefined)) {
-
-          if (isNaN(sizes[i].priceBeforeDiscount)) {
-
-            throw new Error(`Product price before discount (index ${i}) must be of type number.`);
-
-          } else if (sizes[i].priceBeforeDiscount < 0) {
-
-            throw new Error(`Product price before discount (index ${i}) must 0 and 10000.`);
-
-          } else if (sizes[i].priceBeforeDiscount > 10000) {
-
-            throw new Error(`Product price before discount (index ${i}) must 0 and 10000.`);
-
-          } else if (sizes[i].price >= +sizes[i].priceBeforeDiscount) {
-
-            throw new Error(`Product price before discount (index ${i}) must be greater than price.`);
-
-          } else {
-
-            sizes[i].priceBeforeDiscount = parseFloat(sizes[i].priceBeforeDiscount).toFixed(2);
-  
-          };
-
-        };
-
-      };
-
-      // Check if duplicate size
-      const uniqueSizes = new Set(sizes.map((size) => `${size.size}`.toUpperCase()));
-      const uniqueSizeCount = uniqueSizes.size;
-      if (uniqueSizeCount === sizes.length) {
-        return true;
-      } else {
-        throw new Error('There are duplicate sizes.')
-      };
-
-    }),
+    .custom(sizes => sizesValidations(sizes)),
 
   check("category")
     .notEmpty()
@@ -470,17 +486,25 @@ exports.updateProductValidator = [
     .custom(async (value, { req }) => {
       const product = await productModel.findById(req.params.id);
       if (!product) {
-        throw new Error(`No product for this id ${req.params.id}`);
+        throw new Error(`No product for this id ${req.params.id}.`);
       };
-      if (!product.price) {
+      if (!product.sizes.length > 0) {
         throw new Error(`This product does not contain price field.`);
       }
       if (!req.body.priceBeforeDiscount) {
-        if (product.priceBeforeDiscount && product.priceBeforeDiscount <= value) {
-          await productModel.updateOne(
-            { _id: req.params.id },
-            { $unset: { priceBeforeDiscount: "" } }
-          );
+        if (product.priceBeforeDiscount) {
+          if (product.priceBeforeDiscount <= +value) {
+            await productModel.updateOne(
+              { _id: req.params.id },
+              { $unset: { priceBeforeDiscount: 1, discountPercent: 1 } }
+            );
+            req.body.discountPercent = undefined;
+          } else {
+            const { price } = req.body;
+            const { priceBeforeDiscount } = product;
+            const discount = (priceBeforeDiscount - price) / priceBeforeDiscount;
+            req.body.discountPercent = Math.round(discount * 100);
+          }          
         }
       }
     }),
@@ -503,10 +527,18 @@ exports.updateProductValidator = [
         if (+req.body.price >= +value) {
           throw new Error("Product price before discount must be greater than price.");
         }
+        const { price } = req.body;
+        const { priceBeforeDiscount } = req.body;
+        const discount = (priceBeforeDiscount - price) / priceBeforeDiscount;
+        req.body.discountPercent = Math.round(discount * 100);
       } else {
         if (product.price >= +value) {
           throw new Error("Product price before discount must be greater than price.");
         }
+        const { price } = product;
+        const { priceBeforeDiscount } = req.body;
+        const discount = (priceBeforeDiscount - price) / priceBeforeDiscount;
+        req.body.discountPercent = Math.round(discount * 100);
       }
     })
     .customSanitizer(value => parseFloat(value).toFixed(2)),
@@ -565,123 +597,7 @@ exports.updateProductValidator = [
     })
     .isArray()
     .withMessage("Product sizes must be an array.")
-    .custom((sizes) => {
-
-      if (sizes.length === 0) {
-        throw new Error(`Size is required.`);
-      };
-
-      for (let i = 0; i < sizes.length; i++) {
-
-        // Validate type itemes
-        if ( !(typeof sizes[i] === 'object') || Array.isArray(sizes[i])) {
-          throw new Error(`Sizes items must be of type object.`);
-        };
-
-        // Validate size
-        if (sizes[i].size === undefined) {
-
-          throw new Error(`Product size (index ${i}) is required.`);
-
-        } else if (!( typeof sizes[i].size === 'string' )) {
-
-          throw new Error(`Product size (index ${i}) must be of type string.`);
-
-        } else if (sizes[i].size.length < 1) {
-
-          throw new Error(`Product size (index ${i}) must be at least 1 characters.`);
-
-        } else if (sizes[i].size.length > 8) {
-
-          throw new Error(`Product size (index ${i}) cannot exceed 8 characters.`);
-
-        };
-
-        // Validate quantity
-        if (sizes[i].quantity === undefined) {
-
-          throw new Error(`Product quantity (index ${i}) is required.`);
-
-        } else if (isNaN(sizes[i].quantity)) {
-
-          throw new Error(`Product quantity (index ${i}) must be of type number.`);
-
-        } else if (!Number.isInteger(+sizes[i].quantity)) {
-
-          throw new Error(`Product quantity (index ${i}) must be of type integer.`);
-
-        } else if (sizes[i].quantity < 1) {
-
-          throw new Error(`Product quantity (index ${i}) must be between 1 and 1000.`);
-
-        } else if (sizes[i].quantity > 1000) {
-
-          throw new Error(`Product quantity (index ${i}) must be between 1 and 1000.`);
-
-        };
-
-        // Validate price
-        if (sizes[i].price === undefined) {
-
-          throw new Error(`Product price (index ${i}) is required.`);
-
-        } else if (isNaN(sizes[i].price)) {
-
-          throw new Error(`Product price (index ${i}) must be of type number.`);
-
-        } else if (sizes[i].price < 0) {
-
-          throw new Error(`Product price (index ${i}) must be between 0 and 10000.`);
-
-        } else if (sizes[i].price > 10000) {
-
-          throw new Error(`Product price (index ${i}) must be between 0 and 10000.`);
-
-        } else {
-
-          sizes[i].price = parseFloat(sizes[i].price).toFixed(2);
-
-        };
-
-        // Validate price before discount
-        if (!(sizes[i].priceBeforeDiscount === undefined)) {
-
-          if (isNaN(sizes[i].priceBeforeDiscount)) {
-
-            throw new Error(`Product price before discount (index ${i}) must be of type number.`);
-
-          } else if (sizes[i].priceBeforeDiscount < 0) {
-
-            throw new Error(`Product price before discount (index ${i}) must 0 and 10000.`);
-
-          } else if (sizes[i].priceBeforeDiscount > 10000) {
-
-            throw new Error(`Product price before discount (index ${i}) must 0 and 10000.`);
-
-          } else if (sizes[i].price >= +sizes[i].priceBeforeDiscount) {
-
-            throw new Error(`Product price before discount (index ${i}) must be greater than price.`);
-
-          } else {
-
-            sizes[i].priceBeforeDiscount = parseFloat(sizes[i].priceBeforeDiscount).toFixed(2);
-  
-          };
-
-        };
-
-      };
-
-      // Check if duplicate size
-      const uniqueSizes = new Set(sizes.map((size) => `${size.size}`.toUpperCase()));
-      const uniqueSizeCount = uniqueSizes.size;
-      if (uniqueSizeCount === sizes.length) {
-        return true;
-      } else {
-        throw new Error('There are duplicate sizes.')
-      };
-
-    }),
+    .custom(sizes => sizesValidations(sizes)),
 
   check("category")
     .optional()

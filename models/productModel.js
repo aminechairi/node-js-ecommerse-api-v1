@@ -36,7 +36,15 @@ const productSchema = new mongoose.Schema(
     priceBeforeDiscount: {
       type: Number,
       min: [0, "Product price before discount must be between 0 and 10000."],
-      max: [10000, "Product price before discount must be between 0 and 10000."],
+      max: [
+        10000,
+        "Product price before discount must be between 0 and 10000.",
+      ],
+    },
+    discountPercent: {
+      type: Number,
+      min: [0, "Product discount percent must be between 0 and 100."],
+      max: [100, "Product discount percent must be between 0 and 100."],
     },
     color: {
       type: String,
@@ -82,8 +90,19 @@ const productSchema = new mongoose.Schema(
         },
         priceBeforeDiscount: {
           type: Number,
-          min: [0, "Sizes: product price before discount must be between 0 and 10000."],
-          max: [10000, "Sizes: product price before discount must be between 0 and 10000."],
+          min: [
+            0,
+            "Sizes: product price before discount must be between 0 and 10000.",
+          ],
+          max: [
+            10000,
+            "Sizes: product price before discount must be between 0 and 10000.",
+          ],
+        },
+        discountPercent: {
+          type: Number,
+          min: [0, "Product discount percent must be between 0 and 100."],
+          max: [100, "Product discount percent must be between 0 and 100."],
         },
       },
     ],
