@@ -612,7 +612,7 @@ exports.updateProductValidator = [
     .custom(async (_, { req }) => {
       const { id } = req.params;
       const product = await productModel.findById(id);
-      if (product.underSubCategories.length > 1) {
+      if (product.underSubCategories.length > 0) {
         if (!req.body.underSubCategories) {
           throw new Error(`You must update under sub categories.`);
         };
@@ -643,7 +643,7 @@ exports.updateProductValidator = [
     .custom(async (_, { req }) => {
       const { id } = req.params;
       const product = await productModel.findById(id);
-      if (product.underSubCategories.length > 1) {
+      if (product.underSubCategories.length > 0) {
         if (!req.body.underSubCategories) {
           throw new Error(`You must update under sub categories.`);
         };        
