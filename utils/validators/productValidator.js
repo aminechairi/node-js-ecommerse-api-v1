@@ -12,7 +12,7 @@ const productModel = require("../../models/productModel");
 // Custom validation function for MongoDB ObjectID
 const isValidObjectId = value => mongoose.Types.ObjectId.isValid(value);
 
-const sizesValidations = (sizes) => {
+const sizesValidations = (sizes, req) => {
   if (sizes.length === 0) {
     throw new Error(`Size is required.`);
   };
@@ -136,6 +136,16 @@ const sizesValidations = (sizes) => {
     return item;
   })
 
+  // Find size that has the smallest price.
+  const smallestPriceSize = sizes.reduce((min, size) =>
+    +size.price < +min.price ? size : min
+  );
+
+  req.body.price = smallestPriceSize.price;
+  req.body.priceBeforeDiscount = smallestPriceSize.priceBeforeDiscount;
+  req.body.discountPercent = smallestPriceSize.discountPercent;
+  req.body.quantity = smallestPriceSize.quantity;
+
   return true;
 };
 
@@ -145,24 +155,17 @@ exports.createProductValidator = [
     .custom((_, { req }) => {
       if (req.body.sizes === undefined && Object.keys(req.body).length !== 0) {
 
-      if (!req.body.price) {
-        throw new Error('Product price is required.');
-      };
+        if (!req.body.price) {
+          throw new Error('Product price is required.');
+        };
 
-      if (!req.body.quantity) {
-        throw new Error('Product quantity is required.');
-      };
+        if (!req.body.quantity) {
+          throw new Error('Product quantity is required.');
+        };
 
-      } else {
-  
-        req.body.price = undefined;
-        req.body.priceBeforeDiscount = undefined;
-        req.body.quantity = undefined;
-
-      };
+      }
 
       return true;
-
     })
     // Properties that cannot be entered by the user
     .custom((_, { req }) => {
@@ -257,7 +260,7 @@ exports.createProductValidator = [
     .optional()
     .isArray()
     .withMessage("Product sizes must be an array.")
-    .custom(sizes => sizesValidations(sizes)),
+    .custom((sizes, { req }) => sizesValidations(sizes, req)),
 
   check("category")
     .notEmpty()
@@ -489,7 +492,7 @@ exports.updateProductValidator = [
         throw new Error(`No product for this id ${req.params.id}.`);
       };
       if (product.sizes.length > 0) {
-        throw new Error(`This product does not contain price field.`);
+        throw new Error(`You can update product price from sizes list.`);
       }
       if (!req.body.priceBeforeDiscount) {
         if (product.priceBeforeDiscount) {
@@ -521,7 +524,7 @@ exports.updateProductValidator = [
         throw new Error(`No product for this id ${req.params.id}`);
       };
       if (product.sizes.length > 0) {
-        throw new Error(`This product does not contain price before discount field.`);
+        throw new Error(`You can update product price before discount from sizes list.`);
       }
       if (req.body.price) {
         if (+req.body.price >= +value) {
@@ -575,8 +578,8 @@ exports.updateProductValidator = [
       if (!product) {
         throw new Error(`No product for this id ${req.params.id}`);
       };
-      if (!product.quantity) {
-        throw new Error(`This product does not contain quantity field.`);
+      if (product.sizes.length > 0) {
+        throw new Error(`You can update product quantity from sizes list.`);
       }
     })
     .isNumeric()
@@ -597,7 +600,7 @@ exports.updateProductValidator = [
     })
     .isArray()
     .withMessage("Product sizes must be an array.")
-    .custom(sizes => sizesValidations(sizes)),
+    .custom((sizes, { req }) => sizesValidations(sizes, req)),
 
   check("category")
     .optional()
