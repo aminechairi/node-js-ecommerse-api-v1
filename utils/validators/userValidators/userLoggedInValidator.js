@@ -42,17 +42,17 @@ exports.updateMyDataValidator = [
       }
       return true;
     })
-    .custom((value, { req }) => {
+    .custom((_, { req }) => {
       const frisrName = req.body.firstName;
       const lastName = req.body.lastName;
       req.body.slug = slugify(`${frisrName} ${lastName}`);
       return true;
     }),
 
-  check("phone")
+  check("phoneNumber")
     .optional()
     .isString()
-    .withMessage("Phone must be of type string.")
+    .withMessage("Phone number must be of type string.")
     .isMobilePhone(["ar-MA"])
     .withMessage("Invalid phone number only accepted Morocco Phone numbers."),
 

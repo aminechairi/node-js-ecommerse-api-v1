@@ -149,8 +149,8 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
         lastName: body.lastName,
         slug: body.slug,
         email: body.email,
-        emailVerify: body.emailVerify,
-        phone: body.phone,
+        emailVerification: body.emailVerification,
+        phoneNumber: body.phoneNumber,
         profileImage: body.profileImage,
         profileCoverImage: body.profileCoverImage,
         role: body.role,
@@ -204,8 +204,8 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
         lastName: body.lastName,
         slug: body.slug,
         email: body.email,
-        emailVerify: body.emailVerify,
-        phone: body.phone,
+        emailVerification: body.emailVerification,
+        phoneNumber: body.phoneNumber,
         role: body.role,
       },
       {
@@ -239,14 +239,14 @@ exports.changeUserPassword = asyncHandler(async (req, res, next) => {
     );
   };
 
-  const isCorrectPassword = await bcrypt.compare(
-    req.body.currentPassword,
-    userCheck.password
-  );
+  // const isCorrectPassword = await bcrypt.compare(
+  //   req.body.currentPassword,
+  //   userCheck.password
+  // );
 
-  if (!isCorrectPassword) {
-    return next(new ApiError("Incorrect current password.", 401));
-  };
+  // if (!isCorrectPassword) {
+  //   return next(new ApiError("Incorrect current password.", 401));
+  // };
 
   const document = await userModel.findByIdAndUpdate(
     id,

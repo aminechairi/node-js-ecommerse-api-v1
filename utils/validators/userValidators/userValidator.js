@@ -50,17 +50,17 @@ exports.createUserValidator = [
       return true;
     }),
 
-  check("emailVerify")
+  check("emailVerification")
     .notEmpty()
-    .withMessage("Email verify is required.")
+    .withMessage("Email verification is required.")
     .isBoolean()
-    .withMessage("Email verify must be of type boolean."),
+    .withMessage("Email verification must be of type boolean."),
 
-  check("phone")
+  check("phoneNumber")
     .notEmpty()
     .withMessage("Phone number is required.")
     .isString()
-    .withMessage("Phone must be of type string.")
+    .withMessage("Phone number must be of type string.")
     .isMobilePhone(["ar-MA"])
     .withMessage("Invalid phone number only accepted Morocco Phone numbers."),
 
@@ -102,8 +102,8 @@ exports.createUserValidator = [
 
   check("role")
     .optional({ checkFalsy: true }) // This field is optional
-    .isIn(["user", "manager", "admin"])
-    .withMessage("Invalid role."),
+    .isIn(["user", "manager"])
+    .withMessage("Role must be of manager or user."),
 
   validatorMiddleware,
 ];
@@ -146,7 +146,7 @@ exports.updateUserValidator = [
       }
       return true;
     })
-    .custom((value, { req }) => {
+    .custom((_, { req }) => {
       const frisrName = req.body.firstName;
       const lastName = req.body.lastName;
       req.body.slug = slugify(`${frisrName} ${lastName}`);
@@ -167,15 +167,15 @@ exports.updateUserValidator = [
       return true;
     }),
 
-  check("emailVerify")
+  check("emailVerification")
     .optional()
     .isBoolean()
-    .withMessage("Email verify must be of type boolean."),
+    .withMessage("Email verification must be of type boolean."),
 
-  check("phone")
+  check("phoneNumber")
     .optional()
     .isString()
-    .withMessage("Phone must be of type string.")
+    .withMessage("Phone number must be of type string.")
     .isMobilePhone(["ar-MA"])
     .withMessage("Invalid phone number only accepted Morocco Phone numbers."),
 
@@ -197,8 +197,8 @@ exports.updateUserValidator = [
 
   check("role")
     .optional({ checkFalsy: true }) // This field is optional
-    .isIn(["user", "manager", "admin"])
-    .withMessage("Invalid role."),
+    .isIn(["user", "manager"])
+    .withMessage("Role must be of manager or user."),
 
   validatorMiddleware,
 ];
@@ -208,11 +208,11 @@ exports.changeUserPasswordValidator = [
     .isMongoId()
     .withMessage("Invalid user id format."),
 
-  check("currentPassword")
-    .notEmpty()
-    .withMessage("Current password is required.")
-    .isString()
-    .withMessage("Current password must be of type string."),
+  // check("currentPassword")
+  //   .notEmpty()
+  //   .withMessage("Current password is required.")
+  //   .isString()
+  //   .withMessage("Current password must be of type string."),
 
   check("newPassword")
     .notEmpty()

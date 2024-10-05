@@ -168,7 +168,7 @@ exports.updateMyData = asyncHandler(async (req, res) => {
       firstName: body.firstName,
       lastName: body.lastName,
       slug: body.slug,
-      phone: body.phone,
+      phoneNumber: body.phoneNumber,
       profileImage: body.profileImage,
       profileCoverImage: body.profileCoverImage,
     });
@@ -215,7 +215,7 @@ exports.updateMyData = asyncHandler(async (req, res) => {
         firstName: body.firstName,
         lastName: body.lastName,
         slug: body.slug,
-        phone: body.phone,
+        phoneNumber: body.phoneNumber,
       },
       {
         new: true,

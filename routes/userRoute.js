@@ -60,7 +60,7 @@ router.put(
   "/updatemydata",
   protect_allowedTo.protect(),
   uploadUserImages,
-  updateMyDataValidator,  
+  updateMyDataValidator,
   resizeUserImages,
   updateMyData
 );
@@ -94,7 +94,7 @@ router
     getUsers
   ).post(
     uploadUserImages,
-    createUserValidator,    
+    createUserValidator,
     resizeUserImages,
     createUser
   );
@@ -107,7 +107,7 @@ router
   )
   .put(
     uploadUserImages,
-    updateUserValidator,    
+    updateUserValidator,
     resizeUserImages,
     updateUser
   )
