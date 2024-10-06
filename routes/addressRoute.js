@@ -1,14 +1,14 @@
 const express = require(`express`);
 
 const {
-  addAddressToAddresseslistValidator,
-  removeAddressFromAddresseslistValidator
+  addUserAddressValidator,
+  removeUserAddressValidator
 } = require("../utils/validators/addressValidator");
 
 const {
-  addAddressToAddresseslist,
-  removeAddressFromAddresseslist,
-  getLoggedUserAddressesList
+  addUserAddress,
+  removeUserAddress,
+  getUserAddresses
 } = require("../services/addressService");
 const protect_allowedTo = require("../services/authServises/protect&allowedTo");
 
@@ -16,24 +16,24 @@ const router = express.Router();
 
 router.use(
   protect_allowedTo.protect(),
-  protect_allowedTo.allowedTo("user"),
+  protect_allowedTo.allowedTo("user", "manager", "admin"),
 );
 
 router
   .route("/")
   .get(
-    getLoggedUserAddressesList
+    getUserAddresses
   )
   .post(
-    addAddressToAddresseslistValidator,
-    addAddressToAddresseslist
+    addUserAddressValidator,
+    addUserAddress
   );
 
 router
   .route("/:addressId")
   .delete(
-    removeAddressFromAddresseslistValidator,
-    removeAddressFromAddresseslist,
+    removeUserAddressValidator,
+    removeUserAddress,
   );
 
 module.exports = router;

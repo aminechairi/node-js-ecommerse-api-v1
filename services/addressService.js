@@ -3,14 +3,14 @@ const asyncHandler = require("express-async-handler");
 const ApiError = require('../utils/apiErrore');
 const userModel = require("../models/userModel");
 
-// @desc    Add address to addresses list
+// @desc    Logged user add address to his addresses list.
 // @route   POST /api/v1/addresses
 // @access  Private
-exports.addAddressToAddresseslist = asyncHandler(async (req, res, next) => {
+exports.addUserAddress = asyncHandler(async (req, res, next) => {
   const checkListLength = await userModel.findById(req.user._id);
   const max = 8;
   if (checkListLength.addressesList.length > max) {
-    throw next(new ApiError(`You cannot create addresses more than ${max} times.`, 403));
+    throw next(new ApiError(`You cannot create more than ${max} addresses.`, 403));
   }
   const user = await userModel.findByIdAndUpdate(
     req.user._id,
@@ -20,16 +20,16 @@ exports.addAddressToAddresseslist = asyncHandler(async (req, res, next) => {
     { new: true }
   );
   res.status(200).json({
-    status: "success",
-    message: "address added successfully to your addresses list.",
+    status: "Success",
+    message: "Address added successfully to your addresses list.",
     data: user.addressesList,
   });
 });
 
-// @desc    Remove address from addresses list
+// @desc    Logged user remove address from his addresses list.
 // @route   DELETE /api/v1/addresses/:addressId
 // @access  Private
-exports.removeAddressFromAddresseslist = asyncHandler(async (req, res, next) => {
+exports.removeUserAddress = asyncHandler(async (req, res) => {
   const user = await userModel.findByIdAndUpdate(
     req.user._id,
     {
@@ -38,19 +38,19 @@ exports.removeAddressFromAddresseslist = asyncHandler(async (req, res, next) => 
     { new: true }
   );
   res.status(200).json({
-    status: "success",
-    message: "address removed successfully from your addresses list.",
+    status: "Success",
+    message: "Address removed successfully from your addresses list.",
     data: user.addressesList,
   });
 });
 
-// @desc    Get logged user addresses list
+// @desc    Logged user get his addresses.
 // @route   GET /api/v1/addresses
 // @access  Private
-exports.getLoggedUserAddressesList = asyncHandler(async (req, res, next) => {
+exports.getUserAddresses = asyncHandler(async (req, res) => {
   const user = await userModel.findById(req.user._id);
   res.status(200).json({
-    status: "success",
+    status: "Success",
     results: user.addressesList.length,
     data: user.addressesList,
   });
