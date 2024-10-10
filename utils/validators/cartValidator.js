@@ -1,57 +1,53 @@
 const { check } = require("express-validator");
 const validatorMiddleware = require("../../middlewares/validatorMiddleware");
 
-exports.loggedUserAddProductValidator = [
+exports.addProductToCartValidator = [
   check("productId")
     .notEmpty()
-    .withMessage("Product id is required.")
+    .withMessage("Product ID is required.")
     .isMongoId()
-    .withMessage("Invalid product id format."),
+    .withMessage("Invalid product ID format."),
 
   check("quantity")
     .notEmpty()
-    .withMessage('Quantity is required.')
+    .withMessage('Product quantity is required.')
     .isNumeric()
-    .withMessage("Quantity must be of type number.")
-    .isInt({ min: 1, })
-    .withMessage("Quantity number cannot be less than 1 and must be a integer number."),
+    .withMessage("Product quantity must be of type number.")
+    .isInt({ min: 1 })
+    .withMessage('Product quantity must be at least 1.'),
 
   check('size')
     .optional()
     .isString()
-    .withMessage("Size must be of type string.")
+    .withMessage("Product size must be of type string.")
     .isLength({ min: 1 })
-    .withMessage("Too short size.")
+    .withMessage('Product size must be at least 1 character.')
     .isLength({ max: 8 })
-    .withMessage("Too long size."),
+    .withMessage('Product size cannot exceed 8 characters.'),
 
   validatorMiddleware,
 ];
 
-exports.loggedUserRemoveProductValidator = [
-  check("productId")
+exports.applyCouponValidator = [
+  check("couponName")
     .notEmpty()
-    .withMessage("Product id is required.")
-    .isMongoId()
-    .withMessage("Invalid product id format."),
+    .withMessage("Coupon name is required.")
+    .isString()
+    .withMessage("Coupon name must be of type string.")
+    .isLength({ min: 2 })
+    .withMessage("Coupon name must be at least 2 characters.")
+    .isLength({ max: 32 })
+    .withMessage("Coupon name cannot exceed 32 characters."),
 
   validatorMiddleware,
 ];
 
-exports.loggedUserUpdateProductQuantityValidator = [
+exports.removeProductFromCartValidator = [
   check("productId")
     .notEmpty()
-    .withMessage("Product id is required.")
+    .withMessage("Product ID is required.")
     .isMongoId()
-    .withMessage("Invalid product id format."),
-
-    check("quantity")
-    .notEmpty()
-    .withMessage("Quantity is required.")
-    .isNumeric()
-    .withMessage("Quantity must be of type number.")
-    .isInt({ min: 1, })
-    .withMessage("Prodact quantity number cannot be less than 1 and must be a integer number."),
+    .withMessage("Invalid product ID format."),
 
   validatorMiddleware,
 ];

@@ -1,17 +1,16 @@
 const express = require(`express`);
 
 const {
-  loggedUserAddProductValidator,
-  loggedUserRemoveProductValidator,
-  loggedUserUpdateProductQuantityValidator
+  addProductToCartValidator,
+  applyCouponValidator,
+  removeProductFromCartValidator
 } = require("../utils/validators/cartValidator")
 const {
-  loggedUserAddProduct,
-  loggedUserGetCart,
-  loggedUserRemoveProduct,
-  loggedUserClearCart,
-  loggedUserUpdateProductQuantity,
-  loggedUserApplyCoupon
+  addProductToCart,
+  getCart,
+  removeProductFromCart,
+  clearCartItems,
+  applyCoupon
 } = require("../services/cartService");
 const protect_allowedTo = require("../services/authServises/protect&allowedTo");
 
@@ -19,34 +18,32 @@ const router = express.Router();
 
 router.use(
   protect_allowedTo.protect(),
-  protect_allowedTo.allowedTo("user"),
+  protect_allowedTo.allowedTo("user", "manager", "admin"),
 )
 
 router
   .route("/")
   .get(
-    loggedUserGetCart
+    getCart
   ).post(
-    loggedUserAddProductValidator,
-    loggedUserAddProduct
+    addProductToCartValidator,
+    addProductToCart
   ).delete(
-    loggedUserClearCart
+    clearCartItems
   );
 
 router
   .route("/applycoupon")
   .put(
-    loggedUserApplyCoupon
+    applyCouponValidator,
+    applyCoupon
   );
 
 router
   .route("/:productId")
   .delete(
-    loggedUserRemoveProductValidator,
-    loggedUserRemoveProduct
-  ).put(
-    loggedUserUpdateProductQuantityValidator,
-    loggedUserUpdateProductQuantity
+    removeProductFromCartValidator,
+    removeProductFromCart
   );
 
 module.exports = router;
