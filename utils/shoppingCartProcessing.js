@@ -1,33 +1,60 @@
+const mongoose = require("mongoose");
+const { ObjectId } = mongoose.Types;
+
 const appSettingsModel = require("../models/appSettingsModel");
 
-// Function to filter out cart items where the product has been deleted (i.e., product is null)
-exports.filterDeletedCartItems = (cartItems) => {
-  return cartItems.filter((item) => item.product !== null);
-}
+/**
+ * Filters and updates the cart items to ensure that products are valid.
+ *
+ * - Removes items from the cart if their corresponding product has been deleted.
+ * - Updates the item's color if it has changed in the product.
+ * - Removes items if the price or size of the product no longer matches the cart's item details.
+ *
+ * @param {Array} cartItems - An array of items in the cart, where each item contains a product, price, size, and color.
+ * @returns {Array} - A filtered array of valid cart items with updated color, if applicable.
+ */
+const filterValidCartItems = (cartItems) => {
+  return cartItems.filter((item) => {
+    // If the product no longer exists (e.g., deleted), remove the item
+    if (!item.product) return false;
 
-// Remove products that have been updated after being added to the cart.
-const removeRecentlyUpdatedProducts = (cart) => {
-  cart.cartItems = cart.cartItems.filter((item) => {
-    const itemCreatedAt = new Date(item.createdAt); // Get the timestamp when the item was added to the cart
-    const productUpdatedAt =
-      item.product && item.product.updatedAt
-        ? new Date(item.product.updatedAt)
-        : null; // Get the timestamp when the product was last updated
-
-    // If productUpdatedAt is null, it means the item is just an ID, so we keep it.
-    if (!productUpdatedAt) {
+    // If the product is referenced by an ObjectId, assume it's valid
+    if (item.product instanceof ObjectId) {
       return true;
     }
 
-    // Keep the item if its product was not updated after the item was added to the cart
-    return productUpdatedAt <= itemCreatedAt;
-  });
+    // If the product is an object, check for changes in color, size, and price
+    if (typeof item.product === "object" && item.product !== null) {
+      // Update the item's color if it exists and has changed
+      if (
+        item.color &&
+        item.product.color &&
+        item.color !== item.product.color
+      ) {
+        item.color = item.product.color;
+      }
 
-  return cart; // Return the updated cart
+      // Check size and price, or just price if no size is provided
+      if (item.size && item.price) {
+        // If both size and price are present, check for a matching size and price
+        return item.product.sizes.find(
+          (size) =>
+            `${size.size}`.toUpperCase() === `${item.size}`.toUpperCase() &&
+            size.price === item.price
+        );
+      } else {
+        // If no size, just compare the price
+        return item.price === item.product.price;
+      }
+    }
+
+    // If the product does not match any valid conditions, remove the item
+    return false;
+  });
 };
 
 exports.calcTotalCartPrice = async (cart) => {
-  cart = removeRecentlyUpdatedProducts(cart);
+  cart.cartItems = filterValidCartItems(cart.cartItems);
 
   // Check if there are items in the cart
   if (cart.cartItems?.length > 0) {

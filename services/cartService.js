@@ -4,10 +4,7 @@ const ApiError = require("../utils/apiErrore");
 const productModel = require("../models/productModel");
 const couponModel = require("../models/couponModel");
 const cartModel = require("../models/cartModel");
-const {
-  calcTotalCartPrice,
-  filterDeletedCartItems,
-} = require("../utils/shoppingCartProcessing");
+const { calcTotalCartPrice } = require("../utils/shoppingCartProcessing");
 
 const validateProductAvailability = (product, quantity, size) => {
   if (product.sizes.length <= 0) {
@@ -38,6 +35,27 @@ const validateProductAvailability = (product, quantity, size) => {
     return null; // Valid product size state
   }
   return `We're sorry, but this product is not available for purchase.`; // Fallback case
+};
+
+// Find the smallest price in sizes
+const findTheSmallestPricIneSize = (sizes) => {
+  if (sizes.length === 0) return {};
+
+  // Filtering sizes with a quantity greater than 0.
+  const availableSizes = sizes.filter((item) => item.quantity > 0);
+
+  let theSmallestPriceSize;
+  if (availableSizes.length > 0) {
+    theSmallestPriceSize = availableSizes.reduce((min, size) =>
+      size.price < min.price ? size : min
+    );
+  } else {
+    theSmallestPriceSize = sizes.reduce((min, size) =>
+      size.price < min.price ? size : min
+    );
+  }
+
+  return theSmallestPriceSize;
 };
 
 // @desc    Logged user add product to his cart.
@@ -76,8 +94,43 @@ exports.addProductToCart = asyncHandler(async (req, res, next) => {
     (await cartModel.findOne({ user: req.user._id })) ||
     (await cartModel.create({ user: req.user._id, cartItems: [] }));
 
-  // Update the cart to exclude any items with deleted products
-  cart.cartItems = filterDeletedCartItems(cart.cartItems);
+  // Update product quantity
+  if (product.sizes.length <= 0) {
+    // Decrease the overall product quantity
+    await productModel.updateOne(
+      { _id: productId },
+      {
+        $inc: {
+          quantity: -quantity, // Decrease quantity
+        },
+      },
+      { timestamps: false }
+    );
+  } else if (product.sizes.length > 0) {
+    // Update the quantity of the specified size
+    product.sizes.forEach((item) => {
+      if (item.size === size) {
+        item.quantity -= quantity; // Decrease the quantity
+      }
+    });
+
+    // Find the smallest price in sizes
+    const theSmallestPriceSize = findTheSmallestPricIneSize(product.sizes);
+
+    await productModel.updateOne(
+      { _id: productId }, // Find the product by ID
+      {
+        $set: {
+          sizes: [...product.sizes], // Update the sizes array
+          price: theSmallestPriceSize.price ?? null, // Set the smallest price
+          priceBeforeDiscount: theSmallestPriceSize.priceBeforeDiscount ?? null, // Set price before discount
+          discountPercent: theSmallestPriceSize.discountPercent ?? null, // Set discount percent
+          quantity: theSmallestPriceSize.quantity ?? null, // Set quantity
+        },
+      },
+      { new: true, timestamps: false }
+    );
+  }
 
   // Find the index of the product in the cart if it already exists
   const productIndex = cart.cartItems.findIndex(
@@ -126,9 +179,6 @@ exports.getCart = asyncHandler(async (req, res) => {
   let cart = await cartModel.findOne({ user: req.user._id });
 
   if (cart) {
-    // Update the cart to exclude any items with deleted products
-    cart.cartItems = filterDeletedCartItems(cart.cartItems);
-
     // If the cart exists, calculate total price and save changes
     await calcTotalCartPrice(cart);
   } else {
@@ -155,9 +205,6 @@ exports.removeProductFromCart = asyncHandler(async (req, res, next) => {
   let cart = await cartModel.findOne({ user: req.user._id });
 
   if (cart) {
-    // Update the cart to exclude any items with deleted products
-    cart.cartItems = filterDeletedCartItems(cart.cartItems);
-
     // Find the product in the cart by its ID
     const productIndex = cart.cartItems.findIndex(
       (item) => item.product._id.toString() === productId
@@ -240,9 +287,6 @@ exports.applyCoupon = asyncHandler(async (req, res, next) => {
   let cart = await cartModel.findOne({ user: req.user._id });
 
   if (cart) {
-    // Update the cart to exclude any items with deleted products
-    cart.cartItems = filterDeletedCartItems(cart.cartItems);
-
     // Recalculate total price before applying the coupon
     await calcTotalCartPrice(cart);
 

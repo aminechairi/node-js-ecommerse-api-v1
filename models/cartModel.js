@@ -17,7 +17,6 @@ const cartItemSchema = new mongoose.Schema(
     size: {
       type: String,
       trim: true,
-      uppercase: true,
       minlength: [1, "Product size must be at least 1 character."],
       maxlength: [8, "Product size cannot exceed 8 characters."],
     },
@@ -95,6 +94,7 @@ cartSchema.pre(/^find/, function (next) {
       "discountPercent",
       "imageCover",
       "quantity",
+      "color",
       "sizes",
       "sold",
       "ratingsAverage",
