@@ -12,7 +12,7 @@ const validateProductAvailability = (product, quantity, size) => {
       return `Unfortunately, this product is currently out of stock.`;
     }
     if (product.quantity < quantity) {
-      return `Unfortunately, the quantity you are trying to order is not available. Only ${product.quantity} product(s) remain in stock.`;
+      return `Only ${product.quantity} item(s) are available in stock.`;
     }
     return null; // Valid product state
   } else if (product.sizes.length > 0) {
@@ -30,7 +30,9 @@ const validateProductAvailability = (product, quantity, size) => {
       return `Unfortunately, this product is currently out of stock.`;
     }
     if (sizeItem.quantity < quantity) {
-      return `Unfortunately, the quantity you are trying to order is not available. Only ${sizeItem.quantity} product(s) remain in stock.`;
+      return `Only ${
+        sizeItem.quantity
+      } item(s) are available for size ${sizeItem.size.toUpperCase()}.`;
     }
     return null; // Valid product size state
   }
@@ -38,7 +40,7 @@ const validateProductAvailability = (product, quantity, size) => {
 };
 
 // Find the smallest price in sizes
-const findTheSmallestPricIneSize = (sizes) => {
+const findTheSmallestPriceInSize = (sizes) => {
   if (sizes.length === 0) return {};
 
   // Filtering sizes with a quantity greater than 0.
@@ -67,7 +69,7 @@ exports.addProductToCart = asyncHandler(async (req, res, next) => {
   // Validate product existence
   const product = await productModel.findById(productId);
   if (!product) {
-    return next(new ApiError(`No product for this ID: ${productId}.`, 404));
+    throw next(new ApiError(`No product for this ID: ${productId}.`, 404));
   }
 
   // Validate product availability
@@ -77,7 +79,7 @@ exports.addProductToCart = asyncHandler(async (req, res, next) => {
     size
   );
   if (availabilityError) {
-    return next(new ApiError(availabilityError, 404));
+    throw next(new ApiError(availabilityError, 400));
   }
   if (product.sizes.length <= 0) size = undefined;
 
@@ -115,17 +117,17 @@ exports.addProductToCart = asyncHandler(async (req, res, next) => {
     });
 
     // Find the smallest price in sizes
-    const theSmallestPriceSize = findTheSmallestPricIneSize(product.sizes);
+    const theSmallestPriceSize = findTheSmallestPriceInSize(product.sizes);
 
     await productModel.updateOne(
       { _id: productId }, // Find the product by ID
       {
         $set: {
           sizes: [...product.sizes], // Update the sizes array
-          price: theSmallestPriceSize.price ?? null, // Set the smallest price
-          priceBeforeDiscount: theSmallestPriceSize.priceBeforeDiscount ?? null, // Set price before discount
-          discountPercent: theSmallestPriceSize.discountPercent ?? null, // Set discount percent
-          quantity: theSmallestPriceSize.quantity ?? null, // Set quantity
+          price: theSmallestPriceSize.price ?? "", // Set the smallest price
+          priceBeforeDiscount: theSmallestPriceSize.priceBeforeDiscount ?? "", // Set price before discount
+          discountPercent: theSmallestPriceSize.discountPercent ?? "", // Set discount percent
+          quantity: theSmallestPriceSize.quantity ?? "", // Set quantity
         },
       },
       { new: true, timestamps: false }
@@ -162,7 +164,7 @@ exports.addProductToCart = asyncHandler(async (req, res, next) => {
   // Calculate total cart price and save
   await calcTotalCartPrice(cart);
 
-  // Response
+  // Send the cart data in the response
   res.status(200).json({
     status: "Success",
     message: "Product added to cart successfully.",
@@ -188,132 +190,126 @@ exports.getCart = asyncHandler(async (req, res) => {
 
   // Send the cart data in the response
   res.status(200).json({
-    status: "Success", // Success status
+    status: "Success",
     message: "Cart retrieved successfully.",
     numOfCartItems: cart.cartItems.length, // Number of items in the cart
-    data: cart, // Cart details
+    data: cart,
+  });
+});
+
+// @desc    Updates the quantity of a product in the logged-in user's cart
+// @route   PUT /api/v1/cart/:productId
+// @access  Private
+exports.updateProductQuantityInCart = asyncHandler(async (req, res, next) => {
+  const { productId, quantity, size } = req.body;
+
+  // Find the user's cart
+  let cart = await cartModel.findOne({ user: req.user._id });
+
+  if (cart) {
+    // Locate the product in the cart by product ID and size
+    const productIndex = cart.cartItems.findIndex(
+      (item) => item.product._id.toString() === productId && item.size === size
+    );
+
+    // Check if product exists in cart
+    if (productIndex > -1) {
+      const cartItem = cart.cartItems[productIndex];
+
+      // Check if the product has no sizes (single quantity)
+      if (cartItem.product.sizes.length === 0) {
+        const totalAvailableQuantity =
+          cartItem.product.quantity + cartItem.quantity;
+
+        // Check if requested quantity exceeds available stock
+        if (totalAvailableQuantity < quantity) {
+          return next(
+            new ApiError(
+              `Only ${totalAvailableQuantity} item(s) are available in stock.`,
+              400
+            )
+          );
+        }
+
+        // Update product quantity in the database
+        cartItem.product.quantity = totalAvailableQuantity - quantity;
+        await productModel.updateOne(
+          { _id: productId },
+          { $set: { quantity: cartItem.product.quantity } },
+          { timestamps: false }
+        );
+
+        // Update cart item quantity
+        cart.cartItems[productIndex].quantity = quantity;
+      } else {
+        // If product has sizes, locate the specific size object
+        const productSize = cartItem.product.sizes.find(
+          (item) => item.size === cartItem.size
+        );
+        const totalAvailableQuantity = productSize.quantity + cartItem.quantity;
+
+        // Validate available quantity for the selected size
+        if (totalAvailableQuantity < quantity) {
+          return next(
+            new ApiError(
+              `Only ${totalAvailableQuantity} item(s) are available for size ${cartItem.size.toUpperCase()}.`,
+              400
+            )
+          );
+        }
+
+        // Update the specific size quantity
+        productSize.quantity = totalAvailableQuantity - quantity;
+
+        // Find and set the smallest price among available sizes
+        const smallestPriceSize = findTheSmallestPriceInSize(
+          cartItem.product.sizes
+        );
+
+        await productModel.updateOne(
+          { _id: productId },
+          {
+            $set: {
+              sizes: cartItem.product.sizes,
+              price: smallestPriceSize.price ?? "",
+              priceBeforeDiscount: smallestPriceSize.priceBeforeDiscount ?? "",
+              discountPercent: smallestPriceSize.discountPercent ?? "",
+              quantity: smallestPriceSize.quantity ?? "",
+            },
+          },
+          { timestamps: false }
+        );
+
+        // Update cart item quantity
+        cart.cartItems[productIndex].quantity = quantity;
+      }
+    }
+
+    // Calculate and update the cart's total price
+    await calcTotalCartPrice(cart);
+  } else {
+    // If no cart exists, create a new one for the user
+    cart = await cartModel.create({ user: req.user._id, cartItems: [] });
+  }
+
+  // Send response with updated cart information
+  res.status(200).json({
+    status: "Success",
+    message: "Product quantity updated successfully.",
+    numOfCartItems: cart.cartItems.length,
+    data: cart,
   });
 });
 
 // @desc    Logged user removes product from his cart by id
 // @route   DELETE /api/v1/cart/:productId
 // @access  Private
-exports.removeProductFromCart = asyncHandler(async (req, res) => {
-  const { productId } = req.params;
-
-  // Find the cart for the current user
-  let cart = await cartModel.findOne({ user: req.user._id });
-
-  if (cart) {
-    // Find the index of the product in the cart items array
-    const productIndex = cart.cartItems.findIndex(
-      (item) => item.product._id.toString() === productId
-    );
-
-    // If the product exists in the cart, proceed with removal
-    if (productIndex > -1) {
-      const cartItem = cart.cartItems[productIndex];
-
-      // Back quantity to product's stock
-      if (cartItem.product.sizes.length <= 0) {
-        // If no sizes, update the general stock quantity
-        await productModel.updateOne(
-          { _id: productId },
-          { $inc: { quantity: cartItem.quantity } }, // Add back the quantity to stock
-          { timestamps: false }
-        );
-      } else {
-        // If sizes exist, update the specific size stock quantity
-        await productModel.updateOne(
-          { _id: productId, "sizes.size": cartItem.size },
-          { $inc: { "sizes.$.quantity": cartItem.quantity } }, // Add back the quantity for the specific size
-          { timestamps: false }
-        );
-      }
-
-      // Remove the product from the cart
-      cart.cartItems.splice(productIndex, 1);
-    }
-
-    // Recalculate the total price after removing the product
-    await calcTotalCartPrice(cart);
-  } else {
-    // If no cart exists for the user, create an empty cart
-    cart = await cartModel.create({ user: req.user._id, cartItems: [] });
-  }
-
-  // Send the updated cart data in the response
-  res.status(200).json({
-    status: "Success",
-    message: "Product removed from shopping cart successfully.",
-    numOfCartItems: cart.cartItems.length, // Number of items remaining in the cart
-    data: cart, // Updated cart data
-  });
-});
-
-// @desc    Logged user updates product quantity in his cart
-// @route   PUT /api/v1/cart/:productId
-// @access  Private
-// exports.updateProductQuantityInCart = asyncHandler(async () => {
-
-// });
+exports.removeProductFromCart = asyncHandler(async (req, res) => {});
 
 // @desc    Logged user clears their cart items
 // @route   DELETE /api/v1/cart
 // @access  Private
-exports.clearCartItems = asyncHandler(async (req, res) => {
-  // Find the cart for the current user
-  let cart = await cartModel.findOne({ user: req.user._id });
-
-  if (cart && cart.cartItems.length > 0) {
-    // Prepare an array of products from the cart items
-    const products = cart.cartItems.map((item) => ({
-      productId: item.product._id,
-      size: item.size,
-      quantity: item.quantity,
-    }));
-
-    // Create bulk operations to update product quantities based on cart items
-    const bulkOperations = products.map((product) => {
-      const filter = product.size
-        ? { _id: product.productId, "sizes.size": product.size } // If product has size
-        : { _id: product.productId }; // If product has no size
-
-      const update = product.size
-        ? { $inc: { "sizes.$.quantity": product.quantity } } // Increment size-specific quantity
-        : { $inc: { quantity: product.quantity } }; // Increment general quantity
-
-      // Return the update operation for bulkWrite
-      return {
-        updateOne: {
-          filter,
-          update,
-          timestamps: false, // Disable timestamp updates
-        },
-      };
-    });
-
-    // Execute the bulk operations to update products in the database
-    await productModel.bulkWrite(bulkOperations);
-
-    // Clear the cart items after updating product quantities
-    cart.cartItems = [];
-
-    // Recalculate the total price of the cart
-    await calcTotalCartPrice(cart);
-  } else {
-    // If no cart exists, create a new empty cart for the user
-    cart = await cartModel.create({ user: req.user._id, cartItems: [] });
-  }
-
-  // Send the cleared cart data in the response
-  res.status(200).json({
-    status: "Success",
-    message: "Shopping cart cleared successfully.",
-    numOfCartItems: cart.cartItems.length, // Should be 0 after clearing
-    data: cart, // Cleared cart data
-  });
-});
+exports.clearCartItems = asyncHandler(async (req, res) => {});
 
 // @desc    Logged user apply coupon
 // @route   PUT /api/v1/cart/applycoupon
@@ -329,7 +325,7 @@ exports.applyCoupon = asyncHandler(async (req, res, next) => {
 
   // If no valid coupon is found, return an error
   if (!coupon) {
-    return next(
+    throw next(
       new ApiError(
         "the coupon you entered is either invalid or has expired. Please try a different coupon.",
         404

@@ -8,6 +8,7 @@ const {
 const {
   addProductToCart,
   getCart,
+  updateProductQuantityInCart,
   removeProductFromCart,
   clearCartItems,
   applyCoupon
@@ -28,6 +29,9 @@ router
   ).post(
     addProductToCartValidator,
     addProductToCart
+  ).put(
+    addProductToCartValidator, // Because they have the same validations
+    updateProductQuantityInCart
   ).delete(
     clearCartItems
   );
