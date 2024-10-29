@@ -66,8 +66,15 @@ const findTheSmallestPriceInSize = (sizes) => {
 exports.addProductToCart = asyncHandler(async (req, res, next) => {
   let { productId, quantity, size } = req.body;
 
+  let product = await productModel
+    .find({ _id: productId })
+    .select(
+      `title price priceBeforeDiscount discountPercent imageCover quantity color sizes sold ratingsAverage ratingsQuantity updatedAt`
+    );
+
+  product = product[0];
+
   // Validate product existence
-  const product = await productModel.findById(productId);
   if (!product) {
     throw next(new ApiError(`No product for this ID: ${productId}.`, 404));
   }
@@ -99,11 +106,12 @@ exports.addProductToCart = asyncHandler(async (req, res, next) => {
   // Update product quantity
   if (product.sizes.length <= 0) {
     // Decrease the overall product quantity
+    product.quantity -= quantity;
     await productModel.updateOne(
       { _id: productId },
       {
-        $inc: {
-          quantity: -quantity, // Decrease quantity
+        $set: {
+          quantity: product.quantity, // Decrease quantity
         },
       },
       { timestamps: false }
@@ -144,7 +152,7 @@ exports.addProductToCart = asyncHandler(async (req, res, next) => {
   if (productIndex > -1) {
     // Update the existing cart item's quantity, size, color, and price
     cart.cartItems[productIndex] = {
-      product: productId,
+      product: product,
       quantity: cart.cartItems[productIndex].quantity + quantity,
       size,
       color: product.color,
@@ -153,7 +161,7 @@ exports.addProductToCart = asyncHandler(async (req, res, next) => {
   } else {
     // If the product is not found in the cart, add it as a new item
     cart.cartItems.unshift({
-      product: productId,
+      product: product,
       quantity,
       size,
       color: product.color,
