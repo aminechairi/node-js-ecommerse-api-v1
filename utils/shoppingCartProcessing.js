@@ -59,8 +59,7 @@ exports.calcTotalCartPrice = async (cart) => {
   // Check if there are items in the cart
   if (cart.cartItems?.length > 0) {
     // Fetch app settings or provide default values
-    const { taxPrice = 0, shippingPrice = 0 } =
-      (await appSettingsModel.findOne({})) || {};
+    const { taxPrice = 0, shippingPrice = 0 } = (await appSettingsModel.findOne({})) || {};
 
     // Calculate total price for items in the cart
     let totalPrice = cart.cartItems.reduce((total, item) => {
