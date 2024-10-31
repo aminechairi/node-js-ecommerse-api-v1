@@ -49,5 +49,14 @@ exports.removeProductFromCartValidator = [
     .isMongoId()
     .withMessage("Invalid product ID format."),
 
+  check('size')
+    .optional()
+    .isString()
+    .withMessage("Product size must be of type string.")
+    .isLength({ min: 1 })
+    .withMessage('Product size must be at least 1 character.')
+    .isLength({ max: 8 })
+    .withMessage('Product size cannot exceed 8 characters.'),
+
   validatorMiddleware,
 ];
