@@ -5,6 +5,7 @@ const productModel = require("../models/productModel");
 const couponModel = require("../models/couponModel");
 const cartModel = require("../models/cartModel");
 const { calcTotalCartPrice } = require("../utils/shoppingCartProcessing");
+const { findTheSmallestPriceInSize } = require("../utils/findTheSmallestPriceInSize");
 
 // Validate product availability
 const validateProductAvailability = (product, quantity, size) => {
@@ -38,27 +39,6 @@ const validateProductAvailability = (product, quantity, size) => {
     return null; // Valid product size state
   }
   return `We're sorry, but this product is not available for purchase.`; // Fallback case
-};
-
-// Find the smallest price in sizes
-const findTheSmallestPriceInSize = (sizes) => {
-  if (sizes.length === 0) return {};
-
-  // Filtering sizes with a quantity greater than 0.
-  const availableSizes = sizes.filter((item) => item.quantity > 0);
-
-  let theSmallestPriceSize;
-  if (availableSizes.length > 0) {
-    theSmallestPriceSize = availableSizes.reduce((min, size) =>
-      size.price < min.price ? size : min
-    );
-  } else {
-    theSmallestPriceSize = sizes.reduce((min, size) =>
-      size.price < min.price ? size : min
-    );
-  }
-
-  return theSmallestPriceSize;
 };
 
 // @desc    Add a product to the user's cart
@@ -106,29 +86,17 @@ exports.addProductToCart = asyncHandler(async (req, res, next) => {
       { $inc: { quantity: -quantity } },
       { timestamps: false }
     );
-  } 
+  }
   // Handle cases where the product has sizes
   else if (product.sizes.length > 0) {
-    const updatedQuantity = product.sizes.find((item) => item.size === size)?.quantity - quantity;
-
-    const theSmallestPriceSize = findTheSmallestPriceInSize(
-      product.sizes.map((item) => ({
-        ...item.toObject(),
-        quantity: item.size === size ? updatedQuantity : item.quantity,
-      }))
-    );
+    const updatedSizes = product.sizes.map((item) => ({
+      ...item.toObject(),
+      quantity: item.size === size ? item.quantity - quantity : item.quantity,
+    }));
 
     await productModel.updateOne(
-      { _id: productId, "sizes.size": size },
-      {
-        $set: {
-          "sizes.$.quantity": updatedQuantity,
-          price: theSmallestPriceSize.price ?? "",
-          priceBeforeDiscount: theSmallestPriceSize.priceBeforeDiscount ?? "",
-          discountPercent: theSmallestPriceSize.discountPercent ?? "",
-          quantity: theSmallestPriceSize.quantity ?? "",
-        },
-      },
+      { _id: productId },
+      { $set: { sizes: updatedSizes } },
       { new: true, timestamps: false }
     );
   }
@@ -239,34 +207,27 @@ exports.updateProductQuantityInCart = asyncHandler(async (req, res, next) => {
       }
       // Handle cases where the product has sizes
       else if (cartItem.product.sizes.length > 0) {
-        const productSize = cartItem.product.sizes.find((item) => item.size === cartItem.size);
+        const productSize = cartItem.product.sizes.find(
+          (item) => item.size === cartItem.size
+        );
 
-        const totalAvailableQuantity = productSize.quantity + cartItem.quantity;
+        const totalAvailableQuantity = productSize.quantity + cartItem.quantity; // Calculate total available quantity
 
         if (totalAvailableQuantity < quantity) {
           return next(new ApiError(`Only ${totalAvailableQuantity} item(s) are available for size ${cartItem.size.toUpperCase()}.`, 400));
         }
 
-        const theSmallestPriceSize = findTheSmallestPriceInSize(
-          cartItem.product.sizes.map((item) => {
-            const sizeObject = item.toObject();
-            return sizeObject.size === size
-              ? { ...sizeObject, quantity: totalAvailableQuantity - quantity }
-              : sizeObject;
-          })
-        );
+        const updatedSizes = cartItem.product.sizes.map((item) => ({
+          ...item.toObject(),
+          quantity:
+            item.size === size
+              ? totalAvailableQuantity - quantity
+              : item.quantity,
+        }));
 
         await productModel.updateOne(
-          { _id: productId, "sizes.size": size },
-          {
-            $set: {
-              "sizes.$.quantity": totalAvailableQuantity - quantity,
-              price: theSmallestPriceSize.price ?? "",
-              priceBeforeDiscount: theSmallestPriceSize.priceBeforeDiscount ?? "",
-              discountPercent: theSmallestPriceSize.discountPercent ?? "",
-              quantity: theSmallestPriceSize.quantity ?? "",
-            },
-          },
+          { _id: productId },
+          { $set: { sizes: updatedSizes } },
           { new: true, timestamps: false }
         );
 
@@ -326,31 +287,20 @@ exports.removeProductFromCart = asyncHandler(async (req, res) => {
 
         // Remove the product from the cart
         cart.cartItems.splice(productIndex, 1);
-      } 
+      }
       // Handle cases where the product has sizes
       else if (cartItem.product.sizes.length > 0) {
-        const updatedQuantity = cartItem.product.sizes.find((item) => item.size === size)?.quantity + cartItem.quantity;
-
-        const theSmallestPriceSize = findTheSmallestPriceInSize(
-          cartItem.product.sizes.map((item) => {
-            const sizeObject = item.toObject();
-            return sizeObject.size === size
-              ? { ...sizeObject, quantity: updatedQuantity }
-              : sizeObject;
-          })
-        );
+        const updatedSizes = cartItem.product.sizes.map((item) => ({
+          ...item.toObject(),
+          quantity:
+            item.size === size
+              ? item.quantity + cartItem.quantity
+              : item.quantity,
+        }));
 
         await productModel.updateOne(
-          { _id: productId, "sizes.size": size },
-          {
-            $set: {
-              "sizes.$.quantity": updatedQuantity,
-              price: theSmallestPriceSize.price ?? "",
-              priceBeforeDiscount: theSmallestPriceSize.priceBeforeDiscount ?? "",
-              discountPercent: theSmallestPriceSize.discountPercent ?? "",
-              quantity: theSmallestPriceSize.quantity ?? "",
-            },
-          },
+          { _id: productId },
+          { $set: { sizes: updatedSizes } },
           { new: true, timestamps: false }
         );
 
@@ -386,46 +336,71 @@ exports.clearCartItems = asyncHandler(async (req, res) => {
   let cart = await cartModel.findOne({ user: req.user._id });
 
   if (cart && cart.cartItems.length > 0) {
-    for (let cartItem of cart.cartItems) {
+    const storeUpdatedSizes = [];
+
+    const bulkOps = cart.cartItems.map((cartItem) => {
       const { product, quantity, size } = cartItem;
 
       // Handle cases where the product has no sizes
-      if (cartItem.product.sizes.length === 0) {
+      if (product.sizes.length === 0) {
         // Update the product quantity in the database
-        await productModel.updateOne(
-          { _id: product._id },
-          { $inc: { quantity: quantity } },
-          { timestamps: false }
-        );
+        return {
+          updateOne: {
+            filter: { _id: product._id },
+            update: { $inc: { quantity: quantity } },
+            timestamps: false,
+          },
+        };
       }
       // Handle cases where the product has sizes
-      else if (cartItem.product.sizes.length > 0) {
-        const updatedQuantity = product.sizes.find((item) => item.size === size)?.quantity + quantity;
-
-        const theSmallestPriceSize = findTheSmallestPriceInSize(
-          product.sizes.map((item) => {
-            const sizeObject = item.toObject();
-            return sizeObject.size === size
-              ? { ...sizeObject, quantity: updatedQuantity }
-              : sizeObject;
-          })
+      else if (product.sizes.length > 0) {
+        const existingProductIndex = storeUpdatedSizes.findIndex(
+          (stored) => stored.id === product._id.toString()
         );
 
-        await productModel.updateOne(
-          { _id: product._id, "sizes.size": size },
-          {
-            $set: {
-              "sizes.$.quantity": updatedQuantity,
+        let updatedSizes;
+
+        if (existingProductIndex !== -1) {
+          updatedSizes = storeUpdatedSizes[existingProductIndex].sizes.map(
+            (item) => ({
+              ...item,
+              quantity: item.size === size ? item.quantity + quantity : item.quantity,
+            })
+          );
+
+          storeUpdatedSizes[existingProductIndex].sizes = updatedSizes;
+        } else {
+          updatedSizes = product.sizes.map((item) => ({
+            ...item.toObject(),
+            quantity: item.size === size ? item.quantity + quantity : item.quantity,
+          }));
+
+          storeUpdatedSizes.push({
+            id: product._id.toString(),
+            sizes: updatedSizes,
+          });
+        }        
+
+        const theSmallestPriceSize = findTheSmallestPriceInSize(updatedSizes);
+
+        return {
+          updateOne: {
+            filter: { _id: product._id },
+            update: {
+              $set: { sizes: updatedSizes },
               price: theSmallestPriceSize.price ?? "",
               priceBeforeDiscount: theSmallestPriceSize.priceBeforeDiscount ?? "",
               discountPercent: theSmallestPriceSize.discountPercent ?? "",
               quantity: theSmallestPriceSize.quantity ?? "",
             },
+            timestamps: false,
           },
-          { new: true, timestamps: false }
-        );
+        };
       }
-    }
+    });
+
+    // Execute bulkWrite operations to update products
+    await productModel.bulkWrite(bulkOps);
 
     // Clear all items from the cart
     cart.cartItems = [];
@@ -459,12 +434,7 @@ exports.applyCoupon = asyncHandler(async (req, res, next) => {
   });
 
   if (!coupon) {
-    return next(
-      new ApiError(
-        "The coupon you entered is either invalid or has expired. Please try a different coupon.",
-        404
-      )
-    );
+    return next(new ApiError("The coupon you entered is either invalid or has expired. Please try a different coupon.", 404));
   }
 
   // Retrieve the user's cart

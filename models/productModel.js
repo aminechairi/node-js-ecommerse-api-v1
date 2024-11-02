@@ -3,6 +3,8 @@ const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const { GetObjectCommand } = require("@aws-sdk/client-s3");
 const s3Client = require("../config/s3Client");
 
+const { findTheSmallestPriceInSize } = require("../utils/findTheSmallestPriceInSize");
+
 const awsBuckName = process.env.AWS_BUCKET_NAME;
 const expiresIn = process.env.EXPIRE_IN;
 
@@ -171,6 +173,34 @@ productSchema.pre("findOne", function (next) {
     path: "group",
     select: "productsIDs",
   });
+  next();
+});
+
+// Show the properties of the smallest price among sizes.
+const showSmallestPriceSize = function (update) {
+  if (update?.sizes) {
+    const theSmallestPriceSize = findTheSmallestPriceInSize(update.sizes);
+    update.price = theSmallestPriceSize.price ?? "";
+    update.priceBeforeDiscount = theSmallestPriceSize.priceBeforeDiscount ?? "";
+    update.discountPercent = theSmallestPriceSize.discountPercent ?? "";
+    update.quantity = theSmallestPriceSize.quantity ?? "";
+  }
+};
+
+productSchema.pre("findOneAndUpdate", function (next) {
+  const update = this.getUpdate();
+  showSmallestPriceSize(update);
+  next();
+});
+
+productSchema.pre("updateOne", function (next) {
+  const update = this.getUpdate()?.$set;
+  showSmallestPriceSize(update);
+  next();
+});
+
+productSchema.pre("save", function (next) {
+  showSmallestPriceSize(this);
   next();
 });
 

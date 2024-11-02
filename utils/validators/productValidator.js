@@ -136,15 +136,10 @@ const sizesValidations = (sizes, req) => {
     return item;
   })
 
-  // Find size that has the smallest price.
-  const smallestPriceSize = sizes.reduce((min, size) =>
-    +size.price < +min.price ? size : min
-  );
-
-  req.body.price = smallestPriceSize.price;
-  req.body.priceBeforeDiscount = smallestPriceSize.priceBeforeDiscount;
-  req.body.discountPercent = smallestPriceSize.discountPercent;
-  req.body.quantity = smallestPriceSize.quantity;
+  req.body.price = undefined;
+  req.body.priceBeforeDiscount = undefined;
+  req.body.discountPercent = undefined;
+  req.body.quantity = undefined;
 
   return true;
 };
