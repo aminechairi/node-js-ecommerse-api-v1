@@ -28,20 +28,6 @@ exports.addProductToCartValidator = [
   validatorMiddleware,
 ];
 
-exports.applyCouponValidator = [
-  check("couponName")
-    .notEmpty()
-    .withMessage("Coupon name is required.")
-    .isString()
-    .withMessage("Coupon name must be of type string.")
-    .isLength({ min: 2 })
-    .withMessage("Coupon name must be at least 2 characters.")
-    .isLength({ max: 32 })
-    .withMessage("Coupon name cannot exceed 32 characters."),
-
-  validatorMiddleware,
-];
-
 exports.removeProductFromCartValidator = [
   check("productId")
     .notEmpty()
@@ -57,6 +43,20 @@ exports.removeProductFromCartValidator = [
     .withMessage('Product size must be at least 1 character.')
     .isLength({ max: 8 })
     .withMessage('Product size cannot exceed 8 characters.'),
+
+  validatorMiddleware,
+];
+
+exports.applyCouponValidator = [
+  check("couponName")
+    .notEmpty()
+    .withMessage("Coupon name is required.")
+    .isString()
+    .withMessage("Coupon name must be of type string.")
+    .isLength({ min: 2 })
+    .withMessage("Coupon name must be at least 2 characters.")
+    .isLength({ max: 32 })
+    .withMessage("Coupon name cannot exceed 32 characters."),
 
   validatorMiddleware,
 ];

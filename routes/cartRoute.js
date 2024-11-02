@@ -2,8 +2,8 @@ const express = require(`express`);
 
 const {
   addProductToCartValidator,
-  applyCouponValidator,
-  removeProductFromCartValidator
+  removeProductFromCartValidator,
+  applyCouponValidator
 } = require("../utils/validators/cartValidator")
 const {
   addProductToCart,
@@ -33,6 +33,13 @@ router
     addProductToCartValidator, // Because they have the same validations
     updateProductQuantityInCart
   ).delete(
+    removeProductFromCartValidator,
+    removeProductFromCart
+  );
+
+router
+  .route("/clearcartitems")
+  .delete(
     clearCartItems
   );
 
@@ -41,13 +48,6 @@ router
   .put(
     applyCouponValidator,
     applyCoupon
-  );
-
-router
-  .route("/:productId")
-  .delete(
-    removeProductFromCartValidator,
-    removeProductFromCart
   );
 
 module.exports = router;

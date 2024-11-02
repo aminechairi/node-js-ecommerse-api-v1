@@ -80,7 +80,7 @@ exports.addProductToCart = asyncHandler(async (req, res, next) => {
 
   // Handle cases where the product has no sizes
   if (product.sizes.length === 0) {
-    // Update the product quantity in the database
+    // Deduct the requested quantity from the total quantity of the product
     await productModel.updateOne(
       { _id: productId },
       { $inc: { quantity: -quantity } },
@@ -89,11 +89,14 @@ exports.addProductToCart = asyncHandler(async (req, res, next) => {
   }
   // Handle cases where the product has sizes
   else if (product.sizes.length > 0) {
+    // Update the quantity for the specific size requested by the user
     const updatedSizes = product.sizes.map((item) => ({
       ...item.toObject(),
+      // Decrease the quantity only for the selected size; retain the quantity for others
       quantity: item.size === size ? item.quantity - quantity : item.quantity,
     }));
 
+    // Save the updated sizes back to the product document
     await productModel.updateOne(
       { _id: productId },
       { $set: { sizes: updatedSizes } },
@@ -188,50 +191,59 @@ exports.updateProductQuantityInCart = asyncHandler(async (req, res, next) => {
 
       // Handle cases where the product has no sizes
       if (cartItem.product.sizes.length === 0) {
-        const totalAvailableQuantity = cartItem.product.quantity + cartItem.quantity; // Calculate total available quantity
+        // Calculate the total quantity available, combining current stock with the quantity already in the cart
+        const totalAvailableQuantity = cartItem.product.quantity + cartItem.quantity;
 
-        // Check if requested quantity exceeds available stock
+        // Check if the requested quantity exceeds the total available stock
         if (totalAvailableQuantity < quantity) {
+          // Return an error if the requested quantity is greater than available stock
           return next(new ApiError(`Only ${totalAvailableQuantity} item(s) are available in stock.`, 400));
         }
 
-        // Update the product quantity in the database
+        // Update the product's total quantity in the database to reflect the new stock after the update
         await productModel.updateOne(
           { _id: productId },
           { $set: { quantity: totalAvailableQuantity - quantity } },
           { timestamps: false }
         );
 
-        // Update the cart item's quantity
+        // Update the quantity of the item in the cart to match the requested quantity
         cart.cartItems[productIndex].quantity = quantity;
-      }
+      } 
       // Handle cases where the product has sizes
       else if (cartItem.product.sizes.length > 0) {
+        // Find the specific size object that matches the user's selected size
         const productSize = cartItem.product.sizes.find(
           (item) => item.size === cartItem.size
         );
 
-        const totalAvailableQuantity = productSize.quantity + cartItem.quantity; // Calculate total available quantity
+        // Calculate the total available quantity for the selected size, considering the cart's current quantity
+        const totalAvailableQuantity = productSize.quantity + cartItem.quantity;
 
+        // Check if the requested quantity exceeds the available stock for the selected size
         if (totalAvailableQuantity < quantity) {
+          // Return an error if the requested quantity is greater than the stock for that size
           return next(new ApiError(`Only ${totalAvailableQuantity} item(s) are available for size ${cartItem.size.toUpperCase()}.`, 400));
         }
 
+        // Create a new sizes array, updating only the quantity of the selected size
         const updatedSizes = cartItem.product.sizes.map((item) => ({
           ...item.toObject(),
+          // Adjust the quantity for the matching size; leave others unchanged
           quantity:
             item.size === size
               ? totalAvailableQuantity - quantity
               : item.quantity,
         }));
 
+        // Update the product document in the database with the modified sizes array
         await productModel.updateOne(
           { _id: productId },
           { $set: { sizes: updatedSizes } },
           { new: true, timestamps: false }
         );
 
-        // Update the cart item's quantity
+        // Update the quantity of the item in the cart to match the requested quantity
         cart.cartItems[productIndex].quantity = quantity;
       }
     }
@@ -259,9 +271,8 @@ exports.updateProductQuantityInCart = asyncHandler(async (req, res, next) => {
 // @route   DELETE /api/v1/cart/:productId
 // @access  Private
 exports.removeProductFromCart = asyncHandler(async (req, res) => {
-  // Extract productId from the request parameters and size from the request body
-  const { productId } = req.params;
-  const { size } = req.body;
+  // Extract productId, and size from the request body
+  const { productId, size } = req.body;
 
   // Find the user's cart in the database
   let cart = await cartModel.findOne({ user: req.user._id });
@@ -278,33 +289,36 @@ exports.removeProductFromCart = asyncHandler(async (req, res) => {
 
       // Handle cases where the product has no sizes
       if (cartItem.product.sizes.length === 0) {
-        // Update the product quantity in the database
+        // Increase the product's quantity in the database to reflect the returned stock
         await productModel.updateOne(
           { _id: productId },
           { $inc: { quantity: cartItem.quantity } },
           { timestamps: false }
         );
 
-        // Remove the product from the cart
+        // Remove the product from the cart after updating the stock
         cart.cartItems.splice(productIndex, 1);
       }
       // Handle cases where the product has sizes
       else if (cartItem.product.sizes.length > 0) {
+        // Create a new sizes array, updating the quantity for the specific size returned to stock
         const updatedSizes = cartItem.product.sizes.map((item) => ({
           ...item.toObject(),
+          // Increase the quantity only for the size matching the cart item; keep others unchanged
           quantity:
             item.size === size
               ? item.quantity + cartItem.quantity
               : item.quantity,
         }));
 
+        // Update the product document in the database with the modified sizes array
         await productModel.updateOne(
           { _id: productId },
           { $set: { sizes: updatedSizes } },
           { new: true, timestamps: false }
         );
 
-        // Remove the product from the cart
+        // Remove the product from the cart after updating the stock for the specific size
         cart.cartItems.splice(productIndex, 1);
       }
     }
@@ -343,7 +357,7 @@ exports.clearCartItems = asyncHandler(async (req, res) => {
 
       // Handle cases where the product has no sizes
       if (product.sizes.length === 0) {
-        // Update the product quantity in the database
+        // Return an update operation that increments the product's total quantity in the database
         return {
           updateOne: {
             filter: { _id: product._id },
@@ -354,6 +368,7 @@ exports.clearCartItems = asyncHandler(async (req, res) => {
       }
       // Handle cases where the product has sizes
       else if (product.sizes.length > 0) {
+        // Check if the product already exists in the `storeUpdatedSizes` array
         const existingProductIndex = storeUpdatedSizes.findIndex(
           (stored) => stored.id === product._id.toString()
         );
@@ -361,6 +376,7 @@ exports.clearCartItems = asyncHandler(async (req, res) => {
         let updatedSizes;
 
         if (existingProductIndex !== -1) {
+          // If the product is already in `storeUpdatedSizes`, update the sizes array by adjusting the quantity for the matching size
           updatedSizes = storeUpdatedSizes[existingProductIndex].sizes.map(
             (item) => ({
               ...item,
@@ -368,21 +384,26 @@ exports.clearCartItems = asyncHandler(async (req, res) => {
             })
           );
 
+          // Update the sizes in the `storeUpdatedSizes` array
           storeUpdatedSizes[existingProductIndex].sizes = updatedSizes;
         } else {
+          // If the product is not in `storeUpdatedSizes`, create an updated sizes array from the original product sizes
           updatedSizes = product.sizes.map((item) => ({
             ...item.toObject(),
             quantity: item.size === size ? item.quantity + quantity : item.quantity,
           }));
 
+          // Add the product with its updated sizes to `storeUpdatedSizes`
           storeUpdatedSizes.push({
             id: product._id.toString(),
             sizes: updatedSizes,
           });
-        }        
+        }
 
+        // Find the size with the smallest price from the updated sizes
         const theSmallestPriceSize = findTheSmallestPriceInSize(updatedSizes);
 
+        // Return an update operation to update the product's sizes and associated price fields in the database
         return {
           updateOne: {
             filter: { _id: product._id },
