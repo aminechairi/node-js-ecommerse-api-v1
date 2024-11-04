@@ -3,59 +3,56 @@ const { ObjectId } = mongoose.Types;
 
 const appSettingsModel = require("../models/appSettingsModel");
 
-/**
- * Filters and updates the cart items to ensure that products are valid.
- *
- * - Removes items from the cart if their corresponding product has been deleted.
- * - Updates the item's color if it has changed in the product.
- * - Removes items if the price or size of the product no longer matches the cart's item details.
- *
- * @param {Array} cartItems - An array of items in the cart, where each item contains a product, price, size, and color.
- * @returns {Array} - A filtered array of valid cart items with updated color, if applicable.
- */
-const filterValidCartItems = (cartItems) => {
-  return cartItems.filter((item) => {
-    // If the product no longer exists (e.g., deleted), remove the item
+// Handle products if updated or deleted.
+exports.handleProductsIfUpdatedOrDeleted = function (cart) {
+  if (cart.cartItems.length === 0) return cart;
+
+  cart.cartItems = cart.cartItems.filter((item) => {
+    // Remove the item if the product no longer exists (e.g., deleted)
     if (!item.product) return false;
 
     // If the product is referenced by an ObjectId, assume it's valid
-    if (item.product instanceof ObjectId) {
-      return true;
-    }
+    if (item.product instanceof ObjectId) return true;
 
-    // If the product is an object, check for changes in color, size, and price
+    // Ensure the product is a non-null object
     if (typeof item.product === "object" && item.product !== null) {
       // Update the item's color if it exists and has changed
-      if (
-        item.color &&
-        item.product.color &&
-        item.color !== item.product.color
-      ) {
+      if (item.product.color && item.color !== item.product.color) {
         item.color = item.product.color;
       }
 
-      // Check size and price, or just price if no size is provided
-      if (item.size && item.price) {
-        // If both size and price are present, check for a matching size and price
-        return item.product.sizes.find(
-          (size) =>
-            `${size.size}`.toUpperCase() === `${item.size}`.toUpperCase() &&
-            size.price === item.price
+      // Handle cases where the product has no sizes
+      if (item.product.sizes.length === 0) {
+        // Update item price if product price has change
+        if (item.price !== item.product.price) {
+          item.price = item.product.price;
+        }
+      }
+      // Handle cases where the product has sizes
+      else if (item.product.sizes.length > 0) {
+        // Find the size the user has selected.
+        const matchingSize = item.product.sizes.find(
+          (size) => size.size.toUpperCase() === item.size.toUpperCase()
         );
-      } else {
-        // If no size, just compare the price
-        return item.price === item.product.price;
+
+        if (matchingSize) {
+          // Update item price if product price has change
+          if (item.price !== matchingSize.price) item.price = matchingSize.price;
+        } else {
+          // Remove the item from cart
+          return false;
+        }
       }
     }
 
-    // If the product does not match any valid conditions, remove the item
-    return false;
+    // Keep the item in the cart if it passes all checks
+    return true;
   });
-};
+
+  return cart;
+}
 
 exports.calcTotalCartPrice = async (cart) => {
-  cart.cartItems = filterValidCartItems(cart.cartItems);
-
   // Check if there are items in the cart
   if (cart.cartItems?.length > 0) {
     // Fetch app settings or provide default values

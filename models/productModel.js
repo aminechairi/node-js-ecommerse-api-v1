@@ -200,7 +200,7 @@ productSchema.pre("updateOne", function (next) {
 });
 
 productSchema.pre("save", function (next) {
-  showSmallestPriceSize(this);
+  if (this.sizes?.length > 0) showSmallestPriceSize(this);
   next();
 });
 

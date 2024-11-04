@@ -4,7 +4,7 @@ const ApiError = require("../utils/apiErrore");
 const productModel = require("../models/productModel");
 const couponModel = require("../models/couponModel");
 const cartModel = require("../models/cartModel");
-const { calcTotalCartPrice } = require("../utils/shoppingCartProcessing");
+const { calcTotalCartPrice, handleProductsIfUpdatedOrDeleted } = require("../utils/shoppingCartProcessing");
 const { findTheSmallestPriceInSize } = require("../utils/findTheSmallestPriceInSize");
 
 // Validate product availability
@@ -77,6 +77,9 @@ exports.addProductToCart = asyncHandler(async (req, res, next) => {
   let cart =
     (await cartModel.findOne({ user: req.user._id })) ||
     (await cartModel.create({ user: req.user._id, cartItems: [] }));
+
+  // Handle products if updated or deleted.
+  handleProductsIfUpdatedOrDeleted(cart);
 
   // Handle cases where the product has no sizes
   if (product.sizes.length === 0) {
@@ -153,6 +156,9 @@ exports.getCart = asyncHandler(async (req, res) => {
   let cart = await cartModel.findOne({ user: req.user._id });
 
   if (cart) {
+    // Handle products if updated or deleted.
+    handleProductsIfUpdatedOrDeleted(cart);
+
     // Calculate total cart price if cart exists
     await calcTotalCartPrice(cart);
   } else {
@@ -180,6 +186,9 @@ exports.updateProductQuantityInCart = asyncHandler(async (req, res, next) => {
   let cart = await cartModel.findOne({ user: req.user._id });
 
   if (cart) {
+    // Handle products if updated or deleted.
+    handleProductsIfUpdatedOrDeleted(cart);
+
     // Find the index of the product in the cart using productId and size
     const productIndex = cart.cartItems.findIndex(
       (item) => item.product._id.toString() === productId && item.size === size
@@ -278,6 +287,9 @@ exports.removeProductFromCart = asyncHandler(async (req, res) => {
   let cart = await cartModel.findOne({ user: req.user._id });
 
   if (cart) {
+    // Handle products if updated or deleted.
+    handleProductsIfUpdatedOrDeleted(cart);
+
     // Find the index of the product in the cart using productId and size
     const productIndex = cart.cartItems.findIndex(
       (item) => item.product._id.toString() === productId && item.size === size
@@ -349,7 +361,10 @@ exports.clearCartItems = asyncHandler(async (req, res) => {
   // Find the user's cart in the database
   let cart = await cartModel.findOne({ user: req.user._id });
 
-  if (cart && cart.cartItems.length > 0) {
+  if (cart) {
+    // Handle products if updated or deleted.
+    handleProductsIfUpdatedOrDeleted(cart);
+
     const storeUpdatedSizes = [];
 
     const bulkOps = cart.cartItems.map((cartItem) => {
@@ -462,6 +477,9 @@ exports.applyCoupon = asyncHandler(async (req, res, next) => {
   let cart = await cartModel.findOne({ user: req.user._id });
 
   if (cart) {
+    // Handle products if updated or deleted.
+    handleProductsIfUpdatedOrDeleted(cart);
+
     // Calculate the current total price of the cart
     await calcTotalCartPrice(cart);
 
