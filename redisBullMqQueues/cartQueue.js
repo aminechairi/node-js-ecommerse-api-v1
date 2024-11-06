@@ -1,5 +1,5 @@
 const { Queue } = require('bullmq');
-const redisBullMQConnection = require('../config/redisBullMQ');
+const redisBullMQConnection = require('../config/redisBullMq');
 
 const cartQueue = new Queue('cartQueue', { connection: redisBullMQConnection });
 
