@@ -7,7 +7,7 @@ const couponModel = require("../models/couponModel");
 const cartModel = require("../models/cartModel");
 const { calcTotalCartPrice, handleProductsIfUpdatedOrDeleted } = require("../utils/shoppingCartProcessing");
 const { findTheSmallestPriceInSize } = require("../utils/findTheSmallestPriceInSize");
-const redisBullMQConnection = require('../config/redisBullMQ');
+const redisBullMQConnection = require('../config/redisBullMq');
 const cartQueue = require("../redisBullMqQueues/cartQueue");
 
 // Validate product availability
