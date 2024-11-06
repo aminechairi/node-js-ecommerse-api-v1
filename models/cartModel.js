@@ -36,6 +36,11 @@ const cartItemSchema = new mongoose.Schema(
       default: 0,
       min: [0, "Total price must be at least 0."],
     },
+    idOfRedisBullMqJob: {
+      type: String,
+      required: true,
+      trim: true,
+    },
   },
   { timestamps: true }
 );
