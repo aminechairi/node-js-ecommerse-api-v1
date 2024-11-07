@@ -133,7 +133,7 @@ exports.addProductToCart = asyncHandler(async (req, res, next) => {
       "clearCart",
       { userId: req.user._id, product: { productId, size } },
       {
-        delay: 30 * 60 * 1000, // 30m
+        delay: 0.5 * 60 * 1000, // 30m
         removeOnComplete: true,
         // removeOnFail: true
       }
@@ -542,10 +542,10 @@ exports.clearCartItems = asyncHandler(async (req, res) => {
     await productModel.bulkWrite(bulkOps);
 
     // Remove redis bullmq jobs of items
-    for (const jobId of jobIds) {
+    await Promise.all(jobIds.map(async (jobId) => {
       const job = await cartQueue.getJob(jobId);
       if (job) await job.remove();
-    }
+    }));
 
     // Clear all items from the cart
     cart.cartItems = [];
