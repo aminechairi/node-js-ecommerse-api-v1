@@ -52,7 +52,7 @@ exports.handleProductsIfUpdatedOrDeleted = function (cart) {
   return cart;
 }
 
-exports.calcTotalCartPrice = async (cart) => {
+exports.calcTotalCartPrice = async (cart, session) => {
   // Check if there are items in the cart
   if (cart.cartItems?.length > 0) {
     // Fetch app settings or provide default values
@@ -90,5 +90,5 @@ exports.calcTotalCartPrice = async (cart) => {
   }
 
   // Save the updated cart object
-  await cart.save();
+  await cart.save({ session });
 };
