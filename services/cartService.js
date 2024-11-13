@@ -6,7 +6,7 @@ const ApiError = require("../utils/apiErrore");
 const productModel = require("../models/productModel");
 const couponModel = require("../models/couponModel");
 const cartModel = require("../models/cartModel");
-const { calcTotalCartPrice, handleProductsIfUpdatedOrDeleted } = require("../utils/shoppingCartProcessing");
+const { calcTotalCartPrice, handleItemsOfCartIfProductsUpdatedOrDeleted } = require("../utils/shoppingCartProcessing");
 const { findTheSmallestPriceInSize } = require("../utils/findTheSmallestPriceInSize");
 const redisBullMQConnection = require('../config/redisBullMq');
 const cartQueue = require("../redisBullMqQueues/cartQueue");
@@ -57,7 +57,7 @@ exports.addProductToCart = asyncHandler(async (req, res, next) => {
 
   // Check if the product exists, else return a 404 error
   if (!product) {
-    return next(new ApiError(`No product found for ID: ${productId}.`, 404));
+    return next(new ApiError(`No product for this ID: ${productId}.`, 404));
   }
 
   // Validate product availability
@@ -87,8 +87,8 @@ exports.addProductToCart = asyncHandler(async (req, res, next) => {
       (await cartModel.findOne({ user: req.user._id }).session(session)) ||
       (await cartModel.create({ user: req.user._id, cartItems: [] }).session(session));
 
-    // Handle products if updated or deleted.
-    handleProductsIfUpdatedOrDeleted(cart);
+    // Handle items of cart if products updated or deleted
+    handleItemsOfCartIfProductsUpdatedOrDeleted(cart);
 
     // Handle cases where the product has no sizes
     if (product.sizes.length === 0) {
@@ -101,7 +101,7 @@ exports.addProductToCart = asyncHandler(async (req, res, next) => {
     }
     // Handle cases where the product has sizes
     else if (product.sizes.length > 0) {
-      // Update the quantity for the specific size requested by the user
+      // Deduct the requested quantity from the total quantity of the specific size of product
       const updatedSizes = product.sizes.map((item) => ({
         ...item.toObject(),
         // Decrease the quantity only for the selected size; retain the quantity for others
@@ -199,8 +199,8 @@ const worker = new Worker(
       const cart = await cartModel.findOne({ user: userId }).session(session);
 
       if (cart) {
-        // Handle products if updated or deleted.
-        handleProductsIfUpdatedOrDeleted(cart);
+        // Handle items of cart if products updated or deleted
+        handleItemsOfCartIfProductsUpdatedOrDeleted(cart);
 
         // Find the index of the product in the cart using productId and size
         const productIndex = cart.cartItems.findIndex(
@@ -267,13 +267,13 @@ const worker = new Worker(
 );
 
 // Check jobs completed or failed
-worker
-  .on("completed", (job) => {    
-    console.log(`Job ${job.id} completed!`);
-  })
-  .on("failed", (job, err) => {
-    console.error(`Job ${job.id} failed with error: ${err.message}`);
-  });
+// worker
+//   .on("completed", (job) => {    
+//     console.log(`Job ${job.id} completed!`);
+//   })
+//   .on("failed", (job, err) => {
+//     console.error(`Job ${job.id} failed with error: ${err.message}`);
+//   });
 
 // @desc    Retrieve the current user's cart
 // @route   GET /api/v1/cart
@@ -283,8 +283,8 @@ exports.getCart = asyncHandler(async (req, res) => {
   let cart = await cartModel.findOne({ user: req.user._id });
 
   if (cart) {
-    // Handle products if updated or deleted.
-    handleProductsIfUpdatedOrDeleted(cart);
+    // Handle items of cart if products updated or deleted
+    handleItemsOfCartIfProductsUpdatedOrDeleted(cart);
 
     // Calculate total cart price if cart exists
     await calcTotalCartPrice(cart);
@@ -319,8 +319,8 @@ exports.updateProductQuantityInCart = asyncHandler(async (req, res, next) => {
     cart = await cartModel.findOne({ user: req.user._id }).session(session);
 
     if (cart) {
-      // Handle products if updated or deleted.
-      handleProductsIfUpdatedOrDeleted(cart);
+      // Handle items of cart if products updated or deleted
+      handleItemsOfCartIfProductsUpdatedOrDeleted(cart);
 
       // Find the index of the product in the cart using productId and size
       const productIndex = cart.cartItems.findIndex(
@@ -335,18 +335,11 @@ exports.updateProductQuantityInCart = asyncHandler(async (req, res, next) => {
         // Handle cases where the product has no sizes
         if (cartItem.product.sizes.length === 0) {
           // Calculate the total quantity available, combining current stock with the quantity already in the cart
-          const totalAvailableQuantity =
-            cartItem.product.quantity + cartItem.quantity;
+          const totalAvailableQuantity = cartItem.product.quantity + cartItem.quantity;
 
           // Check if the requested quantity exceeds the total available stock
           if (totalAvailableQuantity < quantity) {
-            // Return an error if the requested quantity is greater than available stock
-            return next(
-              new ApiError(
-                `Only ${totalAvailableQuantity} item(s) are available in stock.`,
-                400
-              )
-            );
+            return next(new ApiError(`Only ${totalAvailableQuantity} item(s) are available in stock.`, 400));
           }
 
           // Update the product's total quantity in the database to reflect the new stock after the update
@@ -367,18 +360,11 @@ exports.updateProductQuantityInCart = asyncHandler(async (req, res, next) => {
           );
 
           // Calculate the total available quantity for the selected size, considering the cart's current quantity
-          const totalAvailableQuantity =
-            productSize.quantity + cartItem.quantity;
+          const totalAvailableQuantity = productSize.quantity + cartItem.quantity;
 
           // Check if the requested quantity exceeds the available stock for the selected size
           if (totalAvailableQuantity < quantity) {
-            // Return an error if the requested quantity is greater than the stock for that size
-            return next(
-              new ApiError(
-                `Only ${totalAvailableQuantity} item(s) are available for size ${cartItem.size.toUpperCase()}.`,
-                400
-              )
-            );
+            return next(new ApiError(`Only ${totalAvailableQuantity} item(s) are available for size ${cartItem.size.toUpperCase()}.`, 400));
           }
 
           // Create a new sizes array, updating only the quantity of the selected size
@@ -447,13 +433,14 @@ exports.removeProductFromCart = asyncHandler(async (req, res, next) => {
   session.startTransaction();
 
   let cart;
+  let idOfRedisBullMqJob;
   try {
     // Find the user's cart in the database
     cart = await cartModel.findOne({ user: req.user._id }).session(session);
 
     if (cart) {
-      // Handle products if updated or deleted.
-      handleProductsIfUpdatedOrDeleted(cart);
+      // Handle items of cart if products updated or deleted
+      handleItemsOfCartIfProductsUpdatedOrDeleted(cart);
 
       // Find the index of the product in the cart using productId and size
       const productIndex = cart.cartItems.findIndex(
@@ -464,6 +451,9 @@ exports.removeProductFromCart = asyncHandler(async (req, res, next) => {
       if (productIndex > -1) {
         const cartItem = cart.cartItems[productIndex];
 
+        // Add ID of redis bullmq job to idOfRedisBullMqJob
+        idOfRedisBullMqJob = cartItem.idOfRedisBullMqJob;
+
         // Handle cases where the product has no sizes
         if (cartItem.product.sizes.length === 0) {
           // Increase the product's quantity in the database to reflect the returned stock
@@ -472,10 +462,6 @@ exports.removeProductFromCart = asyncHandler(async (req, res, next) => {
             { $inc: { quantity: cartItem.quantity } },
             { timestamps: false, session }
           );
-
-          // Remove redis bullmq job of item
-          const job = await cartQueue.getJob(cartItem.idOfRedisBullMqJob);
-          if (job) await job.remove();
 
           // Remove the product from the cart after updating the stock
           cart.cartItems.splice(productIndex, 1);
@@ -499,10 +485,6 @@ exports.removeProductFromCart = asyncHandler(async (req, res, next) => {
             { new: true, timestamps: false, session }
           );
 
-          // Remove redis bullmq job of item
-          const job = await cartQueue.getJob(cartItem.idOfRedisBullMqJob);
-          if (job) await job.remove();
-
           // Remove the product from the cart after updating the stock for the specific size
           cart.cartItems.splice(productIndex, 1);
         }
@@ -521,6 +503,12 @@ exports.removeProductFromCart = asyncHandler(async (req, res, next) => {
   } finally {
     // End the session whether the transaction succeeds or fails
     session.endSession();
+  }
+
+  // Remove redis bullmq job of item
+  if (idOfRedisBullMqJob) {
+    const job = await cartQueue.getJob(idOfRedisBullMqJob);
+    if (job) await job.remove();
   }
 
   if (cart) {
@@ -564,13 +552,12 @@ exports.clearCartItems = asyncHandler(async (req, res, next) => {
 
         // Handle cases where the product has no sizes
         if (product.sizes.length === 0) {
-          // Return an update operation that increments the product's total quantity in the database
+          // Increase the product's quantity in the database to reflect the returned stock
           return {
             updateOne: {
               filter: { _id: product._id },
               update: { $inc: { quantity: quantity } },
-              timestamps: false,
-              session,
+              timestamps: false
             },
           };
         }
@@ -611,7 +598,6 @@ exports.clearCartItems = asyncHandler(async (req, res, next) => {
           // Find the size with the smallest price from the updated sizes
           const theSmallestPriceSize = findTheSmallestPriceInSize(updatedSizes);
 
-          // Return an update operation to update the product's sizes and associated price fields in the database
           return {
             updateOne: {
               filter: { _id: product._id },
@@ -622,8 +608,7 @@ exports.clearCartItems = asyncHandler(async (req, res, next) => {
                 discountPercent: theSmallestPriceSize.discountPercent ?? "",
                 quantity: theSmallestPriceSize.quantity ?? "",
               },
-              timestamps: false,
-              session
+              timestamps: false
             },
           };
         }
@@ -651,12 +636,14 @@ exports.clearCartItems = asyncHandler(async (req, res, next) => {
   }
 
   // Remove redis bullmq jobs of items
-  await Promise.all(
-    jobIds.map(async (jobId) => {
-      const job = await cartQueue.getJob(jobId);
-      if (job) await job.remove();
-    })
-  );
+  if (jobIds.length > 0) {
+    await Promise.all(
+      jobIds.map(async (jobId) => {
+        const job = await cartQueue.getJob(jobId);
+        if (job) await job.remove();
+      })
+    );
+  }
 
   if (!cart) {
     // If no cart exists, create a new cart for the user
@@ -692,8 +679,8 @@ exports.applyCoupon = asyncHandler(async (req, res, next) => {
   let cart = await cartModel.findOne({ user: req.user._id });
 
   if (cart) {
-    // Handle products if updated or deleted.
-    handleProductsIfUpdatedOrDeleted(cart);
+    // Handle items of cart if products updated or deleted
+    handleItemsOfCartIfProductsUpdatedOrDeleted(cart);
 
     // Calculate the current total price of the cart
     await calcTotalCartPrice(cart);

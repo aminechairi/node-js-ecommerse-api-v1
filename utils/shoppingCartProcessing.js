@@ -3,8 +3,8 @@ const { ObjectId } = mongoose.Types;
 
 const appSettingsModel = require("../models/appSettingsModel");
 
-// Handle products if updated or deleted.
-exports.handleProductsIfUpdatedOrDeleted = function (cart) {
+// Handle items of cart if products updated or deleted
+exports.handleItemsOfCartIfProductsUpdatedOrDeleted = function (cart) {
   if (cart.cartItems.length === 0) return cart;
 
   cart.cartItems = cart.cartItems.filter((item) => {
