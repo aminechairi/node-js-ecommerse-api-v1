@@ -16,7 +16,7 @@ exports.resizeImage = (names, width, height) =>
       const buffer = await sharp(req.file.buffer)
         .resize(width, height)
         .toFormat(imageFormat)
-        .jpeg({ quality: 100 })
+        .jpeg({ quality: 80 })
         .toBuffer();
 
       const imageName = `${names[1]}-${uuidv4()}-${Date.now()}.${imageFormat}`;

@@ -76,12 +76,12 @@ exports.resizeProductImages = asyncHandler(async (req, _, next) => {
   // 1 - Image processing for imageCover
   if (req.files?.imageCover) {
 
-    const imageFormat = 'jpeg';
+    const imageFormat = 'webp';
 
     const buffer = await sharp(req.files.imageCover[0].buffer)
-    .resize(960, 1312)
+    .resize(500, 690)
     .toFormat(imageFormat)
-    .jpeg({ quality: 100 })
+    .jpeg({ quality: 65 })
     .toBuffer();
 
     const imageCoverName = `product-${uuidv4()}-${Date.now()}.${imageFormat}`;
@@ -110,12 +110,12 @@ exports.resizeProductImages = asyncHandler(async (req, _, next) => {
 
       req.files.images.map(async (img, index) => {
 
-        const imageFormat = 'jpeg';
+        const imageFormat = 'webp';
 
         const buffer = await sharp(img.buffer)
-        .resize(960, 1312)
+        .resize(500, 690)
         .toFormat(imageFormat)
-        .jpeg({ quality: 100 })
+        .jpeg({ quality: 65 })
         .toBuffer();
 
         const imageName = `product-${uuidv4()}-${Date.now()}-${index + 1}.${imageFormat}`;

@@ -39,7 +39,7 @@ exports.resizeUserImages = asyncHandler(async (req, res, next) => {
     const imageFormat = 'jpeg';
 
     const buffer = await sharp(req.files.profileImage[0].buffer)
-    .resize(800, 800)
+    .resize(400, 400)
     .toFormat(imageFormat)
     .jpeg({ quality: 100 })
     .toBuffer();
