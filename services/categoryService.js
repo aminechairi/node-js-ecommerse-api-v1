@@ -13,7 +13,7 @@ const categoryModel = require(`../models/categoryModel`);
 exports.uploadCategoryImage = uploadSingleImage("image");
 
 // Image processing
-exports.resizeImage = resizeImage(['categories', 'category'], 400, 400);
+exports.resizeImage = resizeImage(['categories', 'category'], 600, 600);
 
 // @desc Get list of categories
 // @route GET /api/v1/categories

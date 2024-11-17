@@ -13,7 +13,7 @@ const underSubCategoryModel = require("../models/underSubCategoryModel");
 exports.uploadUnderSubCategoryImage = uploadSingleImage("image");
 
 // Image processing
-exports.resizeImage = resizeImage(['underSubCategories', 'underSubCategory'], 400, 400);
+exports.resizeImage = resizeImage(['underSubCategories', 'underSubCategory'], 600, 600);
 
 // Nested route
 // GET /api/v1/subcategories/:subCategoryId/undersubcategories
