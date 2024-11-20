@@ -1,7 +1,10 @@
 const mongoose = require("mongoose");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const { GetObjectCommand } = require("@aws-sdk/client-s3");
-const s3Client = require('../config/s3Client');
+const s3Client = require("../config/s3Client");
+
+const awsBuckName = process.env.AWS_BUCKET_NAME;
+const expiresIn = process.env.EXPIRE_IN;
 
 const categorySchema = new mongoose.Schema(
   {
@@ -29,13 +32,8 @@ const categorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const setImageUrl = async (doc) => {
-
+const setImageUrl = async (doc) => {  
   if (doc.image) {
-
-    const awsBuckName = process.env.AWS_BUCKET_NAME;
-    const expiresIn = process.env.EXPIRE_IN;
-
     const getObjectParams = {
       Bucket: awsBuckName,
       Key: `categories/${doc.image}`,
@@ -45,9 +43,7 @@ const setImageUrl = async (doc) => {
     const imageUrl = await getSignedUrl(s3Client, command, { expiresIn });
 
     doc.image = imageUrl;
-
-  };
-
+  }
 };
 
 // findOne, findAll, update, delete
