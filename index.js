@@ -42,9 +42,7 @@ app.use(express.json({ limit: '20kb' }));
 
 if (process.env.NODE_ENV === `development`) {
   app.use(morgan("tiny"));
-  console.log(
-    `mode: ${process.env.NODE_ENV}`
-  );
+  console.log(`mode: ${process.env.NODE_ENV}`);
 };
 
 // To apply data sanitization
@@ -68,7 +66,7 @@ app.use(hpp());
 // Mounet Routes
 mountRoutes(app);
 
-app.all(`*`, (req, res, next) => {
+app.all(`*`, (req, _, next) => {
   next(new ApiErrore(`can't find this rout: ${req.originalUrl}`, 400));
 });
 
@@ -76,10 +74,8 @@ app.all(`*`, (req, res, next) => {
 app.use(globalErrore);
 
 const PORT = process.env.PORT || 3000;
-const server = app.listen(PORT, _ => {
-  console.log(
-    `app runnig on port ${PORT}`
-  );
+const server = app.listen(PORT, (_) => {
+  console.log(`app runnig on port ${PORT}`);
 });
 
 // handle rejection outside express
