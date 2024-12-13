@@ -139,7 +139,7 @@ exports.addProductToCart = asyncHandler(async (req, res, next) => {
         "clearCart",
         { userId: req.user._id, product: { productId, size } },
         {
-          delay: 30 * 60 * 1000, // 30 minutes
+          delay: 15 * 60 * 1000, // 30 minutes
           removeOnComplete: true,
           removeOnFail: false,
           attempts: 10000, // Retries up to 10000 times if it fails
