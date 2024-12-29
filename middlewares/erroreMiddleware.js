@@ -1,7 +1,7 @@
 const ApiError = require("../utils/apiErrore");
 
 const sendErroreForDev = (err, res) => {
-  return res.status(err.statusCode).json({ 
+  return res.status(err.statusCode).json({
     status: err.status,
     err: err,
     message: err.message,
@@ -10,7 +10,7 @@ const sendErroreForDev = (err, res) => {
 };
 
 const sendErroreForProd = (err, res) => {
-  return res.status(err.statusCode).json({ 
+  return res.status(err.statusCode).json({
     status: err.status,
     message: err.message,
   });
@@ -37,7 +37,7 @@ const globalErrore = (err, req, res, next) => {
       err = handleJwtExpired();
     }
     sendErroreForProd(err, res);
-  };
+  }
 };
 
 module.exports = globalErrore;
