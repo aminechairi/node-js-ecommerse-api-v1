@@ -663,17 +663,13 @@ exports.clearCartItems = asyncHandler(async (req, res, next) => {
 // @route   PUT /api/v1/cart/applycoupon
 // @access  Private
 exports.applyCoupon = asyncHandler(async (req, res, next) => {
-  const { couponName } = req.body;
+  const { couponCode } = req.body;
 
   // Check if the coupon exists and is still valid
   const coupon = await couponModel.findOne({
-    name: couponName.toUpperCase(),
+    couponCode: couponCode.toUpperCase(),
     expire: { $gt: Date.now() },
   });
-
-  if (!coupon) {
-    return next(new ApiError("The coupon you entered is either invalid or has expired. Please try a different coupon.", 404));
-  }
 
   // Retrieve the user's cart
   let cart = await cartModel.findOne({ user: req.user._id });
@@ -685,13 +681,13 @@ exports.applyCoupon = asyncHandler(async (req, res, next) => {
     // Calculate the current total price of the cart
     await calcTotalCartPrice(cart);
 
-    if (cart.cartItems.length > 0) {
+    if (cart.cartItems.length > 0 && coupon) {
       const totalPrice = cart.totalPrice;
       const discountAmount = (totalPrice * coupon.discount) / 100;
       const totalPriceAfterDiscount = (totalPrice - discountAmount).toFixed(2);
 
       // Update the cart with coupon details
-      cart.couponName = coupon.name;
+      cart.couponName = coupon.couponCode;
       cart.couponDiscount = coupon.discount;
       cart.totalPriceAfterDiscount = totalPriceAfterDiscount;
       await cart.save();

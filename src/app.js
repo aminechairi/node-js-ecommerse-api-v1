@@ -3,7 +3,7 @@ const morgan = require("morgan");
 const dotenv = require("dotenv");
 
 // Load environment variables
-dotenv.config({ path: "./config.env" });
+dotenv.config();
 
 const dbConection = require(`./config/database`);
 const addSecurityMiddlewares = require("./middlewares/securityMiddleware");
@@ -34,7 +34,7 @@ app.use(express.json({ limit: "20kb" }));
 // Enable detailed request logging in development mode using Morgan
 if (process.env.MODE_ENV === `development`) {
   app.use(morgan("tiny")); // Logs HTTP requests in a concise format
-  console.log(`mode: ${process.env.MODE_ENV}`); // Log the current environment mode
+  console.log(`Mode: ${process.env.MODE_ENV}`); // Log the current environment mode
 }
 
 // Mount application routes

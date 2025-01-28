@@ -1,11 +1,11 @@
 {
-  "name": "node-js-ecommerse-api-v1",
+  "name": "back-end-marketplace-platform-api-v1",
   "version": "1.0.0",
   "description": "",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "start:dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js"
   },
   "author": "Amine Chairi",
   "license": "ISC",

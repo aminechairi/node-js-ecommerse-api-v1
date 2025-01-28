@@ -1,50 +1,61 @@
 const { check } = require("express-validator");
 const validatorMiddleware = require("../../middlewares/validatorMiddleware");
 
-const couponModel = require("../../models/couponModel")
+const couponModel = require("../../models/couponModel");
 
 exports.getCouponValidator = [
   check("id")
     .isMongoId()
-    .withMessage("Invalid coupon id format"),
+    .withMessage("Invalid coupon ID format"),
 
   validatorMiddleware,
 ];
 
 exports.createCouponValidator = [
-  check("name")
+  check("couponCode")
     .notEmpty()
-    .withMessage("Coupon name is required.")
+    .withMessage("Coupon code is required.")
     .isString()
-    .withMessage("Coupon name must be of type string.")
+    .withMessage("Coupon code must be of type string.")
     .isLength({ min: 3 })
-    .withMessage("Too short coupon name.")
+    .withMessage("Coupon code must be at least 3 characters.")
     .isLength({ max: 32 })
-    .withMessage("Too long coupon name.")
+    .withMessage("Coupon code cannot exceed 32 characters.")
     .custom(async (value, { req }) => {
-      req.body.name = `${value}`.toUpperCase();      
-      const coupon = await couponModel.findOne({ name: req.body.name });
+      req.body.couponCode = `${value}`.toUpperCase();
+      const coupon = await couponModel.findOne({
+        couponCode: req.body.couponCode,
+      });
       if (coupon) {
-        throw new Error("I've used this coupon name before.");
-      };
+        throw new Error("I've used this coupon code before.");
+      }
       return true;
     }),
 
   check("expire")
     .notEmpty()
-    .withMessage("Coupon expire is required.")
+    .withMessage("Expiration date is required.")
     .isString()
-    .withMessage("Coupon expire must be of type string.")
-    .isISO8601('yyyy-mm-dd')
-    .withMessage("Coupon expire date format => yyyy-mm-dd."),
+    .withMessage("Expiration date must be of type string.")
+    .isISO8601({ strict: true })
+    .withMessage("Expiration date must be in the format yyyy-mm-dd (ISO 8601).")
+    .custom((value) => {
+      const inputDate = new Date(value);
+      if (inputDate <= Date.now()) {
+        throw new Error("Expiration date must be in the future.");
+      }
+      return true;
+    }),
 
-    check("discount")
+  check("discount")
     .notEmpty()
-    .withMessage("Coupon discount is required.")
+    .withMessage("Discount value is required.")
     .isNumeric()
-    .withMessage("Coupon discount must be of type number.")
-    .isFloat({ min: 1, max: 100 })
-    .withMessage('Discount must be between 1 and 100.'),
+    .withMessage("Discount value must be of type number.")
+    .isFloat({ min: 1 })
+    .withMessage("Discount value must be at least 1%.")
+    .isFloat({  max: 100 })
+    .withMessage("Discount value cannot exceed 100%."),
 
   validatorMiddleware,
 ];
@@ -52,38 +63,49 @@ exports.createCouponValidator = [
 exports.updateCouponValidator = [
   check("id")
     .isMongoId()
-    .withMessage("Invalid coupon id format."),
+    .withMessage("Invalid coupon ID format."),
 
-  check("name")
+  check("couponCode")
     .optional()
     .isString()
-    .withMessage("Coupon name must be of type string.")
+    .withMessage("Coupon code must be of type string.")
     .isLength({ min: 3 })
-    .withMessage("Too short coupon name.")
+    .withMessage("Coupon code must be at least 3 characters.")
     .isLength({ max: 32 })
-    .withMessage("Too long coupon name.")
+    .withMessage("Coupon code cannot exceed 32 characters.")
     .custom(async (value, { req }) => {
-      req.body.name = `${value}`.toUpperCase();
-      const coupon = await couponModel.findOne({ name: req.body.name });
+      req.body.couponCode = `${value}`.toUpperCase();
+      const coupon = await couponModel.findOne({
+        couponCode: req.body.couponCode,
+      });
       if (coupon) {
-        throw new Error("I've used this coupon name before.");
-      };
+        throw new Error("I've used this coupon code before.");
+      }
       return true;
     }),
 
-  check("expire")
+    check("expire")
     .optional()
     .isString()
-    .withMessage("Coupon expire must be of type string.")
-    .isISO8601('yyyy-mm-dd')
-    .withMessage("Coupon expire date format => yyyy-mm-dd"),
+    .withMessage("Expiration date must be of type string.")
+    .isISO8601({ strict: true })
+    .withMessage("Expiration date must be in the format yyyy-mm-dd (ISO 8601).")
+    .custom((value) => {
+      const inputDate = new Date(value);
+      if (inputDate <= Date.now()) {
+        throw new Error("Expiration date must be in the future.");
+      }
+      return true;
+    }),
 
   check("discount")
     .optional()
     .isNumeric()
-    .withMessage("Coupon discount must be of type number.")
-    .isFloat({ min: 1, max: 100 })
-    .withMessage('Discount must be between 1 and 100.'),
+    .withMessage("Discount value must be of type number.")
+    .isFloat({ min: 1 })
+    .withMessage("Discount value must be at least 1%.")
+    .isFloat({  max: 100 })
+    .withMessage("Discount value cannot exceed 100%."),
 
   validatorMiddleware,
 ];
@@ -91,7 +113,7 @@ exports.updateCouponValidator = [
 exports.deleteCouponValidator = [
   check("id")
     .isMongoId()
-    .withMessage("Invalid coupon id format."),
+    .withMessage("Invalid coupon ID format."),
 
   validatorMiddleware,
 ];

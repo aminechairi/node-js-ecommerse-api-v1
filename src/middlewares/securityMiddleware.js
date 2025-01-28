@@ -18,16 +18,18 @@ function addSecurityMiddlewares(app) {
   app.use(xss());
 
   // // Apply rate limiting middleware
-  const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
-    message: {
-      status: "fail",
-      message: "Too many requests, please try again later.",
-    },
-  });
-  // Apply rate limiting middleware Tto all requests
-  app.use("/api", limiter);
+  if (process.env.MODE_ENV !== "development") {
+    const limiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 100, // limit each IP to 100 requests per windowMs
+      message: {
+        status: "fail",
+        message: "Too many requests, please try again later.",
+      },
+    });
+    // Apply rate limiting middleware Tto all requests
+    app.use("/api", limiter);
+  }
 
   app.use(hpp());
 

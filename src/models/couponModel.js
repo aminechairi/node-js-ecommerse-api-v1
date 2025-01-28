@@ -1,27 +1,33 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const couponSchema = new mongoose.Schema(
   {
-    name: {
+    couponCode: {
       type: String,
-      required: [true, 'Coupon name is required.'],
-      trim: true,
+      required: [true, "Coupon code is required."],
       unique: true,
-      minlength: [3, "Too short coupon name."],
-      maxlength: [32, "Too long coupon name."],
+      trim: true,
+      minlength: [3, "Coupon code must be at least 3 characters."],
+      maxlength: [32, "Coupon code cannot exceed 32 characters."],
     },
     expire: {
       type: Date,
-      required: [true, 'Coupon expire time is required.'],
+      required: [true, "Expiration date is required."],
+      validate: {
+        validator: function (value) {
+          return value > Date.now();
+        },
+        message: "Expiration date must be in the future."
+      },
     },
     discount: {
       type: Number,
-      required: [true, 'Coupon discount value is required.'],
-      min: 1,
-      max: 100,
+      required: [true, "Discount value is required."],
+      min: [1, "Discount value must be at least 1%."],
+      max: [100, "Discount value cannot exceed 100%."],
     },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model('Coupon', couponSchema);
+module.exports = mongoose.model("Coupon", couponSchema);

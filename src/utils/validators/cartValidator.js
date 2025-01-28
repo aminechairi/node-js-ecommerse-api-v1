@@ -48,15 +48,15 @@ exports.removeProductFromCartValidator = [
 ];
 
 exports.applyCouponValidator = [
-  check("couponName")
+  check("couponCode")
     .notEmpty()
-    .withMessage("Coupon name is required.")
+    .withMessage("Coupon code is required.")
     .isString()
-    .withMessage("Coupon name must be of type string.")
-    .isLength({ min: 2 })
-    .withMessage("Coupon name must be at least 2 characters.")
+    .withMessage("Coupon code must be of type string.")
+    .isLength({ min: 3 })
+    .withMessage("Coupon code must be at least 3 characters.")
     .isLength({ max: 32 })
-    .withMessage("Coupon name cannot exceed 32 characters."),
+    .withMessage("Coupon code cannot exceed 32 characters."),
 
   validatorMiddleware,
 ];

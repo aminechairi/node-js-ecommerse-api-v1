@@ -1,11 +1,7 @@
 const asyncHandler = require("express-async-handler");
 
-const {
-  getAll,
-  getOne,
-  deleteOne
-} = require('./handlersFactory');
-const couponModel = require('../models/couponModel');
+const { getAll, getOne, deleteOne } = require("./handlersFactory");
+const couponModel = require("../models/couponModel");
 
 // @desc    Get list of coupons
 // @route   GET /api/v1/coupons
@@ -21,7 +17,7 @@ exports.getCoupon = getOne(couponModel);
 // @route   POST  /api/v1/coupons
 // @access  Private
 exports.createCoupon = asyncHandler(async (req, res) => {
-  req.body.name = `${req.body.name}`.toUpperCase();
+  req.body.couponCode = `${req.body.couponCode}`.toUpperCase();
   const coupon = await couponModel.create(req.body);
   res.status(201).json({
     data: coupon,
@@ -32,15 +28,13 @@ exports.createCoupon = asyncHandler(async (req, res) => {
 // @route   PUT /api/v1/coupons/:id
 // @access  Private
 exports.updateCoupon = asyncHandler(async (req, res, next) => {
-  req.body.name = `${req.body.name}`.toUpperCase();
-  const coupon = await couponModel.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    { new: true }
-  );
+  req.body.couponCode = `${req.body.couponCode}`.toUpperCase();
+  const coupon = await couponModel.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+  });
   if (!coupon) {
-    return next(new ApiError(`No coupon for this id ${req.params.id}.`, 404));
-  };
+    return next(new ApiError(`No coupon for this ID ${req.params.id}.`, 404));
+  }
   res.status(200).json({
     data: coupon,
   });
