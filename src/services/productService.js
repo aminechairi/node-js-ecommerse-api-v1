@@ -145,7 +145,7 @@ exports.resizeProductImages = asyncHandler(async (req, _, next) => {
 // @desc    Get list of products
 // @route   GET /api/v1/products
 // @access  Public
-exports.getProducts = asyncHandler(async (req, res, next) => {
+exports.getProducts = asyncHandler(async (req, res) => {
 
     // Build query
     const apiFeatures = new ApiFeatures(productModel.find({}), req.query)
