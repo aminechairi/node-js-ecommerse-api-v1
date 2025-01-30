@@ -227,6 +227,59 @@ exports.updateMyData = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Get my addresses.
+// @route   GET /api/v1/users/addresses
+// @access  Private
+exports.getMyAddresses = asyncHandler(async (req, res) => {
+  const user = await userModel.findById(req.user._id);
+  res.status(200).json({
+    status: "Success",
+    message: "List addresses retrieved successfully.",
+    data: user.addressesList,
+  });
+});
+
+// @desc    Add address to my addresses list.
+// @route   POST /api/v1/users/addresses
+// @access  Private
+exports.addMyAddress = asyncHandler(async (req, res, next) => {
+  const checkListLength = await userModel.findById(req.user._id);
+  const max = 8;
+  if (checkListLength.addressesList.length > max) {
+    throw next(new ApiError(`You cannot create more than ${max} addresses.`, 403));
+  }
+  const user = await userModel.findByIdAndUpdate(
+    req.user._id,
+    {
+      $addToSet: { addressesList: req.body },
+    },
+    { new: true }
+  );
+  res.status(200).json({
+    status: "Success",
+    message: "Address added successfully to your addresses list.",
+    data: user.addressesList,
+  });
+});
+
+// @desc    Remove address from my addresses list.
+// @route   DELETE /api/v1/users/addresses/:addressId
+// @access  Private
+exports.removeMyAddress = asyncHandler(async (req, res) => {
+  const user = await userModel.findByIdAndUpdate(
+    req.user._id,
+    {
+      $pull: { addressesList: { _id: req.params.addressId } },
+    },
+    { new: true }
+  );
+  res.status(200).json({
+    status: "Success",
+    message: "Address removed successfully from your addresses list.",
+    data: user.addressesList,
+  });
+});
+
 // @desc    Change my password
 // @route   PUT /api/v1/users/changemypassword
 // @access  user logged in
