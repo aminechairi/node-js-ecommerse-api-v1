@@ -4,7 +4,6 @@ const {
   getUserValidator,
   createUserValidator,
   updateUserValidator,
-  changeUserPasswordValidator,
   userBlockValidator,
   deleteUserValidator,
 } = require("../utils/validators/userValidators/userValidator");
@@ -25,7 +24,6 @@ const {
   getUser,
   createUser,
   updateUser,
-  changeUserPassword,
   userBlock,
   deleteUser,
 } = require("../services/userServices/userService");
@@ -153,12 +151,6 @@ router
     deleteUserValidator,
     deleteUser
   );
-
-router.put(
-  "/changepassword/:id",
-  changeUserPasswordValidator,
-  changeUserPassword
-);
 
 router.put(
   "/userblock/:id",

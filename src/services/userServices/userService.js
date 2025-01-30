@@ -3,17 +3,11 @@ const s3Client = require('../../config/s3Client');
 const sharp = require("sharp");
 const asyncHandler = require("express-async-handler");
 const { v4: uuidv4 } = require("uuid");
-const bcrypt = require("bcryptjs");
 
 const userModel = require("../../models/userModel");
 const ApiError = require("../../utils/apiErrore");
-const {
-  getAll,
-  createOne,
-} = require("../handlersFactory");
-const {
-  uploadMultipleImages,
-} = require("../../middlewares/uploadImageMiddleware");
+const {getAll, createOne } = require("../handlersFactory");
+const { uploadMultipleImages } = require("../../middlewares/uploadImageMiddleware");
 const { userPropertysPrivate } = require("../../utils/propertysPrivate");
 
 const awsBuckName = process.env.AWS_BUCKET_NAME;
@@ -218,50 +212,6 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
 
   };
 
-});
-
-// @desc    Change user password
-// @route   PUT /api/v1/users/changepassword/:id
-// @access  Private admine
-exports.changeUserPassword = asyncHandler(async (req, res, next) => {
-  const { id } = req.params;
-  const userCheck = await userModel.findById(id);
-
-  // Check user exist
-  if (!userCheck) {
-    return next(new ApiError(`No user for this id ${id}.`, 404));
-  };
-
-  // Check if the user is an admin
-  if (userCheck.role === "admin") {
-    return next(
-      new ApiError(`This user cannot be change password because is an admin.`, 403)
-    );
-  };
-
-  // const isCorrectPassword = await bcrypt.compare(
-  //   req.body.currentPassword,
-  //   userCheck.password
-  // );
-
-  // if (!isCorrectPassword) {
-  //   return next(new ApiError("Incorrect current password.", 401));
-  // };
-
-  const document = await userModel.findByIdAndUpdate(
-    id,
-    {
-      password: await bcrypt.hash(req.body.newPassword, 12),
-      passwordChangedAt: Date.now(),
-    },
-    {
-      new: true,
-    }
-  );
-
-  const user = userPropertysPrivate(document);
-
-  res.status(200).json({ data: user });
 });
 
 // @desc    Block specific user
