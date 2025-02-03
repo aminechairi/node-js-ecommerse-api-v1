@@ -25,7 +25,7 @@ const mountRoutes = (app) => {
   app.use(`/api/v1/reviews`, reviewRoutes);
   app.use(`/api/v1/saves`, savetRoutes);
   app.use(`/api/v1/coupons`, couponRoutes);
-  app.use(`/api/v1/cart`, cartRoutes);
+  app.use(`/api/v1/shoppingcart`, cartRoutes);
   app.use(`/api/v1/orders`, orderRoutes);
   app.use(`/api/v1/appsettings`, appSettingsRoutes);
 };

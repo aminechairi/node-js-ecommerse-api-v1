@@ -32,7 +32,7 @@ const categorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const setImageUrl = async (doc) => {  
+const setImageUrl = async (doc) => {
   if (doc.image) {
     const getObjectParams = {
       Bucket: awsBuckName,

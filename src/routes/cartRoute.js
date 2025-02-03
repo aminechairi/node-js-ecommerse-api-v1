@@ -4,7 +4,8 @@ const {
   addProductToCartValidator,
   removeProductFromCartValidator,
   applyCouponValidator
-} = require("../utils/validators/cartValidator")
+} = require("../utils/validators/cartValidator");
+
 const {
   addProductToCart,
   getCart,
@@ -13,6 +14,7 @@ const {
   clearCartItems,
   applyCoupon
 } = require("../services/cartService");
+
 const protect_allowedTo = require("../services/authServises/protect&allowedTo");
 
 const router = express.Router();
